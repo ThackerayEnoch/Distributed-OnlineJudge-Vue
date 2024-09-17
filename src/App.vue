@@ -3,7 +3,8 @@ import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <RouterView style="height: 100%;" />
+  <Toast />
+  <RouterView />
 </template>
 
 <style scoped></style>

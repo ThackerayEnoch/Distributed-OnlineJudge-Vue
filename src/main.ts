@@ -1,3 +1,4 @@
+/* eslint-disable vue/multi-word-component-names */
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
@@ -6,6 +7,7 @@ import Aura from '@primevue/themes/aura';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
+import Toast from 'primevue/toast';
 
 import '@/assets/styles.scss';
 import '@/assets/tailwind.css';
@@ -29,4 +31,8 @@ app.use(PrimeVue, {
 app.use(ToastService);
 app.use(ConfirmationService);
 
+app.component('Toast', Toast);
+
 app.mount('#app')
+
+export default app;
