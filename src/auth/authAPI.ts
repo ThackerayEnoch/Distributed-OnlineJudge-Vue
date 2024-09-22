@@ -1,4 +1,4 @@
-import request from "./index";
+import request from "../common/utils/api";
 
 namespace Auth {
     // 用户登录表单
@@ -9,10 +9,7 @@ namespace Auth {
     }
     // 登录成功后返回的token
     export interface LoginResData {
-        status: string;
-        message: string;
-        data :[];
-        timestamp: number;
+        temporaryToken: string;
     } 
 }
 // 用户登录

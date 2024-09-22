@@ -9,11 +9,11 @@ import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
 import Toast from 'primevue/toast';
 
-import '@/assets/styles.scss';
-import '@/assets/tailwind.css';
+import '@/common/assets/styles.scss';
+import '@/common/assets/tailwind.css';
 
 import App from './App.vue'
-import router from './router'
+import router from './common/utils/router'
 
 const app = createApp(App)
 
