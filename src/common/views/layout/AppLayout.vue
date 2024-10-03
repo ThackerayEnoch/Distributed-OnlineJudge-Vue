@@ -1,6 +1,6 @@
 <script setup>
-import AppTopBar from '@/layout/AppTopBar.vue';
-import { useLayout } from '@/layout/layout';
+import AppTopBar from '@/common/views/layout/AppTopBar.vue';
+import { useLayout } from '@/common/views/layout/layout';
 import { computed } from 'vue';
 
 const { layoutConfig, layoutState } = useLayout();

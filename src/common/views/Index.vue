@@ -1,5 +1,5 @@
 <template>
-    <Button label="Submit" />
+    <h1>Welcome to WCFS!</h1>
 </template>
 
 <script lang="ts">
@@ -24,6 +24,7 @@ export default {
 
         // 5. 定义方法
 
+
         // 6. 生命周期钩子
         onMounted(() => {
             console.log('Component mounted');
@@ -36,7 +37,7 @@ export default {
         return {
             count,
             state,
-            doubledCount,
+            doubledCount
         };
     },
 };

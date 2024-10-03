@@ -1,5 +1,5 @@
 <script setup>
-import { useLayout } from '@/layout/layout';
+import { useLayout } from '@/common/views/layout/layout';
 import AppConfigurator from './AppConfigurator.vue';
 
 const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
@@ -60,8 +60,10 @@ const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
                         <span>Messages</span>
                     </button>
                     <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-user"></i>
-                        <span>Profile</span>
+                        <RouterLink to="/profile">
+                            <i class="pi pi-user"></i>
+                            <span>Profile</span>
+                        </RouterLink>
                     </button>
                 </div>
             </div>
