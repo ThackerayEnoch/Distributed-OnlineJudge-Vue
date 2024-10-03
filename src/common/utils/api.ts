@@ -1,8 +1,10 @@
-import axios from 'axios'
+import axios, { HttpStatusCode } from 'axios'
 import router from '@/common/utils/router';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse,InternalAxiosRequestConfig, AxiosError } from 'axios'
 import globalMessage from '@/common/utils/toast';
-import { ResponseCode } from '@/common/constant/ResponseCode';
+import { getResponseMessage, ResponseCode } from '@/common/constant/ResponseCode';
+import { APIError } from '@/common/exception/APIException';
+import globalErrorHandler from '../exception/globalErrorHandler';
 // 数据返回的接口
 // 定义请求响应参数，不含data
 interface Result {
@@ -62,12 +64,6 @@ class RequestHttp {
       (response: AxiosResponse) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const {data, config} = response; // 解构
-        if (data.status === ResponseCode.UNAUTHORIZED) {
-          // 登录信息失效，应跳转到登录页面，并清空本地的token
-          localStorage.setItem('token', '');
-          router.push('/auth/login');
-          return Promise.reject(data);
-        }
         // 全局错误信息拦截（防止下载文件得时候返回数据流，没有code，直接报错）
         if (!data.status) {
           globalMessage.error('错误',data); // 此处也可以使用组件提示报错信息
@@ -78,29 +74,25 @@ class RequestHttp {
       (error: AxiosError) => {
         const {response} = error;
         if (response) {
-          this.handleCode(response.status)
+          // 服务器有返回
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const {data, config} = response; // 解构
+          // 使用类型断言明确 data 的类型
+          const responseData = data as { status: number; data: string };
+          if (response.status === HttpStatusCode.Unauthorized) {
+            // 登录信息失效，应跳转到登录页面，并清空本地的token
+            localStorage.setItem('token', '');
+            router.push('/auth/login');
+          }
+          const apiError = new APIError(responseData.status, responseData.data);
+          return Promise.reject(apiError);
         }
         if (!window.navigator.onLine) {
             globalMessage.error('错误','网络连接失败');
-          // 可以跳转到错误页面，也可以不做操作
-          // return router.replace({
-          //   path: '/404'
-          // });
         }
       }
     )
   }
-  handleCode(code: number):void {
-    switch(code) {
-      case 401:
-        globalMessage.error('错误','登录失败，请重新登录');
-        break;
-      default:
-        globalMessage.error('错误','请求失败');
-        break;
-    }
-  }
-
   // 常用方法封装
   get<T>(url: string, params?: object): Promise<ResultData<T>> {
     return this.service.get(url, {params});

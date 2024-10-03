@@ -7,7 +7,8 @@ export enum ResponseCode {
     VALIDATOR_ERROR = 1005, // 参数校验错误
     VERIFICATION_CODE_ERROR = 1006, // 验证码错误
     INTERNAL_SERVER_ERROR = 1007, // 内部服务器错误
-    TIME_OUT = 1008, // 请求超时
+    GONE = 1008, // 资源不存在
+    TIME_OUT = 1009, // 请求超时
     UNAUTHORIZED = 2001, // 访问令牌不合法
     ACCESS_DENIED = 2003 // 没有权限访问该资源
 }  
@@ -20,7 +21,12 @@ export const ResponseMessage: { [key in ResponseCode]: string } = {
     [ResponseCode.VALIDATOR_ERROR]: "参数校验错误",
     [ResponseCode.VERIFICATION_CODE_ERROR]: "验证码错误",
     [ResponseCode.INTERNAL_SERVER_ERROR]: "内部服务器错误",
+    [ResponseCode.GONE]: "资源不存在",
     [ResponseCode.TIME_OUT]: "请求超时",
     [ResponseCode.UNAUTHORIZED]: "访问令牌不合法",
     [ResponseCode.ACCESS_DENIED]: "没有权限访问该资源"
 };
+// 根据数字获取具体信息的函数
+export function getResponseMessage(code: number): string {
+    return ResponseMessage[code as ResponseCode] || "未知错误";
+}

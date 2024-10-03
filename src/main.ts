@@ -12,6 +12,8 @@ import Toast from 'primevue/toast';
 import '@/common/assets/styles.scss';
 import '@/common/assets/tailwind.css';
 
+import globalErrorHandler from '@/common/exception/globalErrorHandler';
+
 import App from './App.vue'
 import router from './common/utils/router'
 
@@ -32,7 +34,9 @@ app.use(ToastService);
 app.use(ConfirmationService);
 
 app.component('Toast', Toast);
-
+// 获取 ToastService 实例并传递给全局错误处理器
+const toast = app.config.globalProperties.$toast;
+app.config.errorHandler = globalErrorHandler(toast);
 app.mount('#app')
 
 export default app;

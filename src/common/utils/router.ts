@@ -14,6 +14,33 @@ const router = createRouter({
           components: {
             main: () => import('@/common/views/Index.vue')
           }
+        },
+        {
+          path:'/profile',
+          name:'Profile',
+          components: {
+            main: () => import('@/user/views/ProfileView.vue')
+          },
+          children: [
+            {
+              path: '/profile',
+              redirect: '/profile/info'
+            },
+            {
+              path: '/profile/statistics',
+              name: 'ProfileStatistics',
+              components: {
+                profile: () => import('@/user/components/ProfileStatistics.vue')
+              }
+            },
+            {
+              path: '/profile/info',
+              name: 'ProfileInfo',
+              components: {
+                profile: () => import('@/user/components/ProfileInfo.vue')
+              }
+            }
+          ],
         }
       ]
     },
@@ -23,7 +50,7 @@ const router = createRouter({
       component: () => import('@/auth/views/AuthIndex.vue'),
       children: [
         {
-          path: '',
+          path: '/auth',
           redirect: '/auth/login'
         },
         {
@@ -31,6 +58,13 @@ const router = createRouter({
           name:'Login',
           components: {
             auth: () => import('@/auth/views/SignIn.vue')
+          }
+        },
+        {
+          path:'/auth/register',
+          name:'Register',
+          components: {
+            auth: () => import('@/auth/views/SignUp.vue')
           }
         }
       ]

@@ -4,6 +4,9 @@ const globalMessage = {
     success: (title: string, msg: string) => {
         toast.add({ severity: 'success', summary: title, detail: msg, life: 3000 });
     },
+    successNoTitle:(msg: string) => {
+        toast.add({ severity: 'success', summary: "成功", detail: msg, life: 3000 });
+    },
     info: (title: string, msg: string) => {
         toast.add({ severity: 'info', summary: title, detail: msg, life: 3000 });
     },
