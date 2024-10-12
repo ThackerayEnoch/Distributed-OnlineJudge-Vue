@@ -1,39 +1,22 @@
-# WCFS-Vue
+# 基于Web的C语言快捷伺服评测系统的设计与实现
 
-This template should help get you started developing with Vue 3 in Vite.
 
-## Recommended IDE Setup
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## 1.项目简介(大饼)(待做)
 
-## Type Support for `.vue` Imports in TS
+## 2.技术框架(暂时)
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+前端: [Vue3](https://cn.vuejs.org/)+[PrimeVue](https://primevue.org/)+[Tailwind CSS](https://www.tailwindcss.cn)+[Axios](https://www.axios-http.cn)+[TypeScript](https://www.typescriptlang.org)
 
-## Customize configuration
+后端:[Spring Boot](https://docs.spring.io/spring-boot/index.html)+[Spring Data JPA](https://springdoc.cn/spring-data-jpa/)+[MySQL](https://www.mysql.com/cn/)+[Spring Cache](https://springdoc.cn/spring-cache-tutorial/)+[Redis](https://redis.io/)+[Redisson](https://github.com/redisson/redisson)+[Apache Shiro](https://shiro.apache.org/)+[Aliyun SMTP](https://help.aliyun.com/zh/direct-mail)+[Cloudflare R2](https://www.cloudflare-cn.com/)+[JSON Web Tokens](https://jwt.io/)
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+工具:[Visual Studio Code](https://code.visualstudio.com/)+[IntelliJ IDEA](https://www.jetbrains.com/idea/)+[Apifox](https://apifox.com/)+[Git](https://github.com/)+[GitHub Copilot](https://github.com/features/copilot)+[ChatGPT](https://chatgpt.com/)
 
-## Project Setup
+## 3.项目设计
 
-```sh
-npm install
-```
+团队每个成员都使用Git进行全栈开发(前后端都要做)
 
-### Compile and Hot-Reload for Development
+### TODO.......................................
 
-```sh
-npm run dev
-```
+2024/10/2 20:46
 
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
