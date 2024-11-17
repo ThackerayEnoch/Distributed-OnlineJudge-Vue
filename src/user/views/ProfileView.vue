@@ -1,14 +1,16 @@
 <script setup>
-import { ref } from 'vue';
+import { reactive } from 'vue';
+const props = defineProps(['username']);
 
-const user = ref({
-    name: 'ThackerayEnoch',
+const user = reactive({
+    name: props.username,
     email: 'ThackerayEnoch@foxmail.com',
     avatar: 'https://r2.wcfs.dokidokiujn.ninja/WCFS/User/ProfilePhoto/EdReO11VAAIQygI.jpg'
 });
+
 const items = [
-    { label: '您的信息', icon: 'pi pi-user', route: '/profile/info' },
-    { label: '统计数据', icon: 'pi pi-chart-bar', route: '/profile/statistics' }
+    { label: '您的信息', icon: 'pi pi-user', route: '/profile/' + props.username + '/info' },
+    { label: '统计数据', icon: 'pi pi-chart-bar', route: '/profile/' + props.username + '/statistics' }
 ];
 </script>
 

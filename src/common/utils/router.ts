@@ -8,6 +8,7 @@ const router = createRouter({
       name: 'Layout',
       component: () => import('@/common/views/layout/AppLayout.vue'),
       children: [
+        // --------首页---------
         {
           path:'/',
           name:'Home',
@@ -15,35 +16,39 @@ const router = createRouter({
             main: () => import('@/common/views/Index.vue')
           }
         },
+        // --------首页---------
+        // --------用户个人信息---------
         {
-          path:'/profile',
-          name:'Profile',
+          path: '/profile/:username',
+          name: 'Profile',
           components: {
-            main: () => import('@/user/views/ProfileView.vue')
+            main: () => import('@/user/views/ProfileView.vue'), // 父级组件
           },
+          props: true, // 将 `:username` 作为 prop 传递给组件
+          redirect: (to) => `/profile/${to.params.username}/info`, // 动态重定向
           children: [
             {
-              path: '/profile',
-              redirect: '/profile/info'
-            },
-            {
-              path: '/profile/statistics',
-              name: 'ProfileStatistics',
-              components: {
-                profile: () => import('@/user/components/ProfileStatistics.vue')
-              }
-            },
-            {
-              path: '/profile/info',
+              path: 'info', // 子路由 path 不需要再加 `/profile/:username`
               name: 'ProfileInfo',
               components: {
-                profile: () => import('@/user/components/ProfileInfo.vue')
-              }
-            }
+                profile: () => import('@/user/components/ProfileInfo.vue'), // 绑定到父级的 `profile` 视图
+              },
+              props: true,
+            },
+            {
+              path: 'statistics',
+              name: 'ProfileStatistics',
+              components: {
+                profile: () => import('@/user/components/ProfileStatistics.vue'),
+              },
+              props: true,
+            },
           ],
         }
+        // --------用户个人信息---------        
       ]
     },
+    // --------登录注册---------
     {
       path:'/auth',
       name: 'Auth',
@@ -69,11 +74,14 @@ const router = createRouter({
         }
       ]
     },
+    // --------登录注册---------
+    // --------404---------
     {
       path: '/:pathMatch(.*)*', // 捕获所有未匹配路径
       name: 'NotFound',
       component: () => import('@/common/components/NotFound.vue'), // 替换为 404 组件路径
     }
+    // --------404---------
   ]
 })
 

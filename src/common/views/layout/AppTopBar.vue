@@ -60,7 +60,7 @@ const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
                         <span>Messages</span>
                     </button>
                     <button type="button" class="layout-topbar-action">
-                        <RouterLink to="/profile">
+                        <RouterLink to="/profile/thackerayenochs">
                             <i class="pi pi-user"></i>
                             <span>Profile</span>
                         </RouterLink>

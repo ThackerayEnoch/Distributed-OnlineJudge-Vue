@@ -47,7 +47,6 @@ import { useForm, useField } from 'vee-validate';
 import { ResponseCode } from '@/common/constant/ResponseCode';
 import globalMessage from '@/common/utils/toast';
 import router from '@/common/utils/router';
-import { APIError } from '@/common/exception/APIException';
 
 const isRememberMe = ref(false);
 
@@ -71,13 +70,13 @@ const onSubmit = handleSubmit(async values => {
     const result = await login({
         username: values.username,
         password: values.password,
-        isRememberMe: isRememberMe.value,
     });
+
     if (result != undefined && result.status === ResponseCode.SUCCESS) {
         // 将 temporaryToken 存储在本地存储
-        const token = result.data?.temporaryToken;
+        const token = result.data?.token;
         if (token) {
-            localStorage.setItem('temporaryToken', token);
+            localStorage.setItem('token', token);
             globalMessage.success('成功', '登录成功');
             router.push('/');
         } else {

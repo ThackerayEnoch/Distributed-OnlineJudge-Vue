@@ -1,5 +1,5 @@
 export class User {
-    id:string;
+    userId:string;
     username:string;
     originalUsername:string;
     password:string;
@@ -10,7 +10,7 @@ export class User {
     updateTime:string;
     
     public constructor(){
-        this.id = '';
+        this.userId = '';
         this.username = '';
         this.originalUsername = '';
         this.password = '';

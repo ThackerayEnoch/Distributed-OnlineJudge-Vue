@@ -6,22 +6,18 @@
 </template>
 
 <script>
+import { reactive } from 'vue';
 export default {
     name: 'ProfileStatistics',
-    data() {
+    props: ['username'],
+    setup(props) {
+        const state = reactive({
+            usernmae: props.username,
+        });
         return {
-            // Add your component data here
+            state,
         };
     },
-    methods: {
-        // Add your component methods here
-    },
-    computed: {
-        // Add your computed properties here
-    },
-    mounted() {
-        // Lifecycle hook when the component is mounted
-    }
 };
 </script>
 
