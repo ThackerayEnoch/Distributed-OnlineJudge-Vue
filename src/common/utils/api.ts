@@ -42,7 +42,7 @@ class RequestHttp {
      */
     this.service.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        const token = localStorage.getItem('temporaryToken') || '';
+        const token = localStorage.getItem('token') || '';
         if (config.headers) {
           config.headers['Authorization'] = token; // 直接设置请求头中的 token 信息
         }
@@ -63,7 +63,7 @@ class RequestHttp {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const {data, config} = response; // 解构
         // 全局错误信息拦截（防止下载文件得时候返回数据流，没有code，直接报错）
-        if (!data.status) {
+        if (!data.status||response.status >= 400) {
           globalMessage.error('错误',data); // 此处也可以使用组件提示报错信息
           return Promise.reject(data)
         }

@@ -20,8 +20,6 @@
 
 <script setup>
 import { ref } from 'vue';
-import { defineRule, Form as VeeForm, Field as VeeField, ErrorMessage } from 'vee-validate';
-import * as yup from 'yup';
 
 // 头像相关状态
 const avatarUrl = ref('https://r2.wcfs.dokidokiujn.ninja/WCFS/User/ProfilePhoto/EdReO11VAAIQygI.jpg');

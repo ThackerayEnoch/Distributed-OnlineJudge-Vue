@@ -1,5 +1,5 @@
 <template>
-    <div class="flex justify-center items-center w-full  py-8">
+    <div class="flex justify-center items-center w-full py-8">
         <!-- 用户信息卡片 -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full max-w-7xl space-y-8">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">您的信息</h1>

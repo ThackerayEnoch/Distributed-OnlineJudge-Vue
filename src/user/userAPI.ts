@@ -15,7 +15,7 @@ namespace User {
         updateTime:string;
     } 
 }
-// 用户登录
+// GET获取用户数据
 export const getUserInfo = () => {
     return request.get<User.getUserResData>('/api/users')
 }
