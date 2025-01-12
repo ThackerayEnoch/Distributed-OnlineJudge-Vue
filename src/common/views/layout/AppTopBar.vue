@@ -19,16 +19,16 @@ const items = ref([
     },
     {
         label: '题目',
-        name: 'problem',
+        name: 'problems',
         icon: 'pi pi-book',
-        command: () => navigateTo('problem'),
+        command: () => navigateTo('problems'),
         root: true
     },
     {
         label: '评测',
-        name: 'evaluation',
+        name: 'statuses',
         icon: 'pi pi-check-circle',
-        command: () => navigateTo('evaluation'),
+        command: () => navigateTo('statuses'),
         root: true
     },
     {

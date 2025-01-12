@@ -9,40 +9,31 @@
                 <div class="flex justify-between items-center mb-4">
                     <h1 class="text-2xl font-bold">题目列表</h1>
                     <InputGroup style="max-width: 75%;">
-                        <InputText v-model="text1" placeholder="题目名" style="border-radius: 0;" />
+                        <InputText placeholder="题目名" style="border-radius: 0;" />
                         <InputGroupAddon style="margin: 0;padding: 0;border-radius: 0;">
-                            <Button icon="pi pi-search" severity="secondary" style="border-radius: 0;" variant="text"
-                                @click="toggle" />
+                            <Button icon="pi pi-search" severity="secondary" style="border-radius: 0;" variant="text" />
                         </InputGroupAddon>
                     </InputGroup>
-                    <Button icon="pi pi-sync" rounded @click="getProblems" />
+                    <Button icon="pi pi-sync" rounded />
                     <Button icon="fa-solid fa-shuffle" label="随机一题" />
                 </div>
                 <div class="flex flex-col mb-4">
                     <div class="flex items-center mb-4">
                         <span class="mr-2 text-lg font-bold">题库</span>
                         <div class="ml-2">
-                            <Button label="全部" class="p-button-outlined custom-button p-button-md mr-3"
-                                @click="filterBySource('all')" />
-                            <Button label="主题库" class="p-button-outlined custom-button mr-3"
-                                @click="filterBySource('theme')" />
-                            <Button label="HDU" class="p-button-outlined custom-button mr-3"
-                                @click="filterBySource('hdu')" />
-                            <Button label="POJ" class="p-button-outlined custom-button"
-                                @click="filterBySource('poj')" />
+                            <Button label="全部" class="p-button-outlined custom-button p-button-md mr-3" />
+                            <Button label="主题库" class="p-button-outlined custom-button mr-3" />
+                            <Button label="HDU" class="p-button-outlined custom-button mr-3" />
+                            <Button label="POJ" class="p-button-outlined custom-button" />
                         </div>
                     </div>
                     <div class="flex items-center">
                         <span class="mr-2 text-lg font-bold">难度</span>
                         <div class="ml-2">
-                            <Button label="全部" class="p-button-outlined custom-buttonm mr-3"
-                                @click="filterByDifficulty('all')" />
-                            <Button label="简单" class="p-button-outlined custom-button mr-3"
-                                @click="filterByDifficulty('easy')" />
-                            <Button label="中等" class="p-button-outlined custom-button mr-3"
-                                @click="filterByDifficulty('medium')" />
-                            <Button label="困难" class="p-button-outlined custom-button"
-                                @click="filterByDifficulty('hard')" />
+                            <Button label="全部" class="p-button-outlined custom-buttonm mr-3" />
+                            <Button label="简单" class="p-button-outlined custom-button mr-3" />
+                            <Button label="中等" class="p-button-outlined custom-button mr-3" />
+                            <Button label="困难" class="p-button-outlined custom-button" />
                         </div>
                     </div>
                 </div>
@@ -55,14 +46,15 @@
 
                     <Column field="hasDo" header="状态" style="width: 7%"></Column>
                     <!-- ID Column -->
-                    <Column field="problemId" header="题目ID" style="width: 8%"></Column>
+                    <Column field="displayId" header="题目ID" style="width: 8%"></Column>
 
                     <!-- Title Column -->
                     <Column field="title" header="题目名称">
                         <template #body="slotProps">
-                            <a :href="`/problem/${slotProps.data.id}`">
+                            <router-link :to="`/problem/${slotProps.data.id}`">
                                 {{ slotProps.data.title }}
-                            </a>
+
+                            </router-link>
                         </template>
                     </Column>
 
@@ -85,7 +77,7 @@
                         <template #body="slotProps">
                             <ProgressBar
                                 :value="parseFloat(((slotProps.data.acCount / (slotProps.data.submissionCount || 1)) * 100).toFixed(2))"
-                                :class="getProgressBarColor(((slotProps.data.acCount / slotProps.data.submissionCount) * 100).toFixed(2))">
+                                :class="getProgressBarColor(parseFloat(((slotProps.data.acCount / slotProps.data.submissionCount) * 100).toFixed(2)))">
                             </ProgressBar>
                         </template>
                     </Column>
@@ -143,6 +135,7 @@ export default {
 
         // 统计数据
         const statTitle = ref('请点击或悬停鼠标至问题行查看提交状态');
+        // 选中的问题
         const selectedProblem = reactive({
             title: statTitle.value,
             acPercentage: 0,
@@ -153,6 +146,7 @@ export default {
             cePercentage: 0,
             oePercentage: 0,
         });
+        // onMounted钩子，请求API加载数据
         onMounted(() => {
             getCount();
             getProblems(first.value);
