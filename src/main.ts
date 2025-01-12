@@ -11,7 +11,7 @@ import Toast from 'primevue/toast';
 
 import '@/common/assets/styles.scss';
 import '@/common/assets/tailwind.css';
-
+import '@fortawesome/fontawesome-free/css/all.css';
 import globalErrorHandler from '@/common/exception/globalErrorHandler';
 
 import App from './App.vue'

@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Components from 'unplugin-vue-components/vite';
 import {PrimeVueResolver} from '@primevue/auto-import-resolver';
+import { prismjsPlugin } from 'vite-plugin-prismjs'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -13,21 +14,17 @@ export default defineConfig({
       resolvers: [
         PrimeVueResolver()
       ]
-    })
+    }),
+    prismjsPlugin({
+      languages: 'all', // 语言
+      plugins: ['line-numbers','show-language','copy-to-clipboard','inline-color'],
+      theme: 'okaidia',// 主题
+      css: true,
+  })
   ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
-  },
-  server: {
-    proxy: {
-      // 代理所有以 /api 开头的请求到目标服务器
-      '/api': {
-        target: 'http://localhost:8080', // 替换为你的API服务器地址
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      }
     }
   }
 })

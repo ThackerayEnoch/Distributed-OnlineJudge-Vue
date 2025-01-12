@@ -1,5 +1,5 @@
 <template>
-    <div class="flex justify-center items-center w-full  py-8">
+    <div class="flex justify-center items-center w-full py-8">
         <!-- 用户信息卡片 -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full max-w-7xl space-y-8">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">您的信息</h1>
@@ -50,18 +50,18 @@
                     <!-- 当前密码 -->
                     <div class="flex flex-col">
                         <label for="currentPassword" class="font-semibold text-gray-900 dark:text-gray-100">当前密码</label>
-                        <Password id="currentPassword" v-model="user.currentPassword" feedback="false" class="w-full" />
+                        <Password id="currentPassword" v-model="user.currentPassword" class="w-full" />
                     </div>
                     <!-- 新密码 -->
                     <div class="flex flex-col">
                         <label for="newPassword" class="font-semibold text-gray-900 dark:text-gray-100">新密码</label>
-                        <Password id="newPassword" v-model="user.newPassword" feedback="false" class="w-full" />
+                        <Password id="newPassword" v-model="user.newPassword" class="w-full" />
                     </div>
                     <!-- 确认密码 -->
                     <div class="flex flex-col">
                         <label for="confirmPassword"
                             class="font-semibold text-gray-900 dark:text-gray-100">确认新密码</label>
-                        <Password id="confirmPassword" v-model="user.confirmPassword" feedback="false" class="w-full" />
+                        <Password id="confirmPassword" v-model="user.confirmPassword" class="w-full" />
                     </div>
                 </div>
             </div>
@@ -75,24 +75,26 @@
 </template>
 
 <script>
+import { reactive } from 'vue';
 export default {
-    data() {
-        return {
-            user: {
-                username: 'Thackeray Enoch',
-                email: 'thackeray@example.com',
-                bio: '我是一个开发者，热爱编程。',
-                currentPassword: '',
-                newPassword: '',
-                confirmPassword: ''
-            }
+    name: 'ProfileInfo',
+    props: ['username'],
+    setup(props) {
+        const user = reactive({
+            username: props.username,
+            email: 'HU@qq.com',
+            bio: 'Hello World!',
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: '',
+        });
+        const saveUserInfo = () => {
+            console.log('保存用户信息', user.value);
         };
-    },
-    methods: {
-        saveUserInfo() {
-            console.log("保存用户信息:", this.user);
-            // 这里可以将修改信息发送到后端
-        }
+        return {
+            user,
+            saveUserInfo
+        };
     }
 };
 </script>

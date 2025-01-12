@@ -13,7 +13,7 @@ const layoutState = reactive({
     overlayMenuActive: false,
     profileSidebarVisible: false,
     configSidebarVisible: false,
-    staticMenuMobileActive: true,
+    staticMenuMobileActive: false,
     menuHoverActive: false,
     activeMenuItem: null
 });

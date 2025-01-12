@@ -4,7 +4,7 @@ import { RouterView } from 'vue-router'
 
 <template>
   <Toast />
-  <RouterView />
+  <RouterView name="app" />
 </template>
 
 <style scoped></style>
