@@ -151,22 +151,26 @@ export default {
             getCount();
             getProblems(first.value);
         });
+        // 获取题目列表
         const getProblems = async (page: number) => {
             const response = await getProblemPage(page);
             problems.value = response.data as any;
         };
+        // 获取题目总数
         const getCount = async () => {
             const response = await getProblemCount();
             if (response.data) {
                 totalRecords.value = response.data.count;
             }
         };
+        // 分页的页面切换
         const onPage = (event: any) => {
             getProblems(event.first);
             first.value = event.first;
             router.push({ query: { currentPage: event.page + 1 } });
             scrollToTop();
         };
+        // 选择行，在右侧显示 统计信息
         const selectRow = (event: MouseEvent) => {
             const rowElement = (event.target as HTMLElement).closest('tr');
             if (rowElement) {
@@ -184,6 +188,7 @@ export default {
                 }
             }
         };
+        // 获取标签的颜色
         const getTagSeverity = (difficulty: number) => {
             switch (difficulty) {
                 case 0:
@@ -196,12 +201,14 @@ export default {
                     return 'success';
             }
         };
+        // 获取进度条的颜色
         const getProgressBarColor = (accuracy: number) => {
             if (accuracy < 40) return 'progress-20';
             if (accuracy < 60) return 'progress-40';
             if (accuracy < 80) return 'progress-60';
             return 'progress-80';
         };
+        // 平滑滚回顶部
         const scrollToTop = () => {
             window.scrollTo({
                 top: 0, // 回到顶部
