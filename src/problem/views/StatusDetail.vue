@@ -168,7 +168,9 @@ import { number } from 'yup';
 const props = defineProps({
     submitId: number
 });
+// 定义是否加载中变量
 const isLoading = ref(true);
+// 题目数据
 const status = ref<Status.StatusDetail>(
     {
         id: -8000,
@@ -187,6 +189,7 @@ const status = ref<Status.StatusDetail>(
         testcase: []
     }
 );
+// 状态映射
 const statusMap = {
     '-10': 'Not Submitted',
     '9': 'Submitting',
@@ -205,6 +208,7 @@ const statusMap = {
     '10': 'Submitted Failed',
     '15': 'No Status'
 };
+// 状态映射简写
 const statusMapMin = {
     '9': 'Submitting',
     '6': 'Compiling',
@@ -219,6 +223,7 @@ const statusMapMin = {
     '4': 'SE',
     '5': 'Pending',
 };
+// 测试点状态颜色
 const testcaseClassMap = {
     '9': 'bg-blue-500',     // 提交中
     '6': 'bg-blue-500',   // 编译中
@@ -233,7 +238,7 @@ const testcaseClassMap = {
     '4': 'bg-gray-500',     // 系统错误
     '5': 'bg-blue-500',     // 等待判题
 };
-
+// 判题详情状态颜色
 const statusClassMap = {
     '-10': 'bg-blue-500 text-white',
     '9': 'bg-blue-500 text-white',
@@ -259,6 +264,7 @@ function isJudgingComplete(status: Status.StatusDetail): boolean {
 function isAbnormalStatus(status: Status.StatusDetail): boolean {
     return status.status !== -3 && status.status !== -2 && status.status !== -1 && status.status !== 0 && status.status !== 1 && status.status !== 2 && status.status !== 3
 }
+// 语言映射，用于Prism高亮代码
 const languageClassMap: Record<string, string> = {
     [Judge.Language.C]: 'c',
     [Judge.Language.Cpp]: 'cpp',
@@ -266,27 +272,31 @@ const languageClassMap: Record<string, string> = {
     [Judge.Language.PyPy2]: 'python',
     [Judge.Language.PyPy3]: 'python',
 };
-
+// 加载数据
 onMounted(() => {
     isLoading.value = true;
     getJudgeDetail(props.submitId as unknown as number);
 });
+// Prism高亮代码
 onUpdated(() => {
     Prism.highlightAll();
 });
+// 通过API获取判题详情
 async function getJudgeDetail(submitId: number) {
     // 获取提交详情
     const result = await getStatDetail(submitId);
     status.value = result.data as unknown as Status.StatusDetail;
     isLoading.value = false;
 }
+// 获取状态文本
 function getStatusText(status: keyof typeof statusMap) {
     return statusMap[status] || '未知状态';
 }
-
+// 获取状态颜色
 function getStatusClass(status: keyof typeof statusClassMap) {
     return statusClassMap[status] || 'bg-gray-100 text-gray-800';
 }
+// 格式化内存
 function formatMemory(memory: number) {
     if (memory < 1024) {
         return `${memory} KiB`;
@@ -297,6 +307,7 @@ function formatMemory(memory: number) {
         return `${(memory / 1024).toFixed(2)} MiB`;
     }
 }
+// 格式化代码长度
 function formatLength(length: number) {
     if (length < 1024) {
         return `${length} B`;

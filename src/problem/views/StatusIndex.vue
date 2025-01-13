@@ -145,13 +145,19 @@ import { FilterMatchMode } from '@primevue/core/api';
 
 const route = useRoute();
 const router = useRouter();
+// 评测状态数据
 const problems = ref<Status.StatJSONObject[]>([]);
+// 总记录数
 const totalRecords = ref(150);
+// 当前页数
 const first = ref((parseInt(route.query.currentPage as string || '1') - 1) * 30 || 0);
+// 是否只显示自己
 const isMe = ref(false);
+// 判题状态过滤器
 const filters = ref<any>({
     status: { value: null, matchMode: FilterMatchMode.IN }, // 仅支持多选过滤
 });
+// 判题状态选项
 const statusOptions = ref([
     { name: 'Not Submitted', code: '-10' },
     { name: 'Submitting', code: '9' },
@@ -170,7 +176,7 @@ const statusOptions = ref([
     { name: 'Submitted Failed', code: '10' },
     { name: 'No Status', code: '15' }
 ]);
-
+// 判题状态映射
 const statusMap = {
     '-10': 'Not Submitted',
     '9': 'Submitting',
@@ -189,7 +195,7 @@ const statusMap = {
     '10': 'Submitted Failed',
     '15': 'No Status'
 };
-
+// 判题状态标签颜色映射
 const statusClassMap = {
     '-10': 'bg-blue-500 text-white',
     '9': 'bg-blue-500 text-white',
@@ -208,33 +214,38 @@ const statusClassMap = {
     '10': 'bg-red-500 text-white',
     '15': 'bg-gray-500 text-white'
 };
-
+// 获取判题状态文本
 function getStatusText(status: keyof typeof statusMap) {
     return statusMap[status] || '未知状态';
 }
-
+// 获取判题状态标签颜色
 function getStatusClass(status: keyof typeof statusClassMap) {
     return statusClassMap[status] || 'bg-gray-100 text-gray-800';
 }
+// 获取判题状态数据
 onMounted(() => {
     getStatusCount();
     getStatusData(first.value);
 });
+// 页面切换事件，重新加载数据
 function onPage(event: any) {
     first.value = event.first;
     router.push({ query: { currentPage: event.page + 1 } });
     getStatusData(first.value);
 }
+// 获取判题状态数据
 async function getStatusData(currentPage: number) {
     const res = await getStatPage(currentPage);
     problems.value = res.data ?? [];
     initializePollingQueue();
     startPolling();
 }
+// 获取判题状态总记录数
 async function getStatusCount() {
     const res = await getStatMaxCount();
     totalRecords.value = res.data?.count ?? 0;
 }
+// 格式化内存
 function formatMemory(memory: number) {
     if (memory < 1024) {
         return `${memory} KiB`;
@@ -245,6 +256,7 @@ function formatMemory(memory: number) {
         return `${(memory / 1024).toFixed(2)} MiB`;
     }
 }
+// 格式化代码长度
 function formatLength(length: number) {
     if (length < 1024) {
         return `${length} B`;
@@ -255,6 +267,7 @@ function formatLength(length: number) {
         return `${(length / 1024).toFixed(2)} KiB`;
     }
 }
+// 格式化时间
 function formatTimeAgo(time: string) {
     const now: Date = new Date();
     const past: Date = new Date(time);
@@ -272,9 +285,11 @@ function formatTimeAgo(time: string) {
         return `${Math.floor(diff / 31536000)}年前`;
     }
 }
+// 轮询队列，用于存储需要轮询的提交ID。当提交的题目判题未完成时，将其提交ID加入轮询队列。
 const pollingQueue = ref<{ submitId: number }[]>([]);
+// 需要轮询的判题状态
 const pollingStatuses = [-10, 9, 6, 7, 5, 15];
-
+// 初始化轮询队列
 const initializePollingQueue = () => {
     problems.value.forEach(problem => {
         if (pollingStatuses.includes(problem.status)) {
@@ -282,11 +297,13 @@ const initializePollingQueue = () => {
         }
     });
 };
+// 获取状态更新
 const fetchStatusUpdate = async (submitId: number): Promise<Status.StatusItem> => {
     // 调用API获取状态更新
     const response = await getStatBySubmitid(submitId);
     return response.data as Status.StatusItem;
 };
+// 更新判题状态
 const updateProblems = (statusItem: Status.StatusItem) => {
     const index = problems.value.findIndex(problem => problem.submitId === statusItem.submitId);
     if (index !== -1) {
@@ -301,7 +318,7 @@ const updateProblems = (statusItem: Status.StatusItem) => {
         }
     }
 };
-
+// 开始轮询，1s轮询一次
 const startPolling = () => {
     if (pollingQueue.value.length === 0) {
         return;
