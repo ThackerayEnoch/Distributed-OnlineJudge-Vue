@@ -35,7 +35,7 @@ const items = ref([
         label: '作业',
         name: 'homeworks',
         icon: 'pi pi-pencil',
-        command: () => navigateTo('homeworks'),
+        command: () => navigateTo('homeworks/1'),
         root: true
     },
     {

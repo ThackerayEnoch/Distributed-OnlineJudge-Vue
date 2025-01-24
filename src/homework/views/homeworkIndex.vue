@@ -3,12 +3,12 @@
         <div class="w-full h-[75%] p-4 shadow-lg bg-white dark:bg-gray-800">
             <DataTable :value="homeworks" stripedRows paginator :rows="30" tableStyle="min-width: 60%"
                 responsiveLayout="scroll" size="large" :totalRecords="totalRecords" lazy :first="first" @page="onPage">
-                <Column field="contestId" style="text-align: center;">
+                <Column field="id" style="text-align: center;">
                     <template #header>
                         <span class="flex-1 text-center font-bold">编号</span>
                     </template>
                 </Column>
-                <Column field="title" style="min-width: 28%;">
+                <Column field="title" style="min-width: 35%;">
                     <template #header>
                         <span class="flex-1 font-bold">标题</span>
                     </template>
@@ -24,14 +24,14 @@
                         <span class="flex-1 text-center font-bold">题目数</span>
                     </template>
                 </Column>
-                <Column field="completeRate" style="text-align: center;min-width: 17%;">
+                <Column field="completeRate" style="text-align: center;min-width: 12%;">
                     <template #header>
                         <span class="flex-1 text-center font-bold">完成进度</span>
                     </template>
                     <template #body="slotProps">
                         <ProgressBar
-                            :value="parseFloat(((slotProps.data.acCount / (slotProps.data.total || 1)) * 100).toFixed(2))"
-                            :class="getProgressBarColor(parseFloat(((slotProps.data.acCount / (slotProps.data.total || 1)) * 100).toFixed(2)))">
+                            :value="parseFloat(((slotProps.data.solved / (slotProps.data.total || 1)) * 100).toFixed(2))"
+                            :class="getProgressBarColor(parseFloat(((slotProps.data.solved / (slotProps.data.total || 1)) * 100).toFixed(2)))">
                         </ProgressBar>
                     </template>
                 </Column>
@@ -69,19 +69,19 @@
                                 getStatusText(slotProps.data.startTime, slotProps.data.endTime) }}</span>
                     </template>
                 </Column>
-                <Column field="permission" style="text-align: center;">
+                <Column style="text-align: center;">
                     <template #header>
                         <span class="flex-1 text-center font-bold">开放</span>
                     </template>
                     <template #body="slotProps">
-                        <span :class="getPremClass(slotProps.data.permission)" class="p-2 text-base">
-                            {{ getPremText(slotProps.data.permission) }}
+                        <span :class="getPremClass(slotProps.data.auth)" class="p-2 text-base">
+                            {{ getPremText(slotProps.data.auth) }}
                         </span>
                     </template>
                 </Column>
-                <Column field="author" style="text-align: center;">
+                <Column field="nickname" style="text-align: center;" class="text-sm">
                     <template #header>
-                        <span class="flex-1 text-center font-bold">作者</span>
+                        <span class="flex-1 text-center text-base font-bold">作者</span>
                     </template>
                 </Column>
             </DataTable>
@@ -90,120 +90,15 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, } from 'vue';
+import { getHomeworkPage, getHomeworkCount, type Homework } from '../api/homeworkAPI'
+import { useRouter, useRoute } from 'vue-router';
+const router = useRouter();
+const route = useRoute();
 const totalRecords = ref(0);
-const first = ref(0);
+const first = ref((parseInt(route.query.currentPage as string || '1') - 1) * 30 || 0);
 
-const homeworks = ref([
-    {
-        contestId: 1,
-        title: '已结束的作业',
-        total: 5,
-        acCount: 3,
-        startTime: '2025-01-01T00:00:00',
-        endTime: '2025-01-10T00:00:00',
-        permission: 0,
-    },
-    {
-        contestId: 2,
-        title: '进行中的作业',
-        total: 5,
-        acCount: 2,
-        startTime: '2025-01-20T00:00:00',
-        endTime: '2025-01-30T00:00:00',
-        permission: 1,
-    },
-    {
-        contestId: 3,
-        title: '未开始的作业',
-        total: 5,
-        acCount: 5,
-        startTime: '2025-02-01T00:00:00',
-        endTime: '2025-02-10T00:00:00',
-        permission: 0,
-    },
-    {
-        contestId: 4,
-        title: '还有一天结束的作业',
-        total: 10,
-        acCount: 8,
-        startTime: '2025-01-15T00:00:00',
-        endTime: '2025-01-25T18:50:00',
-        permission: 0,
-    },
-    {
-        contestId: 5,
-        title: '还有15小时结束的作业',
-        total: 5,
-        acCount: 1,
-        startTime: '2025-01-15T00:00:00',
-        endTime: '2025-01-25T09:50:00',
-        permission: 0,
-    },
-    {
-        contestId: 6,
-        title: '还有1小时结束的作业',
-        total: 5,
-        acCount: 2,
-        startTime: '2025-01-15T00:00:00',
-        endTime: '2025-01-24T19:50:00',
-        permission: 0,
-    },
-    {
-        contestId: 7,
-        title: '还有5分钟结束的作业',
-        total: 50,
-        acCount: 20,
-        startTime: '2025-01-15T00:00:00',
-        endTime: '2025-01-24T18:55:00',
-        permission: 0,
-    },
-    {
-        contestId: 8,
-        title: '还有30秒结束的作业',
-        total: 5,
-        acCount: 0,
-        startTime: '2025-01-15T00:00:00',
-        endTime: '2025-01-24T18:50:30',
-        permission: 0,
-    },
-    {
-        contestId: 9,
-        title: '还有15小时开始的作业',
-        total: 5,
-        acCount: 0,
-        startTime: '2025-01-25T09:50:00',
-        endTime: '2025-02-01T00:00:00',
-        permission: 0,
-    },
-    {
-        contestId: 10,
-        title: '还有1小时开始的作业',
-        total: 5,
-        acCount: 0,
-        startTime: '2025-01-24T19:50:00',
-        endTime: '2025-02-01T00:00:00',
-        permission: 0,
-    },
-    {
-        contestId: 11,
-        title: '还有5分钟开始的作业',
-        total: 5,
-        acCount: 0,
-        startTime: '2025-01-24T18:55:00',
-        endTime: '2025-02-01T00:00:00',
-        permission: 0,
-    },
-    {
-        contestId: 12,
-        title: '还有30秒开始的作业',
-        total: 5,
-        acCount: 0,
-        startTime: '2025-01-24T18:50:30',
-        endTime: '2025-02-01T00:00:00',
-        permission: 0,
-    }
-]);
+const homeworks = ref<Homework.HomeworkJSON[]>([]);
 function getPremText(permission: number) {
     if (permission === 0) return '公开';
     if (permission === 1) return '私有';
@@ -299,7 +194,8 @@ function getStatusClass(startTime: string, endTime: string) {
 }
 function onPage(event: any) {
     first.value = event.first;
-    // loadData();
+    router.push({ query: { currentPage: event.page + 1 } });
+    loadData();
 }
 // 获取进度条的颜色
 function getProgressBarColor(accuracy: number) {
@@ -309,9 +205,17 @@ function getProgressBarColor(accuracy: number) {
     return 'progress-80';
 };
 onMounted(() => {
-    // loadData();
+    loadData();
+    loadCount();
 });
-
+async function loadData() {
+    const result = await getHomeworkPage(first.value);
+    homeworks.value = result.data as unknown as Homework.HomeworkJSON[];
+}
+async function loadCount() {
+    const result = await getHomeworkCount();
+    totalRecords.value = result.data as number;
+}
 </script>
 
 <style scoped>
