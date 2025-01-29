@@ -33,16 +33,16 @@ const items = ref([
     },
     {
         label: '作业',
-        name: 'assignments',
+        name: 'homeworks',
         icon: 'pi pi-pencil',
-        command: () => navigateTo('assignments'),
+        command: () => navigateTo('homeworks/1'),
         root: true
     },
     {
         label: '考试',
-        name: 'exams',
+        name: 'contests',
         icon: 'pi pi-calendar',
-        command: () => navigateTo('exams'),
+        command: () => navigateTo('contests'),
         root: true
     },
     {
