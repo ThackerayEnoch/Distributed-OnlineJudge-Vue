@@ -78,7 +78,16 @@ export default defineComponent({
                 items: [
                     { label: '公告管理', icon: 'pi pi-megaphone', to: '/admin/announcements' },
                     { label: '通知管理', icon: 'pi pi-bell', to: '/admin/notifications' },
-                    { label: '权限管理', icon: 'pi pi-lock', to: '/admin/permissions' },
+                    {
+                        label: '权限管理',
+                        icon: 'pi pi-lock',
+                        to: '/admin/permissions',
+                        items: [
+                            { label: '用户角色管理', icon: 'pi pi-user', to: '/admin/permissions/users' },
+                            { label: '角色管理', icon: 'pi pi-users', to: '/admin/permissions/roles' },
+                            { label: '权限项管理', icon: 'pi pi-lock', to: '/admin/permissions/permissions' }
+                        ]
+                    },
                     { label: '系统配置', icon: 'pi pi-cog', to: '/admin/config' }
                 ]
             }

@@ -23,6 +23,40 @@ export default [
           components: {
             admin: () => import('@/admin/views/ProblemList.vue')
           }
+        },
+        {
+          path:'/admin/permissions',
+          name:'Permissions',
+          components: {
+            admin: () => import('@/admin/views/PermManage.vue')
+          },
+          children:[
+            {
+              path:'/admin/permissions',
+              redirect: '/admin/permissions/users'
+            },
+            {
+              path:'/admin/permissions/users',
+              name:'PermUsers',
+              components:{
+                perm:()=>import('@/admin/components/perm/UserRoleManage.vue')
+              }
+            },
+            {
+              path:'/admin/permissions/roles',
+              name:'PermRoles',
+              components:{
+                perm:()=>import('@/admin/components/perm/RoleManage.vue')
+              }
+            },
+            {
+              path:'/admin/permissions/permissions',
+              name:'PermPermissions',
+              components:{
+                perm:()=>import('@/admin/components/perm/PermItem.vue')
+              }
+            }
+          ]
         }
       ]
     }
