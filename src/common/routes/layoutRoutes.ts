@@ -16,7 +16,7 @@ export default [
       ...profileRoutes,
       ...demoRoutes,
       ...problemRoutes,
-      ...homeworkRoutes
+      ...homeworkRoutes,
     ]
   }
 ];
