@@ -4,7 +4,7 @@
             <div class="flex items-center space-x-2">
                 <Select class="w-25" v-model="selectedHomeworkType" :options="HomeworkTypeOptions" placeholder="筛选..."  />
                 <InputGroup style="max-width: 50%;">
-                    <InputText  v-model="homeworkName" placeholder="请输入作业名"/>
+                    <InputText  v-model="homeworkName" placeholder="请输入作业名" @keyup.enter="filterHomeworks"/>
                     <InputGroupAddon style="margin: 0;padding: 0;border-radius: 0;">
                         <Button icon="pi pi-search" @click="filterHomeworks" severity="secondary" style="border-radius: 0;" variant="text" />
                     </InputGroupAddon>
@@ -102,7 +102,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, } from 'vue';
-import { getHomeworkPage, getHomeworkCount, type Homework } from '../api/homeworkAPI'
+import { getHomeworkPage, getHomeworkCount, type Homework, searchHomeworks, searchHomeworksCount } from '../api/homeworkAPI'
 import { useRouter, useRoute } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
@@ -113,20 +113,12 @@ const homeworks = ref<Homework.HomeworkJSON[]>([]);
 
 const homeworkName = ref('');
 const selectedHomeworkType = ref('');
-const HomeworkTypeOptions = ref(['全部作业','我的作业']);
+const HomeworkTypeOptions = ref(['All','Own']);
 
 // 查询作业 用api查询作业
 function filterHomeworks() {
-    let filtered = homeworks.value;
-    if (homeworkName.value) {
-        filtered = filtered.filter((item) => item.title.includes(homeworkName.value));
-    }
-    if (selectedHomeworkType.value === '我的作业') {
-        // 过滤我的作业 假设有一个字段 isMyHomework 来标识是否是我的作业
-        // filtered = filtered.filter((item) => item.isMyHomework);
-    }
-    homeworks.value = filtered;
-    totalRecords.value = filtered.length;
+    loadSearchedData();
+    loadSearchedCount();
 }
 function getPremText(permission: number) {
     if (permission === 0) return '公开';
@@ -224,7 +216,12 @@ function getStatusClass(startTime: string, endTime: string) {
 function onPage(event: any) {
     first.value = event.first;
     router.push({ query: { currentPage: event.page + 1 } });
-    loadData();
+    // 检测逻辑 根据当前搜索内容插对应页码
+    if(homeworkName.value || selectedHomeworkType.value){
+        loadSearchedData();
+    } else {
+        loadData();
+    }
 }
 // 获取进度条的颜色
 function getProgressBarColor(accuracy: number) {
@@ -235,7 +232,7 @@ function getProgressBarColor(accuracy: number) {
 };
 onMounted(() => {
     loadData();
-    loadCount();
+    loadCount();    
 });
 async function loadData() {
     const result = await getHomeworkPage(first.value);
@@ -243,6 +240,14 @@ async function loadData() {
 }
 async function loadCount() {
     const result = await getHomeworkCount();
+    totalRecords.value = result.data as number;
+}
+async function loadSearchedData() {
+    const result = await searchHomeworks(first.value, selectedHomeworkType.value ,homeworkName.value);
+    homeworks.value = result.data as unknown as Homework.HomeworkJSON[];
+}
+async function loadSearchedCount() {
+    const result = await searchHomeworksCount(selectedHomeworkType.value ,homeworkName.value);
     totalRecords.value = result.data as number;
 }
 </script>
