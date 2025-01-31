@@ -1,5 +1,16 @@
 <template>
     <div class="w-full h-full">
+        <div class="w-full h-[25%] p-4 shadow-lg bg-white dark:bg-gray-800 mb-4">
+            <div class="flex items-center space-x-2">
+                <Select class="w-25" v-model="selectedHomeworkType" :options="HomeworkTypeOptions" placeholder="筛选..."  />
+                <InputGroup style="max-width: 50%;">
+                    <InputText  v-model="homeworkName" placeholder="请输入作业名"/>
+                    <InputGroupAddon style="margin: 0;padding: 0;border-radius: 0;">
+                        <Button icon="pi pi-search" @click="filterHomeworks" severity="secondary" style="border-radius: 0;" variant="text" />
+                    </InputGroupAddon>
+                </InputGroup>
+            </div>
+        </div>
         <div class="w-full h-[75%] p-4 shadow-lg bg-white dark:bg-gray-800">
             <DataTable :value="homeworks" stripedRows paginator :rows="30" tableStyle="min-width: 60%"
                 responsiveLayout="scroll" size="large" :totalRecords="totalRecords" lazy :first="first" @page="onPage">
@@ -99,6 +110,24 @@ const totalRecords = ref(0);
 const first = ref((parseInt(route.query.currentPage as string || '1') - 1) * 30 || 0);
 
 const homeworks = ref<Homework.HomeworkJSON[]>([]);
+
+const homeworkName = ref('');
+const selectedHomeworkType = ref('');
+const HomeworkTypeOptions = ref(['全部作业','我的作业']);
+
+// 查询作业 用api查询作业
+function filterHomeworks() {
+    let filtered = homeworks.value;
+    if (homeworkName.value) {
+        filtered = filtered.filter((item) => item.title.includes(homeworkName.value));
+    }
+    if (selectedHomeworkType.value === '我的作业') {
+        // 过滤我的作业 假设有一个字段 isMyHomework 来标识是否是我的作业
+        // filtered = filtered.filter((item) => item.isMyHomework);
+    }
+    homeworks.value = filtered;
+    totalRecords.value = filtered.length;
+}
 function getPremText(permission: number) {
     if (permission === 0) return '公开';
     if (permission === 1) return '私有';
@@ -234,4 +263,5 @@ async function loadCount() {
 .progress-80 ::v-deep(.p-progressbar-value) {
     background-color: #10B981 !important;
 }
+
 </style>
