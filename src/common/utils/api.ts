@@ -101,8 +101,8 @@ post<T>(url: string, params?: object, headers?: object): Promise<ResultData<T>> 
 put<T>(url: string, params?: object, headers?: object): Promise<ResultData<T>> {
   return this.service.put(url, params, headers);
 }
-delete<T>(url: string, params?: object, headers?: object): Promise<ResultData<T>> {
-  return this.service.delete(url, { params, headers });
+delete<T>(url: string, headers?: object): Promise<ResultData<T>> {
+  return this.service.delete(url, { headers });
 }
 }
 

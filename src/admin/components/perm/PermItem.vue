@@ -1,12 +1,19 @@
 <template>
     <ConfirmPopup></ConfirmPopup>
     <div class="rounded-sm mr-4">
-        <DataTable :value="permGroups" stripedRows paginator :rows="20" class="m-0 p-0">
+        <DataTable :value="permGroups" stripedRows :first="(menuFirst - 1) * 30" :total-records="menuTotal" paginator
+            :rows="20" @page="permPageEvent" class="m-0 p-0">
             <template #header>
                 <div class="flex justify-between items-center">
                     <span class="text-xl font-bold text-surface-700 dark:text-surface-0">权限类别管理</span>
                     <div class="flex items-center">
-                        <InputText placeholder="权限类别搜索" class="mr-4" />
+                        <IconField>
+                            <InputIcon @click="searchPermGroup()">
+                                <i class="pi pi-search" />
+                            </InputIcon>
+                            <InputText placeholder="权限类别名搜索" v-model="searchContext1" class="mr-4"
+                                @keyup.enter="searchPermGroup()" />
+                        </IconField>
                         <Button label="添加权限类别" icon="pi pi-plus"
                             class="p-button-sm p-button-outlined p-button-secondary"
                             @click="createPermGroupDialogVisible = true" />
@@ -14,7 +21,13 @@
                 </div>
             </template>
             <Column field="name" header="权限类别名"></Column>
-            <Column field="description" header="描述"></Column>
+            <Column field="description" header="描述">
+                <template #body="slotProps">
+                    <div class="truncate max-w-xs">
+                        {{ slotProps.data.description }}
+                    </div>
+                </template>
+            </Column>
             <Column field="createTime" header="创建时间"></Column>
             <Column field="updateTime" header="修改时间"></Column>
             <Column header="操作">
@@ -27,7 +40,8 @@
                         class="bg-secondary ml-2 text-xs p-1 rounded-full">
                         <i class="pi pi-pencil"></i>
                     </button>
-                    <button @click="deleteConfirm($event)" class="bg-secondary ml-2 text-xs p-1 rounded-full">
+                    <button @click="deleteMenuConfirm($event, slotProps.data)"
+                        class="bg-secondary ml-2 text-xs p-1 rounded-full">
                         <i class="pi pi-trash"></i>
                     </button>
                 </template>
@@ -39,16 +53,16 @@
             <div class="p-4 space-y-3">
                 <div class="grid grid-cols-3 gap-2">
                     <label class="font-semibold text-gray-700">权限类别名:</label>
-                    <span class="col-span-2 text-gray-900">{{ selectedPermGroup.name }}</span>
+                    <span class="col-span-2 text-gray-900">{{ selectedPermGroup?.name }}</span>
 
                     <label class="font-semibold text-gray-700">描述:</label>
-                    <span class="col-span-2 text-gray-900">{{ selectedPermGroup.description }}</span>
+                    <span class="col-span-2 text-gray-900">{{ selectedPermGroup?.description }}</span>
 
                     <label class="font-semibold text-gray-700">创建时间:</label>
-                    <span class="col-span-2 text-gray-600">{{ selectedPermGroup.createTime }}</span>
+                    <span class="col-span-2 text-gray-600">{{ selectedPermGroup?.createTime }}</span>
 
                     <label class="font-semibold text-gray-700">修改时间:</label>
-                    <span class="col-span-2 text-gray-600">{{ selectedPermGroup.updateTime }}</span>
+                    <span class="col-span-2 text-gray-600">{{ selectedPermGroup?.updateTime }}</span>
                 </div>
             </div>
             <template #footer>
@@ -74,7 +88,7 @@
             <template #footer>
                 <div class="flex justify-end space-x-2 p-2">
                     <Button label="取消" severity="secondary" @click="editPermGroupDialogVisible = false" />
-                    <Button label="保存" severity="primary" @click="saveConfirm($event)" />
+                    <Button label="保存" severity="primary" @click="saveMenuConfirm($event)" />
                 </div>
             </template>
         </Dialog>
@@ -95,25 +109,26 @@
             <template #footer>
                 <div class="flex justify-end space-x-2 p-2">
                     <Button label="取消" severity="secondary" @click="createPermGroupDialogVisible = false" />
-                    <Button label="创建" severity="primary" />
+                    <Button label="创建" severity="primary" @click="addPermMenuEvent()" />
                 </div>
             </template>
         </Dialog>
     </div>
-    <div class="rounded-sm mt-8 mr-4">
-        <DataTable :value="perms" stripedRows paginator :rows="20" class="m-0 p-0">
+    <div class="rounded-sm mt-5 mr-4">
+        <DataTable :value="perms" :first="(permFirst - 1) * 30" :total-records="permTotal" stripedRows paginator
+            :rows="20" @page="permGroupPageEvent" class="m-0 p-0">
             <template #header>
                 <div class="flex justify-between items-center">
                     <span class="text-xl font-bold text-surface-700 dark:text-surface-0">权限管理</span>
                     <div class="flex items-center">
-                        <MultiSelect v-model="selectedMenu" :options="menus" optionLabel="name" filter
-                            placeholder="选择类别" size="small" class="md:w-80 mr-4">
+                        <MultiSelect v-model="seletedMenu" :options="permGroups" optionLabel="name" option-value="id"
+                            filter placeholder="选择类别" @change="menuChange()" size="small" class="md:w-80 mr-4">
                         </MultiSelect>
                         <IconField>
-                            <InputIcon>
+                            <InputIcon @click="searchPerm()">
                                 <i class="pi pi-search" />
                             </InputIcon>
-                            <InputText placeholder="权限搜索" />
+                            <InputText placeholder="权限搜索" v-model="searchContext2" @keyup.enter="searchPerm()" />
                         </IconField>
                         <Button label="添加权限" icon="pi pi-plus" class="p-button-sm p-button-outlined p-button-secondary"
                             @click="createDialogVisible = true" />
@@ -121,8 +136,20 @@
                 </div>
             </template>
             <Column field="name" header="权限名"></Column>
+            <Column field="description" header="描述">
+                <template #body="slotProps">
+                    <div class="truncate max-w-xs">
+                        {{ slotProps.data.description }}
+                    </div>
+                </template>
+            </Column>
             <Column field="perm" header="权限字符串"></Column>
-            <Column field="type" header="状态"></Column>
+            <Column field="status" header="状态">
+                <template #body="slotProps">
+                    <span v-if="slotProps.data.status">启用</span>
+                    <span v-else class="text-red-500">禁用</span>
+                </template>
+            </Column>
             <Column field="createTime" header="创建时间"></Column>
             <Column field="updateTime" header="修改时间"></Column>
             <Column header="操作">
@@ -133,7 +160,8 @@
                     <button @click="showEditDialog(slotProps.data)" class="bg-secondary ml-2 text-xs p-1 rounded-full">
                         <i class="pi pi-pencil"></i>
                     </button>
-                    <button @click="deleteConfirm($event)" class="bg-secondary ml-2 text-xs p-1 rounded-full">
+                    <button @click="deleteConfirm($event, slotProps.data)"
+                        class="bg-secondary ml-2 text-xs p-1 rounded-full">
                         <i class="pi pi-trash"></i>
                     </button>
                 </template>
@@ -144,22 +172,22 @@
             <div class="p-4 space-y-3">
                 <div class="grid grid-cols-3 gap-2">
                     <label class="font-semibold text-gray-700">权限名:</label>
-                    <span class="col-span-2 text-gray-900">{{ selectedPerm.name }}</span>
+                    <span class="col-span-2 text-gray-900">{{ selectedPerm?.name }}</span>
 
                     <label class="font-semibold text-gray-700">权限串:</label>
-                    <span class="col-span-2 text-gray-900">{{ selectedPerm.perm }}</span>
+                    <span class="col-span-2 text-gray-900">{{ selectedPerm?.perm }}</span>
 
                     <label class="font-semibold text-gray-700">状态:</label>
-                    <span class="col-span-2 text-gray-900">{{ selectedPerm.type }}</span>
+                    <span class="col-span-2 text-gray-900">{{ selectedPerm?.type }}</span>
 
                     <label class="font-semibold text-gray-700">描述:</label>
-                    <span class="col-span-2 text-gray-900">{{ selectedPerm.description }}</span>
+                    <span class="col-span-2 text-gray-900">{{ selectedPerm?.description }}</span>
 
                     <label class="font-semibold text-gray-700">创建时间:</label>
-                    <span class="col-span-2 text-gray-600">{{ selectedPerm.createTime }}</span>
+                    <span class="col-span-2 text-gray-600">{{ selectedPerm?.createTime }}</span>
 
                     <label class="font-semibold text-gray-700">修改时间:</label>
-                    <span class="col-span-2 text-gray-600">{{ selectedPerm.updateTime }}</span>
+                    <span class="col-span-2 text-gray-600">{{ selectedPerm?.updateTime }}</span>
                 </div>
             </div>
 
@@ -185,7 +213,7 @@
 
                 <div class="flex items-center space-x-2">
                     <label class="font-semibold w-24">状态:</label>
-                    <Dropdown v-model="selectedPerm.type" :options="statusOptions" optionLabel="label" class="w-full" />
+                    <Dropdown v-model="selectedStatus" :options="statusOptions" optionLabel="label" class="w-full" />
                 </div>
 
                 <div class="flex items-center space-x-2">
@@ -195,12 +223,12 @@
 
                 <div class="flex items-center space-x-2">
                     <label class="font-semibold w-24">创建时间:</label>
-                    <span class="text-gray-600">{{ selectedPerm.createTime }}</span>
+                    <span class="text-gray-600">{{ selectedPerm?.createTime }}</span>
                 </div>
 
                 <div class="flex items-center space-x-2">
                     <label class="font-semibold w-24">修改时间:</label>
-                    <span class="text-gray-600">{{ selectedPerm.updateTime }}</span>
+                    <span class="text-gray-600">{{ selectedPerm?.updateTime }}</span>
                 </div>
             </div>
 
@@ -216,29 +244,34 @@
             <div class="p-4 space-y-4">
                 <div class="flex items-center space-x-2">
                     <label class="font-semibold w-24">权限名:</label>
-                    <InputText v-model="newPerm.name" class="w-full" />
+                    <InputText v-model="newPermData.name" class="w-full" />
                 </div>
 
                 <div class="flex items-center space-x-2">
                     <label class="font-semibold w-24">权限串:</label>
-                    <InputText v-model="newPerm.perm" class="w-full" />
+                    <InputText v-model="newPermData.perm" class="w-full" />
                 </div>
 
                 <div class="flex items-center space-x-2">
+                    <label class="font-semibold w-24">隶属菜单:</label>
+                    <Select v-model="newPermData.parentId" :options="permGroups" option-label="name" option-value="id"
+                        placeholder="请选择隶属菜单" class="w-full md:w-56" />
+                </div>
+                <div class="flex items-center space-x-2">
                     <label class="font-semibold w-24">状态:</label>
-                    <Dropdown v-model="newPerm.type" :options="statusOptions" optionLabel="label" class="w-full" />
+                    <Dropdown v-model="selectedStatus" :options="statusOptions" optionLabel="label" class="w-full" />
                 </div>
 
                 <div class="flex items-center space-x-2">
                     <label class="font-semibold w-24">描述:</label>
-                    <InputText v-model="newPerm.description" class="w-full" />
+                    <InputText v-model="newPermData.description" class="w-full" />
                 </div>
             </div>
 
             <template #footer>
                 <div class="flex justify-end space-x-2 p-2">
                     <Button label="取消" severity="secondary" @click="createDialogVisible = false" />
-                    <Button label="创建" severity="primary" />
+                    <Button label="创建" severity="primary" @click="addPermEvent()" />
                 </div>
             </template>
         </Dialog>
@@ -246,8 +279,14 @@
 
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import { useConfirm } from "primevue/useconfirm";
+import { useRouter, useRoute } from 'vue-router';
+import { getPermCount, getPerm, getPerms, updatePerm, deletePerm, addPerm, type PermSpace } from '@/admin/api/permAPI'
+import globalMessage from '@/common/utils/toast';
+
+const router = useRouter();
+const route = useRoute();
 const confirm = useConfirm();
 const viewDialogVisible = ref(false);
 const editDialogVisible = ref(false);
@@ -255,158 +294,203 @@ const createDialogVisible = ref(false);
 const viewPermGroupDialogVisible = ref(false);
 const editPermGroupDialogVisible = ref(false);
 const createPermGroupDialogVisible = ref(false);
+
+const parentURL = ref([parseInt(route.query.permPage as string || '0')]);
+const permFirst = ref(parseInt(route.query.permPage as string || '1'));
+const permTotal = ref(0);
+const menuFirst = ref(parseInt(route.query.menuPage as string || '1'));
+const menuTotal = ref(0);
+
 const statusOptions = ref([
     { label: '启用', value: 1 },
     { label: '禁用', value: 0 }
 ]);
-interface Perm {
-    name: string;
-    perm: string;
-    type: string;
-    description: string;
-    createTime: string;
-    updateTime: string;
-}
-interface PermGroup {
-    name: string;
-    description: string;
-    createTime: string;
-    updateTime: string;
-}
-const newPerm = ref<Perm>({
+const newPermData = reactive<PermSpace.newPermObject>({
     name: '',
     perm: '',
+    type: 'API',
+    status: true,
+    description: '', // 可选字段提供默认值
+    parentId: 0, // 可选字段提供默认值
+});
+const newPermGroup = reactive<PermSpace.newPermObject>({
+    name: '',
+    perm: '',
+    type: 'MENU',
+    status: true,
+    description: '',
+    parentId: 0,
+});
+const searchContext1 = ref('');
+const searchContext2 = ref('');
+const perms = ref<PermSpace.PermObject[]>([]);
+const permGroups = ref<PermSpace.PermObject[]>([]);
+const selectedStatus = ref(statusOptions.value[0])
+const seletedMenu = ref<number[]>([]);
+const selectedPerm = reactive<PermSpace.PermObject>({
+    id: 0,
+    name: '',
+    description: '',
+    perm: '',
     type: '',
-    description: '',
-    createTime: '',
-    updateTime: '',
+    parentId: 0,
+    status: false,
+    createTime: new Date(),
+    updateTime: new Date(),
 });
-const newPermGroup = ref<PermGroup>({
+
+const selectedPermGroup = reactive<PermSpace.PermObject>({
+    id: 0,
     name: '',
     description: '',
-    createTime: '',
-    updateTime: '',
+    perm: '',
+    type: '',
+    parentId: 0,
+    status: false,
+    createTime: new Date(),
+    updateTime: new Date(),
 });
 
-const perms = ref([
-    {
-        name: '查看用户',
-        perm: 'user:view',
-        type: '启用',
-        createTime: '2021-10-01',
-        updateTime: '2021-10-01',
-    },
-    {
-        name: '添加用户',
-        perm: 'user:add',
-        type: '启用',
-        createTime: '2021-10-01',
-        updateTime: '2021-10-01',
-    },
-    {
-        name: '删除用户',
-        perm: 'user:delete',
-        type: '启用',
-        createTime: '2021-10-01',
-        updateTime: '2021-10-01',
-    },
-    {
-        name: '修改用户',
-        perm: 'user:update',
-        type: '启用',
-        createTime: '2021-10-01',
-        updateTime: '2021-10-01',
-    },
-    {
-        name: '查看角色',
-        perm: 'role:view',
-        type: '启用',
-        createTime: '2021-10-01',
-        updateTime: '2021-10-01',
-    },
-    {
-        name: '添加角色',
-        perm: 'role:add',
-        type: '启用',
-        createTime: '2021-10-01',
-        updateTime: '2021-10-01',
-    },
-    {
-        name: '删除角色',
-        perm: 'role:delete',
-        type: '启用',
-        createTime: '2021-10-01',
-        updateTime: '2021-10-01',
-    },
-    {
-        name: '修改角色',
-        perm: 'role:update',
-        type: '启用',
-        createTime: '2021-10-01',
-        updateTime: '2021-10-01',
-    },
-]);
-const permGroups = ref([
-    {
-        name: '管理员',
-        description: '系统管理员',
-        createTime: '2021-10-01',
-        updateTime: '2021-10-01',
-    },
-    {
-        name: '教师',
-        description: '教师角色',
-        createTime: '2021-10-01',
-        updateTime: '2021-10-01',
-    },
-    {
-        name: '学生',
-        description: '学生角色',
-        createTime: '2021-10-01',
-        updateTime: '2021-10-01',
-    },
-]);
-const selectedMenu = ref(0);
-const menus = ref([
-    { name: 'New York', code: 0 },
-    { name: 'Rome', code: 1 },
-    { name: 'London', code: 2 },
-    { name: 'Istanbul', code: 3 },
-    { name: 'Paris', code: 4 }
-]);
-
-const selectedPerm = ref<Perm>(
-    {
-        name: '',
-        perm: '',
-        type: '',
-        description: '',
-        createTime: '',
-        updateTime: '',
+function menuChange() {
+    parentURL.value = [...seletedMenu.value];
+    permFirst.value = 1;
+    if (parentURL.value.length === 0) {
+        perms.value = [];
+    } else {
+        loadPerms();
+        loadPermCount();
     }
-);
-const selectedPermGroup = ref({
-    name: '',
-    description: '',
-    createTime: '',
-    updateTime: '',
+}
+onMounted(() => {
+    loadPerms();
+    loadPermMenus();
+    loadPermCount();
+    loadMenuCount();
 });
+function permPageEvent(event: any) {
+    permFirst.value = event.page + 1;
+    router.push({ query: { permPage: event.page + 1 } });
+    loadPerms();
+}
+function permGroupPageEvent(event: any) {
+    menuFirst.value = event.page + 1;
+    router.push({ query: { menuPage: event.page + 1 } });
+    loadPermMenus();
+}
+async function searchPerm() {
+    // search perm
+    const res = await loadSearchPerm(searchContext2.value, "NAME");
+    perms.value = [];
+    if (res) {
+        perms.value = res;
+    } else {
+        globalMessage.error("未找到权限", "请检查输入");
+    }
+}
+async function searchPermGroup() {
+    // search perm group
+    const res = await loadSearchPerm(searchContext1.value, "NAME");
+    permGroups.value = [];
+    if (res) {
+        permGroups.value = res;
+    } else {
+        globalMessage.error("未找到权限类别", "请检查输入");
+    }
+}
+async function loadSearchPerm(context: string, type: string): Promise<PermSpace.PermObject[]> {
+    // load single perm
+    const res = await getPerm(context, type);
+    return res.data as unknown as PermSpace.PermObject[];
+}
+async function loadPerms() {
+    // load perms
+    const res = await getPerms(permFirst.value, "API", parentURL.value);
+    perms.value = res.data as unknown as PermSpace.PermObject[];
+}
+async function loadPermCount() {
+    // load perm count
+    const res = await getPermCount("API", parentURL.value);
+    permTotal.value = res.data as number;
+}
+async function loadMenuCount() {
+    // load menus
+    const res = await getPermCount("MENU", [0]);
+    menuTotal.value = res.data as number;
+}
+async function loadPermMenus() {
+    // load perm groups
+    const res = await getPerms(menuFirst.value, "MENU", [0]);
+    permGroups.value = res.data as unknown as PermSpace.PermObject[];
+}
+async function addPermEvent() {
+    // add perm
+    newPermData.status = selectedStatus.value.value === 1;
+    const res = await addPerm(newPermData);
+    const newPerm = await loadSearchPerm(newPermData.perm, "PERM");
+    perms.value.push(newPerm[0]);
+    createDialogVisible.value = false;
+    globalMessage.success("添加成功", res.data as unknown as string);
+}
+async function updatePermEvent() {
+    // update perm
+    selectedPerm.status = selectedStatus.value.value === 1;
+    const res = await updatePerm(selectedPerm);
+    perms.value = perms.value.map((perm) => {
+        if (perm.id === selectedPerm.id) {
+            return selectedPerm;
+        }
+        return perm;
+    });
+    selectedPerm.status = selectedStatus.value.value === 1;
+    globalMessage.success("更新成功", res.data as unknown as string);
+}
+async function deletePermEvent(id: number) {
+    // delete perm
+    const res = await deletePerm(id);
+    perms.value = perms.value.filter((perm) => perm.id !== id);
+    globalMessage.success("删除成功", res.data as unknown as string);
+}
+async function addPermMenuEvent() {
+    // add perm
+    const res = await addPerm(newPermGroup);
+    const newPerm = await loadSearchPerm(newPermGroup.name, "NAME");
+    permGroups.value.push(newPerm[0]);
+    createPermGroupDialogVisible.value = false
+    globalMessage.success("添加成功", res.data as unknown as string);
+}
+async function updatePermMenuEvent() {
+    // update perm
+    const res = await updatePerm(selectedPermGroup);
+    permGroups.value = permGroups.value.map((perm) => {
+        if (perm.id === selectedPermGroup.id) {
+            return selectedPermGroup;
+        }
+        return perm;
+    });
+    globalMessage.success("更新成功", res.data as unknown as string);
+}
+async function deletePermMenuEvent(id: number) {
+    // delete perm
+    const res = await deletePerm(id);
+    permGroups.value = permGroups.value.filter((perm) => perm.id !== id);
+    globalMessage.success("删除成功", res.data as unknown as string);
+}
 
-function showViewDialog(perm: Perm) {
-    selectedPerm.value = perm;
+function showViewDialog(perm: PermSpace.PermObject) {
+    Object.assign(selectedPerm, perm); // 浅拷贝
     viewDialogVisible.value = true;
 }
 
-function showEditDialog(perm: Perm) {
-    selectedPerm.value = perm;
+function showEditDialog(perm: PermSpace.PermObject) {
+    Object.assign(selectedPerm, JSON.parse(JSON.stringify(perm))); // 深拷贝
     editDialogVisible.value = true;
 }
-function showViewPermGroupDialog(permGroup: PermGroup) {
-    selectedPermGroup.value = permGroup;
+function showViewPermGroupDialog(permGroup: PermSpace.PermObject) {
+    Object.assign(selectedPermGroup, JSON.parse(JSON.stringify(permGroup))); // 深拷贝
     viewPermGroupDialogVisible.value = true;
 }
-function showEditPermGroupDialog(permGroup: PermGroup) {
-    selectedPermGroup.value = permGroup;
+function showEditPermGroupDialog(permGroup: PermSpace.PermObject) {
+    Object.assign(selectedPermGroup, JSON.parse(JSON.stringify(permGroup))); // 深拷贝
     editPermGroupDialogVisible.value = true;
 }
 const saveConfirm = (event: any) => {
@@ -426,6 +510,7 @@ const saveConfirm = (event: any) => {
         accept: () => {
             //API call to save
             editDialogVisible.value = false;
+            updatePermEvent();
         },
         reject: () => {
             //reject action
@@ -433,7 +518,32 @@ const saveConfirm = (event: any) => {
         }
     });
 };
-const deleteConfirm = (event: any) => {
+const saveMenuConfirm = (event: any) => {
+    confirm.require({
+        target: event.currentTarget,
+        message: '确定修改？',
+        icon: 'pi pi-exclamation-triangle',
+        rejectProps: {
+            label: '取消',
+            severity: 'secondary',
+            outlined: true
+        },
+        acceptProps: {
+            label: '保存',
+            severity: 'danger'
+        },
+        accept: () => {
+            //API call to save
+            editPermGroupDialogVisible.value = false;
+            updatePermMenuEvent();
+        },
+        reject: () => {
+            //reject action
+            editPermGroupDialogVisible.value = false;
+        }
+    });
+};
+const deleteConfirm = (event: any, slotProps: any) => {
     confirm.require({
         target: event.currentTarget,
         message: '确定删除？',
@@ -449,6 +559,30 @@ const deleteConfirm = (event: any) => {
         },
         accept: () => {
             //API call to save
+            deletePermEvent(slotProps.id);
+        },
+        reject: () => {
+            //reject action
+        }
+    });
+};
+const deleteMenuConfirm = (event: any, slotProps: any) => {
+    confirm.require({
+        target: event.currentTarget,
+        message: '确定删除？',
+        icon: 'pi pi-exclamation-triangle',
+        rejectProps: {
+            label: '取消',
+            severity: 'secondary',
+            outlined: true
+        },
+        acceptProps: {
+            label: '删除',
+            severity: 'danger'
+        },
+        accept: () => {
+            //API call to save
+            deletePermMenuEvent(slotProps.id);
         },
         reject: () => {
             //reject action

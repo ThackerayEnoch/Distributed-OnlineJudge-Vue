@@ -90,11 +90,11 @@ export default defineComponent({
                     {
                         label: '权限管理',
                         icon: 'pi pi-lock',
-                        to: '/admin/permissions',
+                        to: '/admin/perm',
                         items: [
-                            { label: '用户角色分配', icon: 'pi pi-user', to: '/admin/permissions/users' },
-                            { label: '角色管理', icon: 'pi pi-users', to: '/admin/permissions/roles' },
-                            { label: '权限项管理', icon: 'pi pi-lock', to: '/admin/permissions/permissions' }
+                            { label: '用户角色分配', icon: 'pi pi-user', to: '/admin/perm/users' },
+                            { label: '角色管理', icon: 'pi pi-users', to: '/admin/perm/roles' },
+                            { label: '权限项管理', icon: 'pi pi-lock', to: '/admin/perm/permissions' }
                         ]
                     },
                     { label: "系统配置", icon: "pi pi-cog", to: "/admin/config" },
