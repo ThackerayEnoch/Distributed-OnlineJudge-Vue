@@ -26,3 +26,6 @@ export const searchHomeworks = (currentPage:number, type:string, homeworkName:st
 export const searchHomeworksCount = ( type:string, homeworkName:string ) => {
     return request.get<number>('/api/c/homeworks/search/count',{ type, homeworkName })
 }
+export const searchHomeworkById = (homeworkId:number) => {
+    return request.get<Homework.HomeworkJSON>('/api/c/homeworks/search/id',{homeworkId})
+}

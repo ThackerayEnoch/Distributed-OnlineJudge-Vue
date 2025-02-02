@@ -24,7 +24,7 @@
                         <span class="flex-1 font-bold">标题</span>
                     </template>
                     <template #body="slotProps">
-                        <router-link :to="`/status/${slotProps.data.id}`"
+                        <router-link :to="{ name: 'HomeworkDetail', params: { hid: slotProps.data.id } }"
                             class="text-blue-400 hover:text-blue-600 truncate">
                             {{ slotProps.data.title }}
                         </router-link>
@@ -215,7 +215,7 @@ function getStatusClass(startTime: string, endTime: string) {
 }
 function onPage(event: any) {
     first.value = event.first;
-    router.push({ query: { currentPage: event.page + 1 } });
+    console.log(first.value)
     // 检测逻辑 根据当前搜索内容插对应页码
     if(homeworkName.value || selectedHomeworkType.value){
         loadSearchedData();
@@ -231,12 +231,18 @@ function getProgressBarColor(accuracy: number) {
     return 'progress-80';
 };
 onMounted(() => {
-    loadData();
-    loadCount();    
+    if (homeworkName.value || selectedHomeworkType.value) {
+        loadSearchedData();
+        loadSearchedCount();
+    } else {
+        loadData();
+        loadCount();
+    }    
 });
 async function loadData() {
     const result = await getHomeworkPage(first.value);
     homeworks.value = result.data as unknown as Homework.HomeworkJSON[];
+    router.push({ query: { currentPage: (first.value / 30 + 1).toString() } });
 }
 async function loadCount() {
     const result = await getHomeworkCount();
@@ -245,6 +251,19 @@ async function loadCount() {
 async function loadSearchedData() {
     const result = await searchHomeworks(first.value, selectedHomeworkType.value ,homeworkName.value);
     homeworks.value = result.data as unknown as Homework.HomeworkJSON[];
+    const currentQuery:any = {currentPage: (first.value / 30 + 1).toString()};
+    // 更新查询参数
+    if (selectedHomeworkType.value) {
+    currentQuery['type'] = selectedHomeworkType.value;
+    } else {
+        delete currentQuery['type'];
+    }
+    if (homeworkName.value) {
+        currentQuery['name'] = homeworkName.value;
+    } else {
+        delete currentQuery['name'];
+    }
+    router.push({ query: currentQuery });
 }
 async function loadSearchedCount() {
     const result = await searchHomeworksCount(selectedHomeworkType.value ,homeworkName.value);
