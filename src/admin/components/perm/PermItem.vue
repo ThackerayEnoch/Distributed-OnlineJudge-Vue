@@ -1,8 +1,8 @@
 <template>
     <ConfirmPopup></ConfirmPopup>
     <div class="rounded-sm mr-4">
-        <DataTable :value="permGroups" stripedRows :first="(menuFirst - 1) * 30" :total-records="menuTotal" paginator
-            :rows="20" @page="permPageEvent" class="m-0 p-0">
+        <DataTable :value="permGroups" stripedRows :first="menuFirst" :totalRecords="menuTotal" paginator :rows="5"
+            class="m-0 p-0">
             <template #header>
                 <div class="flex justify-between items-center">
                     <span class="text-xl font-bold text-surface-700 dark:text-surface-0">权限类别管理</span>
@@ -115,8 +115,8 @@
         </Dialog>
     </div>
     <div class="rounded-sm mt-5 mr-4">
-        <DataTable :value="perms" :first="(permFirst - 1) * 30" :total-records="permTotal" stripedRows paginator
-            :rows="20" @page="permGroupPageEvent" class="m-0 p-0">
+        <DataTable :value="perms" :totalRecords="permTotal" stripedRows paginator :rows="10" sortField="perm"
+            :sortOrder="1" class="m-0 p-0">
             <template #header>
                 <div class="flex justify-between items-center">
                     <span class="text-xl font-bold text-surface-700 dark:text-surface-0">权限管理</span>
@@ -143,7 +143,7 @@
                     </div>
                 </template>
             </Column>
-            <Column field="perm" header="权限字符串"></Column>
+            <Column field="perm" sortable header="权限字符串"></Column>
             <Column field="status" header="状态">
                 <template #body="slotProps">
                     <span v-if="slotProps.data.status">启用</span>
@@ -281,12 +281,8 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue';
 import { useConfirm } from "primevue/useconfirm";
-import { useRouter, useRoute } from 'vue-router';
 import { getPermCount, getPerm, getPerms, updatePerm, deletePerm, addPerm, type PermSpace } from '@/admin/api/permAPI'
 import globalMessage from '@/common/utils/toast';
-
-const router = useRouter();
-const route = useRoute();
 const confirm = useConfirm();
 const viewDialogVisible = ref(false);
 const editDialogVisible = ref(false);
@@ -295,10 +291,9 @@ const viewPermGroupDialogVisible = ref(false);
 const editPermGroupDialogVisible = ref(false);
 const createPermGroupDialogVisible = ref(false);
 
-const parentURL = ref([parseInt(route.query.permPage as string || '0')]);
-const permFirst = ref(parseInt(route.query.permPage as string || '1'));
+const parentURL = ref([0]);
 const permTotal = ref(0);
-const menuFirst = ref(parseInt(route.query.menuPage as string || '1'));
+const menuFirst = ref(0);
 const menuTotal = ref(0);
 
 const statusOptions = ref([
@@ -353,7 +348,6 @@ const selectedPermGroup = reactive<PermSpace.PermObject>({
 
 function menuChange() {
     parentURL.value = [...seletedMenu.value];
-    permFirst.value = 1;
     if (parentURL.value.length === 0) {
         perms.value = [];
     } else {
@@ -367,16 +361,6 @@ onMounted(() => {
     loadPermCount();
     loadMenuCount();
 });
-function permPageEvent(event: any) {
-    permFirst.value = event.page + 1;
-    router.push({ query: { permPage: event.page + 1 } });
-    loadPerms();
-}
-function permGroupPageEvent(event: any) {
-    menuFirst.value = event.page + 1;
-    router.push({ query: { menuPage: event.page + 1 } });
-    loadPermMenus();
-}
 async function searchPerm() {
     // search perm
     const res = await loadSearchPerm(searchContext2.value, "NAME");
@@ -404,7 +388,7 @@ async function loadSearchPerm(context: string, type: string): Promise<PermSpace.
 }
 async function loadPerms() {
     // load perms
-    const res = await getPerms(permFirst.value, "API", parentURL.value);
+    const res = await getPerms("API", parentURL.value);
     perms.value = res.data as unknown as PermSpace.PermObject[];
 }
 async function loadPermCount() {
@@ -419,7 +403,7 @@ async function loadMenuCount() {
 }
 async function loadPermMenus() {
     // load perm groups
-    const res = await getPerms(menuFirst.value, "MENU", [0]);
+    const res = await getPerms("MENU", [0]);
     permGroups.value = res.data as unknown as PermSpace.PermObject[];
 }
 async function addPermEvent() {

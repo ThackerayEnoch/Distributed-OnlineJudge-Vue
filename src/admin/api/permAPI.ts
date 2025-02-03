@@ -1,5 +1,4 @@
 import request from "@/common/utils/api";
-import { number } from "yup";
 export namespace PermSpace{
     export interface PermObject {
         id: number;
@@ -21,9 +20,8 @@ export namespace PermSpace{
         parentId?: number;
     }
 }
-export const getPerms = (currentPage:number,type:string,parentIds:number[]) => {
+export const getPerms = (type:string,parentIds:number[]) => {
     return request.get<PermSpace.PermObject>('/api/u/perms',{
-        currentPage,
         type,
         parentId: parentIds.join(',')
     })
