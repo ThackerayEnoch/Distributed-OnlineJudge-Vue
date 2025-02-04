@@ -44,7 +44,12 @@
             </template>
             <Column field="username" header="用户名"></Column>
             <Column field="nickname" header="昵称"></Column>
-            <Column field="status" header="状态"></Column>
+            <Column field="status" header="状态">
+                <template #body="slotProps">
+                    <span v-if="!slotProps.data.status" class="text-green-500">正常</span>
+                    <span v-else class="text-red-500">禁用</span>
+                </template>
+            </Column>
             <Column field="createTime" header="创建时间"></Column>
             <Column field="updateTime" header="更新时间"></Column>
             <Column header="操作">

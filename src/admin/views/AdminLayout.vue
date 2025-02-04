@@ -23,6 +23,27 @@
 <script lang="ts" setup>
 import AdminAside from '@/admin/components/AdminAside.vue';
 import BreadcrumbNav from '@/admin/components/BreadcrumbNav.vue';
+
+import { onBeforeMount } from 'vue';
+import router from '@/common/utils/router';
+import { useUserStore } from '@/common/utils/store';
+import { Role } from '@/common/constant/Role';
+const counterStore = useUserStore();
+
+onBeforeMount(() => {
+    const user = counterStore.currentUser;
+    console.log(user);
+    if (user.username === '') {
+        console.log("username is empty");
+        router.push('/auth/login');
+    } else {
+        console.log("username is not empty");
+        if (user.roleId === null || user.roleId > Role.ADMIN) {
+
+            router.push('/forbidden');
+        }
+    }
+})
 </script>
 
 <style scoped></style>
