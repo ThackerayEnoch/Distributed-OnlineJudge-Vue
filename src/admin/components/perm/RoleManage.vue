@@ -1,5 +1,4 @@
 <template>
-    <ConfirmPopup></ConfirmPopup>
     <div class="rounded-sm mr-4">
         <DataTable v-model:selection="selectedRole" selectionMode="single" :metaKeySelection="false" dataKey="id"
             :value="roles" @rowSelect="onRowSelect" @rowUnselect="unRowSelect" stripedRows scrollable scrollHeight="30%"
