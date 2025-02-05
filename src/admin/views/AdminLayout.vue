@@ -1,26 +1,49 @@
 <template>
     <div class="flex h-screen">
-        <!-- 侧边栏 -->
-        <aside class="w-[15%]">
+        <!-- 侧边栏固定 -->
+        <aside class="w-[15%] fixed h-screen left-0 top-0 bg-gray-800 text-white">
             <AdminAside />
         </aside>
-        <!-- 右侧内容 -->
-        <div class="flex flex-col flex-1 gap-4">
-            <!-- 二级导航栏 -->
-            <header class="h-auto ml-1 rounded-none">
-                <!-- 二级导航内容 -->
+        <!-- 右侧内容区域 -->
+        <div class="flex flex-col flex-1 ml-[15%] h-screen overflow-hidden">
+            <!-- 二级导航栏固定 -->
+            <header class="h-auto ml-1 rounded-none sticky top-0 z-10">
                 <BreadcrumbNav />
             </header>
-            <main class="mt-2 ml-3">
+            <!-- 主内容区域，滚动只作用于这里 -->
+            <main class="mt-2 ml-3 flex-1 overflow-y-auto">
                 <router-view name="admin"></router-view>
             </main>
         </div>
     </div>
 </template>
 
+
+
 <script lang="ts" setup>
 import AdminAside from '@/admin/components/AdminAside.vue';
 import BreadcrumbNav from '@/admin/components/BreadcrumbNav.vue';
+
+import { onBeforeMount } from 'vue';
+import router from '@/common/utils/router';
+import { useUserStore } from '@/common/utils/store';
+import { Role } from '@/common/constant/Role';
+const counterStore = useUserStore();
+
+onBeforeMount(() => {
+    const user = counterStore.currentUser;
+    console.log(user);
+    if (user.username === '') {
+        console.log("username is empty");
+        router.push('/auth/login');
+    } else {
+        console.log("username is not empty");
+        if (user.roleId === null || user.roleId > Role.ADMIN) {
+
+            router.push('/forbidden');
+        }
+    }
+})
 </script>
 
 <style scoped></style>

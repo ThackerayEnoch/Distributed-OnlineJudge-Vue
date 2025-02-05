@@ -47,7 +47,9 @@ import { useForm, useField } from 'vee-validate';
 import { ResponseCode } from '@/common/constant/ResponseCode';
 import globalMessage from '@/common/utils/toast';
 import router from '@/common/utils/router';
-
+import { useUserStore } from '@/common/utils/store';
+import { User } from '@/common/entity/user'
+const counterStore = useUserStore();
 const isRememberMe = ref(false);
 
 // 定义表单验证规则
@@ -77,6 +79,8 @@ const onSubmit = handleSubmit(async values => {
         const token = result.data?.token;
         if (token) {
             localStorage.setItem('token', token);
+            const user = new User(result.data?.id, result.data?.username, result.data?.nickname, result.data?.roleId);
+            counterStore.setUser(user);
             globalMessage.success('成功', '登录成功');
             router.push('/');
         } else {
