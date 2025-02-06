@@ -57,6 +57,23 @@ export default [
               }
             }
           ]
+        },
+        {
+          path:'/admin/problems',
+          name:'ProblemAdmin',
+          children:[
+            {
+              path:'/admin/problems',
+              redirect: '/admin/problems/list'
+            },
+            {
+              path:'/admin/problems/list',
+              name:'ProblemList',
+              components:{
+                admin:()=>import('@/admin/components/problem/ProblemList.vue')
+              }
+            }
+          ]
         }
       ]
     }

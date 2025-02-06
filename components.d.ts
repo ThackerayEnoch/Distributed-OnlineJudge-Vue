@@ -7,13 +7,10 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    Avatar: typeof import('primevue/avatar')['default']
     Breadcrumb: typeof import('primevue/breadcrumb')['default']
     Button: typeof import('primevue/button')['default']
-    Card: typeof import('primevue/card')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
     Column: typeof import('primevue/column')['default']
-    ConfirmPopup: typeof import('primevue/confirmpopup')['default']
     DataTable: typeof import('primevue/datatable')['default']
     Dialog: typeof import('primevue/dialog')['default']
     Dropdown: typeof import('primevue/dropdown')['default']
@@ -24,23 +21,18 @@ declare module 'vue' {
     InputIcon: typeof import('primevue/inputicon')['default']
     InputText: typeof import('primevue/inputtext')['default']
     MegaMenu: typeof import('primevue/megamenu')['default']
-    Menu: typeof import('primevue/menu')['default']
     MultiSelect: typeof import('primevue/multiselect')['default']
     Password: typeof import('primevue/password')['default']
     ProgressBar: typeof import('primevue/progressbar')['default']
-    RadioButton: typeof import('primevue/radiobutton')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Select: typeof import('primevue/select')['default']
     SelectButton: typeof import('primevue/selectbutton')['default']
     Tag: typeof import('primevue/tag')['default']
-    Textarea: typeof import('primevue/textarea')['default']
     Toast: typeof import('primevue/toast')['default']
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
-    TreeTable: typeof import('primevue/treetable')['default']
   }
   export interface ComponentCustomProperties {
-    Ripple: typeof import('primevue/ripple')['default']
     StyleClass: typeof import('primevue/styleclass')['default']
   }
 }
