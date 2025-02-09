@@ -57,7 +57,8 @@
             <div class="mt-6 flex space-x-3 justify-start max-w-3xl">
                 <div class="flex-1 min-w-[200px]">
                     <label class="text-gray-500"> 权限</label>
-                    <Select suffix="ms" class="mt-2 w-full" />
+                    <Select suffix="ms" v-model="selectedAuth" :options="authOptions" optionLabel="label"
+                        optionValue="value" class="mt-2 w-full" />
                 </div>
                 <div class="flex-1 min-w-[200px]">
                     <label class="text-gray-500"> 类型</label>
@@ -251,22 +252,35 @@
                 <ToggleSwitch inputId="autoRemove" v-model="judgeCaseStatus" class="mt-4" />
             </div>
             <div>
-                <Button label="保存" icon="pi pi-check" class="w-full mt-4" />
+                <Button label="保存" @click="saveProblem" icon="pi pi-check" class="w-full mt-4" />
             </div>
         </Panel>
     </div>
     <!-- PrimeVue Dialog -->
-    <Dialog v-model:visible="dialogVisible" header="添加新文件" :modal="true">
-        <div class="p-4">
-            <InputText v-model="newTag" placeholder="输入文件名" class="w-full mb-3" />
+    <Dialog v-model:visible="dialogVisible" header="添加新文件-User" :modal="true">
+        <div class="p-4 flex flex-col gap-4">
+            <div>
+                <label class="pl-0 font-bold"><span class="text-red-500">*</span> 文件名</label>
+                <InputText v-model="newTag" placeholder="example.h" class="w-full mb-3" />
+            </div>
+            <div>
+                <label class="pl-0 font-bold"><span class="text-red-500">*</span> 代码 </label>
+                <Textarea v-model="newCode" rows="5" cols="30" class="w-full mb-3" />
+            </div>
             <Button label="确认添加" icon="pi pi-check" @click="addTag(userFiles)" class="w-full" />
         </div>
     </Dialog>
     <!-- PrimeVue Dialog -->
-    <Dialog v-model:visible="spjDialogVisible" header="添加新文件" :modal="true">
-        <div class="p-4">
-            <label class="pl-0 font-bold"><span class="text-red-500">*</span> 文件名</label>
-            <InputText v-model="newTag" placeholder="example.h" class="w-full mb-3 mt-1" />
+    <Dialog v-model:visible="spjDialogVisible" header="添加新文件-SPJ" :modal="true">
+        <div class="p-4 flex flex-col gap-4">
+            <div>
+                <label class="pl-0 font-bold"><span class="text-red-500">*</span> 文件名</label>
+                <InputText v-model="newTag" placeholder="example.h" class="w-full mb-3" />
+            </div>
+            <div>
+                <label class="pl-0 font-bold"><span class="text-red-500">*</span> 代码 </label>
+                <Textarea v-model="newCode" rows="5" cols="30" class="w-full mb-3" />
+            </div>
             <Button label="确认添加" icon="pi pi-check" @click="addTag(spjFiles)" class="w-full" />
         </div>
     </Dialog>
@@ -278,6 +292,7 @@ import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 
 import { createProblem, type ProblemSpace } from '@/admin/api/problemAPI'
+import globalMessage from '@/common/utils/toast';
 
 export default defineComponent({
     name: 'ProblemEdit',
@@ -315,6 +330,7 @@ export default defineComponent({
         const userFiles = ref<{ name: string; code: string }[]>([]);
         const spjFiles = ref<{ name: string; code: string }[]>([]);
         const newTag = ref("");
+        const newCode = ref("");
         const dialogVisible = ref(false);
         const spjDialogVisible = ref(false);
         const judgeMode = ref(0);
@@ -328,6 +344,11 @@ export default defineComponent({
             { label: '中等', value: 1 },
             { label: '困难', value: 2 }
         ];
+        const authOptions = [
+            { label: '公开', value: 1 },
+            { label: '隐藏', value: 0 }
+        ];
+        const selectedAuth = ref(0);
         const selectedDifficulty = ref(0);
         // 添加新 Tag
         const addTag = (files: { name: string; code: string }[]) => {
@@ -336,6 +357,7 @@ export default defineComponent({
             }
             newTag.value = "";
             dialogVisible.value = false;
+            spjDialogVisible.value = false;
         };
 
         // 删除 Tag
@@ -360,11 +382,69 @@ export default defineComponent({
         const toggleSample = (index: number) => {
             samples.value[index].collapsed = !samples.value[index].collapsed;
         };
-
+        async function saveProblem() {
+            let userFileDTO: ProblemSpace.AdminCreateProblemFileDTO[] = [];
+            let spjFileDTO: ProblemSpace.AdminCreateProblemFileDTO[] = [];
+            let sampleDTO: ProblemSpace.AdminCreateProblemSampleDTO[] = [];
+            userFiles.value.forEach(file => {
+                userFileDTO.push({
+                    name: file.name,
+                    code: file.code
+                })
+            })
+            spjFiles.value.forEach(file => {
+                spjFileDTO.push({
+                    name: file.name,
+                    code: file.code
+                })
+            })
+            samples.value.forEach(sample => {
+                sampleDTO.push({
+                    id: sample.id,
+                    input: sample.input,
+                    output: sample.output,
+                    score: 0,
+                    subtask: 0,
+                    collapsed: sample.collapsed
+                })
+            })
+            let problem: ProblemSpace.AdminCreateProblemDTO = {
+                displayId: displayId.value,
+                title: title.value,
+                timeLimit: timeLimit.value,
+                memoryLimit: memoryLimit.value,
+                stackLimit: stackLimit.value,
+                problemDesc: problemDesc.value,
+                inputDesc: inputDesc.value,
+                outputDesc: outputDesc.value,
+                hintDesc: hintDesc.value,
+                problemType: problemType.value,
+                share: share.value,
+                userJudgeFile: userJudgeFile.value,
+                spjJudgeFile: spjJudgeFile.value,
+                judgeMode: judgeMode.value,
+                acmJudgeCaseMode: acmJudgeCaseMode.value,
+                oiJudgeCaseMode: oiJudgeCaseMode.value,
+                removeBlank: removeBlank.value,
+                judgeCaseStatus: judgeCaseStatus.value,
+                selectedDifficulty: selectedDifficulty.value,
+                auth: selectedAuth.value,
+                selectedLanguages: selectedLanguages.value,
+                userFiles: userFileDTO,
+                spjFiles: spjFileDTO,
+                samples: sampleDTO
+            }
+            await createProblem(problem).then(res => {
+                globalMessage.success("题目创建", res.message)
+            }).catch(err => {
+                globalMessage.error("创建失败", err.message)
+            })
+        }
 
         return {
             displayId, difficulty, selectedDifficulty, title, timeLimit, memoryLimit, stackLimit, share, problemDesc, inputDesc, outputDesc, hintDesc, problemType, selectedLanguages, languageOptions, samples, addSample, removeSample,
-            toggleSample, userJudgeFile, spjJudgeFile, userFiles, spjFiles, newTag, spjDialogVisible, dialogVisible, addTag, removeTag, judgeMode, oiJudgeCaseMode, acmJudgeCaseMode, removeBlank, judgeCaseStatus
+            toggleSample, userJudgeFile, spjJudgeFile, userFiles, spjFiles, newTag, spjDialogVisible, dialogVisible, addTag, removeTag, judgeMode, oiJudgeCaseMode, acmJudgeCaseMode, removeBlank, judgeCaseStatus, saveProblem,
+            authOptions, selectedAuth, newCode
         }
     }
 })
