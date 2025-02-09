@@ -72,6 +72,13 @@ export default [
               components:{
                 admin:()=>import('@/admin/components/problem/ProblemList.vue')
               }
+            },
+            {
+              path:'/admin/problem/create',
+              name:'ProblemCreate',
+              components:{
+                admin:()=>import('@/admin/components/problem/ProblemCreate.vue')
+              }
             }
           ]
         }

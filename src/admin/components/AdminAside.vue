@@ -35,7 +35,7 @@ export default defineComponent({
                         to: '/admin/problems',
                         items: [
                             { label: '题目列表', icon: 'pi pi-list', to: '/admin/problems/list' },
-                            { label: '创建题目', icon: 'pi pi-plus', to: '/admin/problems/create' },
+                            { label: '创建题目', icon: 'pi pi-plus', to: '/admin/problem/create' },
                             { label: '题目标签', icon: 'pi pi-tags', to: '/admin/problems/tags' },
                             { label: '导入|导出题目', icon: 'pi pi-upload', to: '/admin/problems/import-export' }
                         ]
