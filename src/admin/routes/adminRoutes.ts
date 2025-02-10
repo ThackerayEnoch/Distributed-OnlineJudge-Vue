@@ -79,6 +79,14 @@ export default [
               components:{
                 admin:()=>import('@/admin/components/problem/ProblemCreate.vue')
               }
+            },
+            {
+              path:'/admin/problem/edit/:id',
+              name:'ProblemDetail',
+              components:{
+                admin:()=>import('@/admin/components/problem/ProblemEditView.vue')
+              },
+              props:true
             }
           ]
         }

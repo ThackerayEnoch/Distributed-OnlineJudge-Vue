@@ -52,6 +52,45 @@ export namespace ProblemSpace{
         name: string;
         code: string;
     }
+    export interface Problem{
+        id: number;
+        displayId: string;
+        judgeMode: string;
+        title: string;
+        type: number;
+        timeLimit: number;
+        memoryLimit: number;
+        stackLimit: number;
+        description: string;
+        input: string;
+        output: string;
+        inputExamples: string;
+        outputExamples: string;
+        source: number;
+        difficulty: number;
+        hint: string;
+        auth: number;
+        ioScore: number;
+        codeShare: boolean;
+        spjCode: string;
+        spjLanguage: string;
+        userExtraFile: string;
+        judgeExtraFile: string;
+        judgeCaseMode: string;
+        isRemoveEndBlank: boolean;
+        openCaseResult: boolean;
+        caseVersion: string;
+        isUploadCase: boolean;
+        modifiedUser: number;
+        isGroup: boolean;
+        gid: number;
+        isFileIo: boolean;
+        ioReadFileName: string;
+        ioWriteFileName: string;
+        createdUser: number;
+        createTime: Date;
+        updateTime: Date;
+    }
 }
 export const getAdminProblems = (offset:number) => {
     return request.get<ProblemSpace.ProblemVO[]>('/api/p/admin/problems',{offset})
@@ -64,4 +103,13 @@ export const updateAdminProblem = (id:number,status:number) => {
 }
 export const createProblem = (data:ProblemSpace.AdminCreateProblemDTO) => {
     return request.post<ProblemSpace.ProblemVO>('/api/p/admin/problem',data)
+}
+export const getProblem = (id:number) => {
+    return request.get<ProblemSpace.Problem>(`/api/p/admin/problem/${id}`,{})
+}
+export const getProblemLanguages = (id:number) => {
+    return request.get<number[]>(`/api/p/admin/problem/${id}/languages`,{})
+}
+export const updateProblem = (id:number,data:ProblemSpace.AdminCreateProblemDTO) => {
+    return request.put<ProblemSpace.ProblemVO>(`/api/p/admin/problem/${id}`,data)
 }

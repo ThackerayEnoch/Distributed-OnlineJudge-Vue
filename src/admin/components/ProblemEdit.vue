@@ -286,12 +286,12 @@
     </Dialog>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, onMounted, ref } from 'vue'
 import { languageOptions } from '@/common/constant/AllConstant'
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 
-import { createProblem, type ProblemSpace } from '@/admin/api/problemAPI'
+import { createProblem, getProblem, updateProblem, getProblemLanguages, type ProblemSpace } from '@/admin/api/problemAPI'
 import globalMessage from '@/common/utils/toast';
 
 export default defineComponent({
@@ -307,7 +307,7 @@ export default defineComponent({
             required: true
         }
     },
-    setup() {
+    setup(props) {
         const displayId = ref("");
         const title = ref("");
         const timeLimit = ref(1000);
@@ -319,7 +319,7 @@ export default defineComponent({
         const hintDesc = ref("");
         const problemType = ref(0);
         const share = ref(false);
-        const selectedLanguages = ref([]); // 绑定选中的值
+        const selectedLanguages = ref<number[]>([0, 1, 2]); // 绑定选中的值
         let sampleId = 0; // 用于生成唯一的样例id
         const samples = ref([
             // 示例数据
@@ -434,13 +434,111 @@ export default defineComponent({
                 spjFiles: spjFileDTO,
                 samples: sampleDTO
             }
-            await createProblem(problem).then(res => {
-                globalMessage.success("题目创建", res.message)
+            if (props.type === 'edit') {
+                if (!props.id) {
+                    globalMessage.error("编辑失败", "题目ID不存在")
+                    return
+                }
+                // 编辑题目
+                await updateProblem(props.id, problem).then(res => {
+                    globalMessage.success("题目更新", res.message)
+                }).catch(err => {
+                    globalMessage.error("更新失败", err.message)
+                })
+
+            } else {
+                // 创建题目
+                await createProblem(problem).then(res => {
+                    globalMessage.success("题目创建", res.message)
+                }).catch(err => {
+                    globalMessage.error("创建失败", err.message)
+                })
+            }
+
+        }
+        async function loadProblemLanguages() {
+            if (!props.id) {
+                return
+            }
+            // 获取题目支持的语言
+            await getProblemLanguages(props.id).then(res => {
+                selectedLanguages.value = res.data as unknown as number[]
             }).catch(err => {
-                globalMessage.error("创建失败", err.message)
+                globalMessage.error("获取语言失败", err.message)
             })
         }
+        async function getProblemById() {
+            if (!props.id) {
+                return
+            }
+            await getProblem(props.id).then(res => {
+                let data = res.data as ProblemSpace.Problem;
+                title.value = data.title;
+                displayId.value = data.displayId;
+                timeLimit.value = data.timeLimit;
+                memoryLimit.value = data.memoryLimit;
+                stackLimit.value = data.stackLimit;
+                problemDesc.value = data.description;
+                inputDesc.value = data.input;
+                outputDesc.value = data.output;
+                hintDesc.value = data.hint;
+                problemType.value = data.type;
+                share.value = data.codeShare;
+                selectedDifficulty.value = data.difficulty;
+                selectedAuth.value = data.auth;
+                if (data.userExtraFile !== null && data.userExtraFile !== "") {
+                    const userExtraFiles = JSON.parse(data.userExtraFile);
+                    userFiles.value = [];
+                    Object.entries(userExtraFiles).forEach(([name, code]) => {
+                        userFiles.value.push({ name, code: code as string });
+                    });
+                }
+                if (data.judgeExtraFile !== null && data.userExtraFile !== "") {
+                    const judgeExtraFiles = JSON.parse(data.judgeExtraFile);
+                    spjFiles.value = [];
+                    Object.entries(judgeExtraFiles).forEach(([name, code]) => {
+                        spjFiles.value.push({ name, code: code as string });
+                    });
+                }
+                const inputSamples = JSON.parse(data.inputExamples);
+                const outputSamples = JSON.parse(data.outputExamples);
+                samples.value = [];
+                Object.entries(inputSamples).forEach(([key, input]) => {
+                    samples.value.push({
+                        id: Number(key),
+                        input: input as string,
+                        output: "",
+                        collapsed: false
+                    });
+                });
 
+                Object.entries(outputSamples).forEach(([key, output]) => {
+                    let index = samples.value.findIndex(s => s.id === Number(key));
+                    if (index !== -1) {
+                        samples.value[index].output = output as string;
+                    }
+                });
+
+                userJudgeFile.value = data.userExtraFile !== null && data.userExtraFile !== "";
+                spjJudgeFile.value = data.judgeExtraFile !== null && data.userExtraFile !== "";
+                judgeMode.value = data.judgeMode === "default" ? 0 : data.judgeMode === "spj" ? 1 : 2;
+                if (data.type === 0) {
+                    acmJudgeCaseMode.value = data.judgeCaseMode === "default" ? 0 : 1;
+                } else {
+                    oiJudgeCaseMode.value = data.judgeCaseMode === "default" ? 0 : data.judgeCaseMode === "subtask_lowest" ? 1 : 2;
+                }
+                removeBlank.value = data.isRemoveEndBlank
+                judgeCaseStatus.value = data.openCaseResult
+            }).catch(err => {
+                globalMessage.error("获取题目失败", err.message)
+            })
+        }
+        onMounted(() => {
+            if (props.type === 'edit') {
+                getProblemById()
+                loadProblemLanguages()
+            }
+        })
         return {
             displayId, difficulty, selectedDifficulty, title, timeLimit, memoryLimit, stackLimit, share, problemDesc, inputDesc, outputDesc, hintDesc, problemType, selectedLanguages, languageOptions, samples, addSample, removeSample,
             toggleSample, userJudgeFile, spjJudgeFile, userFiles, spjFiles, newTag, spjDialogVisible, dialogVisible, addTag, removeTag, judgeMode, oiJudgeCaseMode, acmJudgeCaseMode, removeBlank, judgeCaseStatus, saveProblem,
