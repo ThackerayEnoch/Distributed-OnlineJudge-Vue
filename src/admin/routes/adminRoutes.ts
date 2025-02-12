@@ -87,6 +87,14 @@ export default [
                 admin:()=>import('@/admin/components/problem/ProblemEditView.vue')
               },
               props:true
+            },
+            {
+              path:'/admin/problem/testcases/:id',
+              name:'ProblemTestCase',
+              components:{
+                admin:()=> import('@/admin/components/problem/ProblemTestCase.vue')
+              },
+              props:true
             }
           ]
         }

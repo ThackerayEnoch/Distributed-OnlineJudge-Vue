@@ -8,9 +8,10 @@
             <!-- 操作栏 -->
             <div class="flex items-center space-x-5 p-4">
                 <!-- 按钮：创建 -->
-                <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded shadow-md">
+                <router-link to="/admin/problem/create"
+                    class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded shadow-md">
                     + 创建
-                </button>
+                </router-link>
                 <!-- 按钮：添加远程OJ题目 -->
                 <button class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded shadow-md">
                     + 添加远程OJ题目
@@ -28,7 +29,7 @@
         </div>
         <div class="border-b border-gray-300 dark:border-gray-700 p-0 m-0 md-4" />
         <div id="tableArea">
-            <DataTable :value="problems" size="large" :paginator="true" :rows="10" lazy :first="first"
+            <DataTable :value="problems" stripedRows size="large" :paginator="true" :rows="10" lazy :first="first"
                 :totalRecords="totalRecords" @page="onPage" tableClass="text-sm p-4">
                 <Column field="id" header="ID"></Column>
                 <Column field="displayId" header="展示ID"></Column>
@@ -49,21 +50,29 @@
                     </template>
                 </Column>
                 <Column header="操作">
-                    <template #body>
+                    <template #body="{ data }">
                         <div class="space-y-2">
                             <div class="flex space-x-2">
-                                <button
-                                    class="bg-blue-500 text-white p-2 rounded flex items-center justify-center w-14 h-9 hover:bg-blue-600">
+                                <router-link :to="`/admin/problem/edit/${data.id}`"
+                                    class="bg-blue-500 text-white p-2 rounded flex items-center justify-center w-14 h-9 hover:bg-blue-600"
+                                    v-tooltip.top="'编辑题目'">
                                     <i class="fas fa-edit"></i>
-                                </button>
-                                <button
-                                    class="bg-red-500 text-white p-2 rounded flex items-center justify-center w-14 h-9 hover:bg-red-600">
+                                </router-link>
+                                <router-link :to="`/admin/problem/testcases/${data.id}`"
+                                    class="bg-green-500 text-white p-2 rounded flex items-center justify-center w-14 h-9 hover:bg-green-600"
+                                    v-tooltip.top="'编辑测试点'">
+                                    <i class="fas fa-edit"></i>
+                                </router-link>
+                                <router-link :to="`/delete/${data.id}`"
+                                    class="bg-red-500 text-white p-2 rounded flex items-center justify-center w-14 h-9 hover:bg-red-600"
+                                    v-tooltip.top="'删除题目'">
                                     <i class="fas fa-trash"></i>
-                                </button>
+                                </router-link>
                             </div>
                         </div>
                     </template>
                 </Column>
+
 
             </DataTable>
         </div>
