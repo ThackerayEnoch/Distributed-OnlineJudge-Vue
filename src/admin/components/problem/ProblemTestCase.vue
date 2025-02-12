@@ -1,4 +1,5 @@
 <template>
+    <ConfirmPopup></ConfirmPopup>
     <DataTable :value="testcases" v-model:selection="selectedTestcase" selectionMode="multiple"
         :metaKeySelection="false" dataKey="id" stripedRows>
         <template #header>
@@ -20,7 +21,8 @@
                         class="p-button-sm p-button-secondary" />
                     <Button label="反选" @click="invertSelection" icon="pi pi-clone"
                         class="p-button-sm p-button-secondary" />
-                    <Button label="删除" icon="pi pi-trash" class="p-button-sm p-button-danger" />
+                    <Button label="删除" icon="pi pi-trash" class="p-button-sm p-button-danger"
+                        @click="deleteConfirm($event, selectedFiles, 'mult')" />
                     <Button label="刷新" @click="refrush" icon="pi pi-refresh" class="p-button-sm p-button-secondary" />
                 </div>
             </div>
@@ -53,7 +55,7 @@
                         </button>
                         <button
                             class="bg-red-500 text-white p-2 rounded flex items-center justify-center w-14 h-9 hover:bg-red-600"
-                            v-tooltip.top="'删除测试点'">
+                            v-tooltip.top="'删除测试点'" @click="deleteConfirm($event, slotProps.data.id, 'single')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -96,7 +98,7 @@
 
             <!-- 按钮 -->
             <div class="flex justify-end gap-4">
-                <Button label="保存" class="p-button-success" />
+                <Button label="保存" class="p-button-success" @click="submit" />
                 <Button label="取消" class="p-button-danger" @click="editDialog = false" />
             </div>
         </div>
@@ -186,10 +188,12 @@
 </template>
 <script setup lang="ts">
 import { defineProps, onMounted, ref } from 'vue'
-import { type TestCaseSpace, getTestcases, getTestcase, uploadTestcase } from '@/admin/api/testcase'
+import { type TestCaseSpace, getTestcases, getTestcase, uploadTestcase, addTestcase, updateTestcase, deleteTestcase } from '@/admin/api/testcase'
 import globalMessage from '@/common/utils/toast';
 import InputNumber from 'primevue/inputnumber';
+import { useConfirm } from "primevue/useconfirm";
 
+const confirm = useConfirm();
 const selectedTestcase = ref<TestCaseSpace.TestCase[]>([])
 const dialogType = ref('edit')
 const uploadType = ref('normal')
@@ -222,17 +226,16 @@ const handleFileUpload = async () => {
     });
     formData.append("id", props.id.toString());
     formData.append("type", uploadType.value);
-    try {
-        const res = await uploadTestcase(formData, {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            },
-            onUploadProgress: (progressEvent: any) => {
-                // 计算上传进度
-                const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
-                uploadProgress.value = progress;
-            },
-        });
+    await uploadTestcase(formData, {
+        headers: {
+            "Content-Type": "multipart/form-data"
+        },
+        onUploadProgress: (progressEvent: any) => {
+            // 计算上传进度
+            const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+            uploadProgress.value = progress;
+        },
+    }).then(res => {
         globalMessage.success("上传成功", res.message);
         loadTestcases()
         // **关键：将已上传的文件存入 uploadedFiles**
@@ -240,12 +243,12 @@ const handleFileUpload = async () => {
         // **清空 selectedFiles，但不影响 FileUpload 组件**
         selectedFiles.value = [];
         isUploading.value = false;
-    } catch (error) {
+    }).catch(error => {
         selectedFiles.value = [];
         isUploading.value = false;
-        console.error("上传失败:", error);
-        globalMessage.error('上传失败', '请检查网络或文件格式');
-    }
+        console.log("上传失败:", error);
+        globalMessage.error('上传失败', error.message);
+    })
 };
 const clearAllFiles = () => {
     selectedFiles.value = [];
@@ -311,6 +314,62 @@ async function loadSingleTestcase(id: number) {
     })
 
 }
+function submit() {
+    if (dialogType.value === 'edit') {
+        submitUpdateTestcase()
+    } else {
+        submitCreateTestcase()
+    }
+}
+async function submitUpdateTestcase() {
+    const data: TestCaseSpace.CreateAndUpdateDTO = {
+        pid: props.id,
+        input: testcaseInfo.value.input,
+        output: testcaseInfo.value.output,
+        score: testcaseInfo.value.score,
+        subtask: testcaseInfo.value.subtask,
+    }
+    await updateTestcase(testcaseInfo.value.id, data).then(res => {
+        globalMessage.success("更新测试点成功", res.message)
+        loadTestcases()
+        editDialog.value = false
+    }).catch(err => {
+        globalMessage.error("更新测试点异常", err.message)
+    })
+
+}
+async function submitCreateTestcase() {
+    const data: TestCaseSpace.CreateAndUpdateDTO = {
+        pid: props.id,
+        input: testcaseInfo.value.input,
+        output: testcaseInfo.value.output,
+        score: testcaseInfo.value.score,
+        subtask: testcaseInfo.value.subtask,
+    }
+    await addTestcase(data).then(res => {
+        globalMessage.success("新建测试点成功", res.message)
+        loadTestcases()
+        editDialog.value = false
+    }).catch(err => {
+        globalMessage.error("新建测试点异常", err.message)
+    })
+}
+async function deleteTestcases(ids: any, type: string) {
+    if (type === 'single' && !Array.isArray(ids)) {
+        ids = [ids]
+    } else if (type === 'mult') {
+        ids = selectedTestcase.value.map(item => item.id)
+    } else {
+        return;
+    }
+    const idsString = ids.join(',');
+    await deleteTestcase(idsString).then(res => {
+        globalMessage.success("删除测试点成功", res.message)
+        loadTestcases()
+    }).catch(err => {
+        globalMessage.error("删除测试点异常", err.message)
+    })
+}
 const edit = (id: number) => {
     editDialog.value = true
     dialogType.value = 'edit'
@@ -327,6 +386,30 @@ const createTestcase = () => {
         subtask: 0,
     }
 }
+const deleteConfirm = (event: any, slotProps: any, type: string) => {
+    confirm.require({
+        target: event.currentTarget,
+        message: '确定删除？',
+        icon: 'pi pi-exclamation-triangle',
+        rejectProps: {
+            label: '取消',
+            severity: 'secondary',
+            outlined: true
+        },
+        acceptProps: {
+            label: '删除',
+            severity: 'danger'
+        },
+        accept: () => {
+            //API call to save
+            console.log('Delete')
+            deleteTestcases(slotProps, type)
+        },
+        reject: () => {
+            //reject action
+        }
+    });
+};
 </script>
 <style scoped>
 /* 更改选中行的背景颜色 */

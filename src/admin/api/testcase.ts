@@ -18,6 +18,13 @@ export namespace TestCaseSpace{
         score:number;
         subtask:number;
     }
+    export interface CreateAndUpdateDTO{
+        pid:number; 
+        input:string;
+        output:string;
+        score:number;
+        subtask:number;
+    }
     export interface UploadTestcaseDTO {
         fileType: string;
         id: number;
@@ -31,4 +38,13 @@ export const getTestcases = (pid:number) => {
 }
 export const getTestcase = (id:number) => {
     return request.get<TestCaseSpace.TestCaseInfo>(`/api/p/admin/testcase/${id}`,{});
+}
+export const addTestcase = (testcase:TestCaseSpace.CreateAndUpdateDTO) => {
+    return request.post(`/api/p/admin/testcase`,testcase);
+}
+export const updateTestcase = (id:number, testcase:TestCaseSpace.CreateAndUpdateDTO) => {
+    return request.put(`/api/p/admin/testcase/${id}`,testcase);
+}
+export const deleteTestcase = (ids:string) => {
+    return request.delete(`/api/p/admin/testcase/${ids}`,{});
 }
