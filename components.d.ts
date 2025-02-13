@@ -7,11 +7,13 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+<<<<<<< Updated upstream
     Avatar: typeof import('primevue/avatar')['default']
+=======
+>>>>>>> Stashed changes
     Badge: typeof import('primevue/badge')['default']
     Breadcrumb: typeof import('primevue/breadcrumb')['default']
     Button: typeof import('primevue/button')['default']
-    Card: typeof import('primevue/card')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
     Column: typeof import('primevue/column')['default']
     ConfirmPopup: typeof import('primevue/confirmpopup')['default']
@@ -21,6 +23,7 @@ declare module 'vue' {
     Dropdown: typeof import('primevue/dropdown')['default']
     FileUpload: typeof import('primevue/fileupload')['default']
     FloatLabel: typeof import('primevue/floatlabel')['default']
+<<<<<<< Updated upstream
     IconField: typeof import('primevue/iconfield')['default']
     Image: typeof import('primevue/image')['default']
     InputGroup: typeof import('primevue/inputgroup')['default']
@@ -30,6 +33,14 @@ declare module 'vue' {
     InputText: typeof import('primevue/inputtext')['default']
     MegaMenu: typeof import('primevue/megamenu')['default']
     Menu: typeof import('primevue/menu')['default']
+=======
+    Image: typeof import('primevue/image')['default']
+    InputGroup: typeof import('primevue/inputgroup')['default']
+    InputGroupAddon: typeof import('primevue/inputgroupaddon')['default']
+    InputNumber: typeof import('primevue/inputnumber')['default']
+    InputText: typeof import('primevue/inputtext')['default']
+    MegaMenu: typeof import('primevue/megamenu')['default']
+>>>>>>> Stashed changes
     Message: typeof import('primevue/message')['default']
     MultiSelect: typeof import('primevue/multiselect')['default']
     Panel: typeof import('primevue/panel')['default']
@@ -44,10 +55,8 @@ declare module 'vue' {
     Textarea: typeof import('primevue/textarea')['default']
     Toast: typeof import('primevue/toast')['default']
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
-    TreeTable: typeof import('primevue/treetable')['default']
   }
   export interface ComponentCustomProperties {
-    Ripple: typeof import('primevue/ripple')['default']
     StyleClass: typeof import('primevue/styleclass')['default']
     Tooltip: typeof import('primevue/tooltip')['default']
   }
