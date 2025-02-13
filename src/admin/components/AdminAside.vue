@@ -35,7 +35,7 @@ export default defineComponent({
                         to: '/admin/problems',
                         items: [
                             { label: '题目列表', icon: 'pi pi-list', to: '/admin/problems/list' },
-                            { label: '创建题目', icon: 'pi pi-plus', to: '/admin/problems/create' },
+                            { label: '创建题目', icon: 'pi pi-plus', to: '/admin/problem/create' },
                             { label: '题目标签', icon: 'pi pi-tags', to: '/admin/problems/tags' },
                             { label: '导入|导出题目', icon: 'pi pi-upload', to: '/admin/problems/import-export' }
                         ]
@@ -43,10 +43,10 @@ export default defineComponent({
                     {
                         label: '作业管理',
                         icon: 'pi pi-folder-open',
-                        to: '/admin/homework',
+                        to: '/admin/homeworks',
                         items: [
-                            { label: '作业列表', icon: 'pi pi-list', to: '/admin/homework/list' },
-                            { label: '创建作业', icon: 'pi pi-plus', to: '/admin/homework/create' }
+                            { label: '作业列表', icon: 'pi pi-list', to: '/admin/homeworks/list' },
+                            { label: '创建作业', icon: 'pi pi-plus', to: '/admin/homeworks/create' }
                         ]
                     },
                     {

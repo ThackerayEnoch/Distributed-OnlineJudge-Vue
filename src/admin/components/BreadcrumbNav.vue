@@ -44,7 +44,9 @@ export default defineComponent({
                         to: "/admin/problems",
                         items: [
                             { label: "题目列表", icon: "pi pi-list", to: "/admin/problems/list" },
-                            { label: "创建题目", icon: "pi pi-plus", to: "/admin/problems/create" },
+                            { label: '测试点管理', icon: 'pi pi-list', to: '/admin/problem/testcases' },
+                            { label: '题目编辑', icon: 'pi pi-edit', to: '/admin/problem/edit' },
+                            { label: "创建题目", icon: "pi pi-plus", to: "/admin/problem/create" },
                             { label: "题目标签", icon: "pi pi-tags", to: "/admin/problems/tags" },
                             { label: "导入|导出题目", icon: "pi pi-upload", to: "/admin/problems/import-export" },
                         ],
@@ -52,10 +54,10 @@ export default defineComponent({
                     {
                         label: "作业管理",
                         icon: "pi pi-folder-open",
-                        to: "/admin/homework",
+                        to: "/admin/homeworks",
                         items: [
-                            { label: "作业列表", icon: "pi pi-list", to: "/admin/homework/list" },
-                            { label: "创建作业", icon: "pi pi-plus", to: "/admin/homework/create" },
+                            { label: "作业列表", icon: "pi pi-list", to: "/admin/homeworks/list" },
+                            { label: "创建作业", icon: "pi pi-plus", to: "/admin/homeworks/create" },
                         ],
                     },
                     {
@@ -117,17 +119,28 @@ export default defineComponent({
 
             const findBreadcrumb = (items: MenuItem[], parentPath?: MenuItem) => {
                 for (const item of items) {
+                    if (!item.to) continue;
+
+                    // 直接匹配完整路径
                     if (item.to === currentPath) {
                         if (parentPath) breadcrumbItems.push(parentPath);
                         breadcrumbItems.push(item);
                         return true;
                     }
-                    if (item.items) {
-                        if (findBreadcrumb(item.items, item)) return true;
+
+                    // 处理带参数的路径，例如 `/admin/problem/testcase/54` 匹配 `/admin/problem/testcase`
+                    if (currentPath.startsWith(item.to)) {
+                        if (parentPath) breadcrumbItems.push(parentPath);
+                        breadcrumbItems.push(item);
+                        return true;
                     }
+
+                    // 递归查找子菜单
+                    if (item.items && findBreadcrumb(item.items, item)) return true;
                 }
                 return false;
             };
+
 
             model.value.forEach((category) => {
                 if (category.items) findBreadcrumb(category.items, category);

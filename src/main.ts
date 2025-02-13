@@ -8,6 +8,7 @@ import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
 import Toast from 'primevue/toast';
+import Tooltip from 'primevue/tooltip';
 
 import '@/common/assets/styles.scss';
 import '@/common/assets/tailwind.css';
@@ -34,6 +35,7 @@ app.use(PrimeVue, {
 app.use(ToastService);
 app.use(ConfirmationService);
 
+app.directive('tooltip', Tooltip);
 app.component('Toast', Toast);
 // 获取 ToastService 实例并传递给全局错误处理器
 const toast = app.config.globalProperties.$toast;

@@ -18,13 +18,6 @@ export default [
           }
         },
         {
-          path:'/admin/problems/list',
-          name:'ProblemList',
-          components: {
-            admin: () => import('@/admin/views/ProblemList.vue')
-          }
-        },
-        {
           path:'/admin/perm',
           name:'Permissions',
           components: {
@@ -54,6 +47,63 @@ export default [
               name:'PermPermissions',
               components:{
                 perm:()=>import('@/admin/components/perm/PermItem.vue')
+              }
+            }
+          ]
+        },
+        {
+          path:'/admin/problems',
+          name:'ProblemAdmin',
+          children:[
+            {
+              path:'/admin/problems',
+              redirect: '/admin/problems/list'
+            },
+            {
+              path:'/admin/problems/list',
+              name:'AdminProblemList',
+              components:{
+                admin:()=>import('@/admin/components/problem/ProblemList.vue')
+              }
+            },
+            {
+              path:'/admin/problem/create',
+              name:'AdminProblemCreate',
+              components:{
+                admin:()=>import('@/admin/components/problem/ProblemCreate.vue')
+              }
+            },
+            {
+              path:'/admin/problem/edit/:id',
+              name:'AdminProblemDetail',
+              components:{
+                admin:()=>import('@/admin/components/problem/ProblemEditView.vue')
+              },
+              props:true
+            },
+            {
+              path:'/admin/problem/testcases/:id',
+              name:'AdminProblemTestCase',
+              components:{
+                admin:()=> import('@/admin/components/problem/ProblemTestCase.vue')
+              },
+              props:true
+            }
+          ]
+        },
+        {
+          path:'/admin/homeworks',
+          name:'ContestAdmin',
+          children:[
+            {
+              path:'/admin/homeworks',
+              redirect: '/admin/homeworks/list'
+            },
+            {
+              path:'/admin/homeworks/list',
+              name:'AdminContestList',
+              components:{
+                admin:()=>import('@/admin/components/contest/ContestList.vue')
               }
             }
           ]
