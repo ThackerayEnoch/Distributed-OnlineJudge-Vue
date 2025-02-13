@@ -12,7 +12,21 @@ export namespace Homework{
         solved: number;
         startTime: string;
         endTime: string;
-    }
+    };
+    export interface PersonalHomeworkProblemsJSON {
+        displayId: number;
+        problemId: number;
+        title: string;
+        submitCount: number;
+        acceptCount: number;
+    };
+    export interface HomeworkProblemsStatusJSON {
+        displayId: number;
+        problemId: number;
+        title: string;
+        totalSubmitCount: number;
+        totalAcceptCount: number;
+    };
 }
 export const getHomeworkPage = (currentPage:number) => {
     return request.get<Homework.HomeworkJSON[]>('/api/c/homeworks',{currentPage})
@@ -28,4 +42,12 @@ export const searchHomeworksCount = ( type:string, homeworkName:string ) => {
 }
 export const searchHomeworkById = (homeworkId:number) => {
     return request.get<Homework.HomeworkJSON>('/api/c/homeworks/search/id',{homeworkId})
+}
+// 根据作业id获取题目列表
+export const getHomeworkProblems = (homeworkId:number) => {
+    return request.get<Homework.PersonalHomeworkProblemsJSON[]>('/api/c/homeworks/id/problems',{homeworkId})
+}
+// 根据作业id查询所有题目的提交状况
+export const getHomeworkProblemsStatus = (homeworkId:number) => {
+    return request.get<Homework.HomeworkProblemsStatusJSON[]>('/api/c/homeworks/id/problems/status',{homeworkId})
 }
