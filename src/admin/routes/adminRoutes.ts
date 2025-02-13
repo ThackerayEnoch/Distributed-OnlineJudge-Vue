@@ -18,13 +18,6 @@ export default [
           }
         },
         {
-          path:'/admin/problems/list',
-          name:'ProblemList',
-          components: {
-            admin: () => import('@/admin/views/ProblemList.vue')
-          }
-        },
-        {
           path:'/admin/perm',
           name:'Permissions',
           components: {
@@ -68,21 +61,21 @@ export default [
             },
             {
               path:'/admin/problems/list',
-              name:'ProblemList',
+              name:'AdminProblemList',
               components:{
                 admin:()=>import('@/admin/components/problem/ProblemList.vue')
               }
             },
             {
               path:'/admin/problem/create',
-              name:'ProblemCreate',
+              name:'AdminProblemCreate',
               components:{
                 admin:()=>import('@/admin/components/problem/ProblemCreate.vue')
               }
             },
             {
               path:'/admin/problem/edit/:id',
-              name:'ProblemDetail',
+              name:'AdminProblemDetail',
               components:{
                 admin:()=>import('@/admin/components/problem/ProblemEditView.vue')
               },
@@ -90,11 +83,28 @@ export default [
             },
             {
               path:'/admin/problem/testcases/:id',
-              name:'ProblemTestCase',
+              name:'AdminProblemTestCase',
               components:{
                 admin:()=> import('@/admin/components/problem/ProblemTestCase.vue')
               },
               props:true
+            }
+          ]
+        },
+        {
+          path:'/admin/homeworks',
+          name:'ContestAdmin',
+          children:[
+            {
+              path:'/admin/homeworks',
+              redirect: '/admin/homeworks/list'
+            },
+            {
+              path:'/admin/homeworks/list',
+              name:'AdminContestList',
+              components:{
+                admin:()=>import('@/admin/components/contest/ContestList.vue')
+              }
             }
           ]
         }

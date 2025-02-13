@@ -54,10 +54,10 @@ export default defineComponent({
                     {
                         label: "作业管理",
                         icon: "pi pi-folder-open",
-                        to: "/admin/homework",
+                        to: "/admin/homeworks",
                         items: [
-                            { label: "作业列表", icon: "pi pi-list", to: "/admin/homework/list" },
-                            { label: "创建作业", icon: "pi pi-plus", to: "/admin/homework/create" },
+                            { label: "作业列表", icon: "pi pi-list", to: "/admin/homeworks/list" },
+                            { label: "创建作业", icon: "pi pi-plus", to: "/admin/homeworks/create" },
                         ],
                     },
                     {
