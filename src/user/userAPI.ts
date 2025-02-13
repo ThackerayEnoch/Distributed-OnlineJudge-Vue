@@ -1,5 +1,4 @@
 import request from "../common/utils/api";
-import { User } from "@/user/entity/user";
 namespace User {
 
     // 登录成功后返回的token

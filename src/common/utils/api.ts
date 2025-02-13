@@ -23,7 +23,7 @@ const config = {
   // 默认地址
   baseURL: URL as string,
   // 设置超时时间
-  timeout: 10000,
+  timeout: 1000000,
   // 跨域时候允许携带凭证
   withCredentials: true
 }
@@ -96,13 +96,13 @@ get<T>(url: string, params?: object, headers?: object): Promise<ResultData<T>> {
   return this.service.get(url, { params, headers });
 }
 post<T>(url: string, params?: object, headers?: object): Promise<ResultData<T>> {
-  return this.service.post(url, params, headers );
+  return this.service.post(url, params, headers);
 }
 put<T>(url: string, params?: object, headers?: object): Promise<ResultData<T>> {
   return this.service.put(url, params, headers);
 }
-delete<T>(url: string, params?: object, headers?: object): Promise<ResultData<T>> {
-  return this.service.delete(url, { params, headers });
+delete<T>(url: string, headers?: object): Promise<ResultData<T>> {
+  return this.service.delete(url, { headers });
 }
 }
 

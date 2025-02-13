@@ -8,7 +8,11 @@ namespace Auth {
     }
     // 登录成功后返回的token
     export interface LoginResData {
-       token: string;
+        token: string;
+        username: string;
+        nickname: string;
+        roleId: number;
+        id: number;
     }
     // 发送验证码表单
     export interface SendCaptchaReqParams {
