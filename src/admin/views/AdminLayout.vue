@@ -32,14 +32,12 @@ const counterStore = useUserStore();
 
 onBeforeMount(() => {
     const user = counterStore.currentUser;
-    console.log(user);
     if (user.username === '') {
         console.log("username is empty");
         router.push('/auth/login');
     } else {
         console.log("username is not empty");
-        if (user.roleId === null || user.roleId > Role.ADMIN) {
-
+        if (user.roleId === null || user.roleId > Role.TEACHER) {
             router.push('/forbidden');
         }
     }

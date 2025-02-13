@@ -103,7 +103,7 @@ export default [
               path:'/admin/homeworks/list',
               name:'AdminContestList',
               components:{
-                admin:()=>import('@/admin/components/contest/ContestList.vue')
+                admin:()=>import('@/admin/components/contest/HomeworkList.vue')
               }
             }
           ]
