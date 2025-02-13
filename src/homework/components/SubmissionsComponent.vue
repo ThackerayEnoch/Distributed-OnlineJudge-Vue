@@ -140,6 +140,7 @@
 
 import { ref, onMounted } from 'vue'
 import { getStatPage, getStatBySubmitid, getStatMaxCount, type Status } from '@/problem/StatusAPI'
+import { getHomeworkProblemsSubmissions } from '../api/homeworkSubmissionAPI';
 import { useRoute, useRouter } from 'vue-router';
 import { FilterMatchMode } from '@primevue/core/api';
 
@@ -226,7 +227,13 @@ function getStatusClass(status: keyof typeof statusClassMap) {
 onMounted(() => {
     getStatusCount();
     getStatusData(first.value);
+    test(first.value);
 });
+// 测试函数
+const test = async (currentPage: number) => {
+    const res = await getHomeworkProblemsSubmissions(currentPage, 1578, false);
+    console.log('这是我写的状态接口返回值',res);
+};
 // 页面切换事件，重新加载数据
 function onPage(event: any) {
     first.value = event.first;
