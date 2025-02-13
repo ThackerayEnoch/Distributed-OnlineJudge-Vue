@@ -1,4 +1,4 @@
-import { computed, reactive, readonly } from 'vue';
+import { computed, reactive,ref, readonly } from 'vue';
 
 const layoutConfig = reactive({
     preset: 'Aura',
@@ -15,7 +15,8 @@ const layoutState = reactive({
     configSidebarVisible: false,
     staticMenuMobileActive: false,
     menuHoverActive: false,
-    activeMenuItem: null
+    activeMenuItem: null,
+    activeMenuItems: ref<string[]>([])
 });
 
 export function useLayout() {
@@ -38,7 +39,18 @@ export function useLayout() {
     const setMenuMode = (mode: string) => {
         layoutConfig.menuMode = mode;
     };
-
+    function toggleMenuItem(itemKey: string) {
+        const index = layoutState.activeMenuItems.indexOf(itemKey);
+        if (index > -1) {
+            layoutState.activeMenuItems.splice(index, 1);
+        } else {
+            layoutState.activeMenuItems.push(itemKey);
+        }
+    }
+    
+    function isMenuItemActive(itemKey: string): boolean {
+        return layoutState.activeMenuItems.includes(itemKey);
+    }
     const toggleDarkMode = () => {
         if (!(document as any).startViewTransition) {
             executeDarkModeToggle();
@@ -79,5 +91,5 @@ export function useLayout() {
 
     const getSurface = computed(() => layoutConfig.surface);
 
-    return { layoutConfig: readonly(layoutConfig), layoutState: readonly(layoutState), onMenuToggle, isSidebarActive, isDarkTheme, getPrimary, getSurface, setActiveMenuItem, toggleDarkMode, setPrimary, setSurface, setPreset, resetMenu, setMenuMode };
+    return { layoutConfig: readonly(layoutConfig), layoutState: readonly(layoutState), toggleMenuItem,isMenuItemActive, onMenuToggle, isSidebarActive, isDarkTheme, getPrimary, getSurface, setActiveMenuItem, toggleDarkMode, setPrimary, setSurface, setPreset, resetMenu, setMenuMode };
 }

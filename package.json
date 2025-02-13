@@ -14,12 +14,15 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
+    "@primevue/forms": "^4.2.5",
     "@primevue/themes": "^4.0.5",
     "@vee-validate/rules": "^4.13.2",
     "autoprefixer": "^10.4.20",
     "axios": "^1.7.6",
     "katex": "^0.16.19",
+    "md-editor-v3": "^5.2.2",
     "pinia": "^2.1.7",
+    "pinia-plugin-persistedstate": "^4.2.0",
     "postcss": "^8.4.41",
     "primeicons": "^7.0.0",
     "primevue": "^4.0.5",
@@ -38,6 +41,7 @@
   "devDependencies": {
     "@primevue/auto-import-resolver": "^4.0.5",
     "@rushstack/eslint-patch": "^1.8.0",
+    "@tailwindcss/typography": "^0.5.16",
     "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20.12.5",
     "@types/prismjs": "^1.26.5",

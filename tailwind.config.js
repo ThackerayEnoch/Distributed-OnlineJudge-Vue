@@ -1,10 +1,13 @@
 /** @type {import('tailwindcss').Config} */
 import tailwindcssPrimeui from 'tailwindcss-primeui';
-
+import typography from '@tailwindcss/typography';
 export default {
     darkMode: ['selector', '[class*="app-dark"]'],
     content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
-    plugins: [tailwindcssPrimeui],
+    plugins: [
+        typography,
+        tailwindcssPrimeui
+    ],
     theme: {
         screens: {
             sm: '576px',

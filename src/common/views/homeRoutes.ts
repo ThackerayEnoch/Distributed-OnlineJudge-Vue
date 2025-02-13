@@ -5,5 +5,12 @@ export default [
       components: {
         main: () => import('@/common/views/Index.vue')
       }
+    },
+    {
+      path:'/forbidden',
+      name:'Forbidden',
+      components: {
+        main: () => import('@/common/components/ForbiddenView.vue')
+      }
     }
 ];
