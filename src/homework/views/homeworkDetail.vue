@@ -92,7 +92,7 @@
                     <RankingComponent />
                 </div>
                 <div v-if="selectedTab === 'submissions'">
-                    <SubmissionsComponent />
+                    <SubmissionsComponent :homeworkId="homework.id" />
                 </div>
             </div><!--显示不同导航栏内容-->
         </div>

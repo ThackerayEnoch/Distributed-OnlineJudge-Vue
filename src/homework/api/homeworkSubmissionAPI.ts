@@ -1,5 +1,5 @@
 import request from "@/common/utils/api";
-export namespace Status{
+export namespace SubmissionsStatus{
     export interface StatJSONObject {
         submitId: number;
         contestId: number;
@@ -18,9 +18,7 @@ export namespace Status{
         oiRankScore: number;
         createTime: string;
     }
-    export interface StatusmMaxCountJSONObject {
-        count: number;
-    }
+
     export interface StatusItem {
         submitId: number;
         status: number;
@@ -30,6 +28,7 @@ export namespace Status{
         score: number;
         // 其他属性根据实际情况添加
     }
+
     export interface TestCase {
         id: number;
         status: number;
@@ -55,15 +54,12 @@ export namespace Status{
         testcase: TestCase[];
     }
 }
-export const getHomeworkProblemsSubmissions = ( currentPage:number, homeworkId:number, type:boolean ) => {
-    return request.get<Status.StatJSONObject[]>('/api/c/homeworks/id/submission/statuses',{ currentPage, homeworkId, type })
+export const getSubmissions = ( currentPage:number, homeworkId:number, type:boolean ) => {
+    return request.get<SubmissionsStatus.StatJSONObject[]>('/api/c/homeworks/submission/statuses',{ currentPage, homeworkId, type })
 }
-export const getHomeworkProblemsSubmissionsMaxCount = ( homeworkId:number ) => {
-    return request.get<Status.StatusmMaxCountJSONObject>('/api/c/homeworks/id/submission/statuses/count', { homeworkId })
+export const getSubmissionsMaxCount = ( homeworkId:number, type: Boolean ) => {
+    return request.get<number>('/api/c/homeworks/submission/statuses/count', { homeworkId, type })
 }
-export const getStatBySubmitid = (submitId:number) => {
-    return request.get<Status.StatusItem>(`/api/j/judge/status/${submitId}`)
-}
-export const getStatDetail = (submitId:number) => {
-    return request.get<Status.StatusDetail>(`/api/p/status/${submitId}`)
+export const getSubmissionBySubmitid = (submitId:number) => {
+    return request.get<SubmissionsStatus.StatusItem>(`/api/c/homeworks/submission`,{ submitId })
 }

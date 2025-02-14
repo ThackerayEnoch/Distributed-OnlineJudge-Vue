@@ -33,7 +33,7 @@
                         <span class="flex-1 text-center font-bold">题目</span>
                     </template>
                     <template #body="slotProps">
-                        <router-link :to="`/problem/${slotProps.data.pid}`"
+                        <router-link :to="`/status/${ slotProps.data.submitId }`"
                             class="text-blue-400 hover:text-blue-600 truncate">
                             P{{ slotProps.data.pid }} {{ slotProps.data.title }}
                         </router-link>
@@ -139,15 +139,14 @@
 <script lang="ts" setup>
 
 import { ref, onMounted } from 'vue'
-import { getStatPage, getStatBySubmitid, getStatMaxCount, type Status } from '@/problem/StatusAPI'
-import { getHomeworkProblemsSubmissions } from '../api/homeworkSubmissionAPI';
+import { getSubmissions, getSubmissionsMaxCount, getSubmissionBySubmitid, type SubmissionsStatus } from '../api/homeworkSubmissionAPI';
 import { useRoute, useRouter } from 'vue-router';
 import { FilterMatchMode } from '@primevue/core/api';
 
 const route = useRoute();
 const router = useRouter();
 // 评测状态数据
-const problems = ref<Status.StatJSONObject[]>([]);
+const problems = ref<SubmissionsStatus.StatJSONObject[]>([]);
 // 总记录数
 const totalRecords = ref(150);
 // 当前页数
@@ -215,6 +214,8 @@ const statusClassMap = {
     '10': 'bg-red-500 text-white',
     '15': 'bg-gray-500 text-white'
 };
+// 组件自定义属性homeworkId用来接收父组件传递的homeworkId
+const props = defineProps<{ homeworkId: number }>();
 // 获取判题状态文本
 function getStatusText(status: keyof typeof statusMap) {
     return statusMap[status] || '未知状态';
@@ -225,33 +226,29 @@ function getStatusClass(status: keyof typeof statusClassMap) {
 }
 // 获取判题状态数据
 onMounted(() => {
-    getStatusCount();
-    getStatusData(first.value);
-    test(first.value);
+    localSubmissionStateCount();
+    localSubmissionState(first.value);
 });
-// 测试函数
-const test = async (currentPage: number) => {
-    const res = await getHomeworkProblemsSubmissions(currentPage, 1578, false);
+// 获取该作业所有题目提交记录数据
+const localSubmissionState = async (currentPage: number) => {
+    const res = await getSubmissions(currentPage, props.homeworkId, false);
+    problems.value = res.data ?? [];
+    initializePollingQueue();
+    startPolling();
     console.log('这是我写的状态接口返回值',res);
+    console.log('这是我从父组件接受的作业id值',props.homeworkId);
 };
 // 页面切换事件，重新加载数据
 function onPage(event: any) {
     first.value = event.first;
     router.push({ query: { currentPage: event.page + 1 } });
-    getStatusData(first.value);
+    localSubmissionState(first.value);
 }
-// 获取判题状态数据
-async function getStatusData(currentPage: number) {
-    const res = await getStatPage(currentPage);
-    problems.value = res.data ?? [];
-    initializePollingQueue();
-    startPolling();
-}
-// 获取判题状态总记录数
-async function getStatusCount() {
-    const res = await getStatMaxCount();
-    totalRecords.value = res.data?.count ?? 0;
-}
+const localSubmissionStateCount = async () => {
+    const res = await getSubmissionsMaxCount(props.homeworkId, false);
+    console.log("这是返回多少数量的接口",res);
+    totalRecords.value = res.data ?? 0;
+};
 // 格式化内存
 function formatMemory(memory: number) {
     if (memory < 1024) {
@@ -298,21 +295,21 @@ const pollingQueue = ref<{ submitId: number }[]>([]);
 const pollingStatuses = [-10, 9, 6, 7, 5, 15];
 // 初始化轮询队列
 const initializePollingQueue = () => {
-    problems.value.forEach((problem: Status.StatJSONObject) => {
+    problems.value.forEach((problem: SubmissionsStatus.StatJSONObject) => {
         if (pollingStatuses.includes(problem.status)) {
             pollingQueue.value.push({ submitId: problem.submitId });
         }
     });
 };
 // 获取状态更新
-const fetchStatusUpdate = async (submitId: number): Promise<Status.StatusItem> => {
+const fetchStatusUpdate = async (submitId: number): Promise<SubmissionsStatus.StatusItem> => {
     // 调用API获取状态更新
-    const response = await getStatBySubmitid(submitId);
-    return response.data as Status.StatusItem;
+    const response = await getSubmissionBySubmitid(submitId);
+    return response.data as SubmissionsStatus.StatusItem;
 };
 // 更新判题状态
-const updateProblems = (statusItem: Status.StatusItem) => {
-    const index = problems.value.findIndex((problem: Status.StatJSONObject) => problem.submitId === statusItem.submitId);
+const updateProblems = (statusItem: SubmissionsStatus.StatusItem) => {
+    const index = problems.value.findIndex((problem: SubmissionsStatus.StatJSONObject) => problem.submitId === statusItem.submitId);
     if (index !== -1) {
         problems.value[index].status = statusItem.status;
         problems.value[index].time = statusItem.time.toString();
