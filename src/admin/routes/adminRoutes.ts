@@ -101,10 +101,25 @@ export default [
             },
             {
               path:'/admin/homeworks/list',
-              name:'AdminContestList',
+              name:'AdminHomeworkList',
               components:{
                 admin:()=>import('@/admin/components/contest/HomeworkList.vue')
               }
+            },
+            {
+              path:'/admin/homework/create',
+              name:'AdminHomeworkCreate',
+              components:{
+                admin:()=>import('@/admin/components/contest/HomeworkCreate.vue')
+              }
+            },
+            {
+              path:'/admin/homework/edit/:id',
+              name:'AdminHomeworkEdit',
+              components:{
+                admin:()=>import('@/admin/components/contest/HomeworkEdit.vue')
+              },
+              props:true
             }
           ]
         }

@@ -57,7 +57,7 @@ export default defineComponent({
                         to: "/admin/homeworks",
                         items: [
                             { label: "作业列表", icon: "pi pi-list", to: "/admin/homeworks/list" },
-                            { label: "创建作业", icon: "pi pi-plus", to: "/admin/homeworks/create" },
+                            { label: "创建作业", icon: "pi pi-plus", to: "/admin/homework/create" },
                         ],
                     },
                     {

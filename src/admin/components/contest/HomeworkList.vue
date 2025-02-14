@@ -9,7 +9,7 @@
             <!-- 操作栏 -->
             <div class="flex items-center space-x-5 p-4">
                 <!-- 按钮：创建 -->
-                <router-link to="/admin/problem/create"
+                <router-link to="/admin/homework/create"
                     class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded shadow-md">
                     + 创建
                 </router-link>
