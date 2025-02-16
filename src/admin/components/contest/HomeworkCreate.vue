@@ -137,7 +137,7 @@
         </div>
 
         <div>
-            <Button label="保存" @click="createHomeworkFun" icon="pi pi-check" class="w-full mt-4" />
+            <Button label="保存" @click="onSubmitEvent" icon="pi pi-check" class="w-full mt-4" />
         </div>
     </Panel>
 </template>
@@ -147,11 +147,11 @@ import CustomToggleButton from './CustomToggleButton.vue';
 import { reactive, ref, defineComponent, onMounted } from 'vue'
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { parseUsers, getHomeworkGroup, createHomework, type ContestSpace } from '@/admin/api/contestAPI'
+import { parseUsers, getHomeworkGroup, createHomework, getHomeworkDetail, updateHomework, type ContestSpace } from '@/admin/api/contestAPI'
 import globalMessage from '@/common/utils/toast';
 
 export default defineComponent({
-    name: 'HomeworkEdit',
+    name: 'HomeworkCreate',
     components: { MdEditor, CustomToggleButton },
     props: {
         id: {
@@ -163,7 +163,7 @@ export default defineComponent({
             required: true
         }
     },
-    setup() {
+    setup(props) {
         const authOptions = ref([
             { label: '公开作业', value: 0 },
             { label: '私有作业', value: 1 },
@@ -194,6 +194,9 @@ export default defineComponent({
         })
         onMounted(() => {
             loadClasses();
+            if (props.type === 'edit') {
+                loadHomeworkDetail(props.id as number);
+            }
         })
         const parseButtonEvent = () => {
             parseUsersFun();
@@ -240,9 +243,59 @@ export default defineComponent({
                 globalMessage.error("创建失败", err.message);
             });
         }
+        async function loadHomeworkDetail(id: number) {
+            await getHomeworkDetail(id).then(res => {
+                const data = res.data as ContestSpace.HomeworkDetailVO;
+                homework.title = data.title;
+                homework.description = data.description;
+                homework.auth = data.auth;
+                homework.password = data.password;
+                homework.visible = data.visible;
+                homework.duplicateCheck = data.duplicateCheck;
+                homework.languages = data.languages;
+                homework.selectedClasses = { id: data.groupId, name: '' };
+                homework.startTime = new Date(data.startTime);
+                homework.endTime = new Date(data.endTime);
+                studentInput.value = data.users.join('\n');
+
+                console.log(res.data);
+            }).catch(err => {
+                globalMessage.error("加载数据失败", err.message);
+            });
+        }
+        async function updateHomeworkFun() {
+            const stu: string[] = studentInput.value.split('\n');
+            const homeworkDTO: ContestSpace.CreateHomeworkDTO = {
+                id: props.id as number,
+                title: homework.title,
+                description: homework.description,
+                auth: homework.auth,
+                type: 0,
+                password: homework.password,
+                visible: homework.visible,
+                duplicateCheck: homework.duplicateCheck,
+                languages: homework.languages,
+                users: stu,
+                groupId: homework.selectedClasses.id,
+                startTime: homework.startTime.getTime(),
+                endTime: homework.endTime.getTime()
+            }
+            await updateHomework(homeworkDTO).then(() => {
+                globalMessage.success("更新作业", "操作成功");
+            }).catch(err => {
+                globalMessage.error("加载数据失败", err.message);
+            });
+        }
+        function onSubmitEvent() {
+            if (props.type === 'edit') {
+                updateHomeworkFun();
+            } else {
+                createHomeworkFun();
+            }
+        }
         return {
             homework, authOptions, languageOptions, visibleOptions, searchContent, onlyMyClasses, filteredClasses, studentInput, students,
-            onOwnClassesChange, parseButtonEvent, createHomeworkFun
+            onOwnClassesChange, parseButtonEvent, createHomeworkFun, onSubmitEvent
         }
     }
 })

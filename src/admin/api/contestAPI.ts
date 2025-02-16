@@ -20,6 +20,7 @@ export namespace ContestSpace{
         creator:string;
     }
     export interface CreateHomeworkDTO {
+        id?: number;
         title: string;
         description: string;
         auth: number;
@@ -32,6 +33,23 @@ export namespace ContestSpace{
         users: string[];
         startTime: number;
         endTime: number;
+    }
+    export interface HomeworkDetailVO {
+        id: number;
+        title: string;
+        description: string;
+        auth: number;
+        type: number;
+        password: string;
+        visible: boolean;
+        duplicateCheck: boolean;
+        groupId: number;
+        startTime: number;
+        endTime: number;
+        languages: number[];
+        users: string[];
+        createTime: string;
+        updateTime: string;
     }
 }
 export const getHomeworkList = (offset:number,type:string) => {
@@ -47,5 +65,11 @@ export const getHomeworkGroup = (type:string) => {
     return request.get<ContestSpace.AdminHomeworkGroupVO[]>('/api/c/admin/homework/create/group',{type});
 }
 export const createHomework = (data:ContestSpace.CreateHomeworkDTO) => {
-    return request.post('/api/c/admin/homework/create',data);
+    return request.post<string>('/api/c/admin/homework/create',data);
+}
+export const getHomeworkDetail = (id:number) => {
+    return request.get<ContestSpace.HomeworkDetailVO>('/api/c/admin/homework',{id});
+}
+export const updateHomework = (data:ContestSpace.CreateHomeworkDTO) => {
+    return request.put<string>('/api/c/admin/homework',data);
 }
