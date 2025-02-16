@@ -34,6 +34,11 @@
                 <Calendar v-model="homework.endTime" showTime hourFormat="24" class="mt-2 w-full" />
             </div>
         </div>
+        <div class="mt-4">
+            <label class="text-gray-500">
+                作业题目在作业列表处编辑
+            </label>
+        </div>
         <div class="flex flex-col space-y-2 mt-4">
             <label class="text-gray-500"><span class="text-red-500">*</span> 允许提交语言:</label>
             <div class="flex flex-wrap gap-4">
@@ -90,23 +95,18 @@
             </label>
         </div>
         <div v-if="homework.auth !== 0" class="p-0 mt-4 space-y-4">
-            <MultiSelect v-model="homework.selectedClasses" :options="filteredClasses" optionLabel="name"
+            <Select v-model="homework.selectedClasses" :options="filteredClasses" optionLabel="name"
                 placeholder="选择班级..." class="w-[150px]">
                 <template #header>
                     <div class="flex items-center gap-2 p-2">
                         <InputText v-model="searchContent" placeholder="搜索班级..." class="w-full p-2 border rounded-lg" />
                         <div class="flex items-center gap-1">
-                            <ToggleSwitch v-tooltip.top="'仅显示我创建的'" id="myClasses" v-model="onlyMyClasses" />
+                            <ToggleSwitch v-tooltip.top="'仅显示我创建的'" id="myClasses" v-model="onlyMyClasses"
+                                @change="onOwnClassesChange" />
                         </div>
                     </div>
                 </template>
-                <template #option="slotProps">
-                    <div class="flex items-center gap-2">
-                        <span>{{ slotProps.option.name }}</span>
-                        <span v-if="slotProps.option.isMine" class="text-xs text-green-500">(我创建的)</span>
-                    </div>
-                </template>
-            </MultiSelect>
+            </Select>
         </div>
         <div v-if="homework.auth !== 0" class="mt-6">
             <label class="text-gray-500">
@@ -120,7 +120,8 @@
 
             <!-- 中间解析按钮和箭头 -->
             <div class="flex flex-col items-center">
-                <button class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition">
+                <button class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                    @click="parseButtonEvent">
                     解析
                 </button>
                 <span class="text-2xl mt-2">→</span>
@@ -129,23 +130,25 @@
             <!-- 右侧 DataTable -->
             <div class="w-1/4 border border-gray-300 rounded-md min-h-96 overflow-auto">
                 <DataTable :value="students" class="w-full" scrollable scrollHeight="400px">
-                    <Column field="id" header="学号"></Column>
-                    <Column field="name" header="昵称"></Column>
+                    <Column field="studentId" header="学号"></Column>
+                    <Column field="nickname" header="昵称"></Column>
                 </DataTable>
             </div>
         </div>
 
         <div>
-            <Button label="保存" icon="pi pi-check" class="w-full mt-4" />
+            <Button label="保存" @click="createHomeworkFun" icon="pi pi-check" class="w-full mt-4" />
         </div>
     </Panel>
 </template>
 <script lang="ts">
 import { languageOptions } from '@/common/constant/AllConstant'
 import CustomToggleButton from './CustomToggleButton.vue';
-import { reactive, ref, defineComponent } from 'vue'
+import { reactive, ref, defineComponent, onMounted } from 'vue'
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
+import { parseUsers, getHomeworkGroup, createHomework, type ContestSpace } from '@/admin/api/contestAPI'
+import globalMessage from '@/common/utils/toast';
 
 export default defineComponent({
     name: 'HomeworkEdit',
@@ -171,21 +174,11 @@ export default defineComponent({
             { label: '不可见', value: 0 }
         ])
         const searchContent = ref('');
-        const onlyMyClasses = ref(false);
-        const filteredClasses = ref([
-            { name: '班级1', id: 1, isMine: true },
-            { name: '班级2', id: 2, isMine: false },
-            { name: '班级3', id: 3, isMine: true },
-            { name: '班级4', id: 4, isMine: false },
-            { name: '班级5', id: 5, isMine: true },
-            { name: '班级6', id: 6, isMine: false },
-            { name: '班级7', id: 7, isMine: true },
-            { name: '班级8', id: 8, isMine: false },
-            { name: '班级9', id: 9, isMine: true },
-            { name: '班级10', id: 10, isMine: false },
+        const onlyMyClasses = ref(true);
+        const filteredClasses = ref<ContestSpace.AdminHomeworkGroupVO[]>([
         ]);
         const studentInput = ref('');
-        const students = ref([]);
+        const students = ref<ContestSpace.AdminParseUsers[]>([]);
         const homework = reactive({
             title: '',
             description: '',
@@ -194,14 +187,62 @@ export default defineComponent({
             visible: true,
             duplicateCheck: false,
             languages: [1, 2, 3, 4, 9, 10],
-            users: [],
-            selectedClasses: [],
+            users: '',
+            selectedClasses: { id: -1, name: '' },
             startTime: new Date(),
             endTime: new Date()
         })
-
+        onMounted(() => {
+            loadClasses();
+        })
+        const parseButtonEvent = () => {
+            parseUsersFun();
+        }
+        const onOwnClassesChange = () => {
+            loadClasses();
+        }
+        const parseUsersFun = async () => {
+            // 解析学生
+            const stu: string[] = studentInput.value.split('\n');
+            await parseUsers(stu).then(res => {
+                students.value = res.data as ContestSpace.AdminParseUsers[];
+            }).catch(err => {
+                globalMessage.error("解析失败", err.message);
+            });
+        }
+        const loadClasses = async () => {
+            const type = onlyMyClasses.value ? 'own' : 'all';
+            await getHomeworkGroup(type).then(res => {
+                filteredClasses.value = res.data as ContestSpace.AdminHomeworkGroupVO[];
+            }).catch(err => {
+                globalMessage.error("加载班级失败", err.message);
+            });
+        }
+        const createHomeworkFun = async () => {
+            const stu: string[] = studentInput.value.split('\n');
+            const homeworkDTO: ContestSpace.CreateHomeworkDTO = {
+                title: homework.title,
+                description: homework.description,
+                auth: homework.auth,
+                type: 0,
+                password: homework.password,
+                visible: homework.visible,
+                duplicateCheck: homework.duplicateCheck,
+                languages: homework.languages,
+                users: stu,
+                groupId: homework.selectedClasses.id,
+                startTime: homework.startTime.getTime(),
+                endTime: homework.endTime.getTime()
+            }
+            await createHomework(homeworkDTO).then(() => {
+                globalMessage.success("创建作业", "操作成功");
+            }).catch(err => {
+                globalMessage.error("创建失败", err.message);
+            });
+        }
         return {
-            homework, authOptions, languageOptions, visibleOptions, searchContent, onlyMyClasses, filteredClasses, studentInput, students
+            homework, authOptions, languageOptions, visibleOptions, searchContent, onlyMyClasses, filteredClasses, studentInput, students,
+            onOwnClassesChange, parseButtonEvent, createHomeworkFun
         }
     }
 })

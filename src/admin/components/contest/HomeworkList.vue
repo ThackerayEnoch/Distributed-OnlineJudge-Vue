@@ -37,17 +37,6 @@
                             }}</router-link>
                     </template>
                 </Column>
-                <Column field="type" style="text-align: center;">
-                    <template #header>
-                        <span class="flex-1 text-center font-bold">类型</span>
-                    </template>
-                    <template #body="slotProps">
-                        <span v-if="slotProps.data.type === 0"
-                            class="bg-blue-100 text-blue-800 text-sm font-semibold mr-2 px-2.5 py-2 rounded">ACM</span>
-                        <span v-else-if="slotProps.data.type === 1"
-                            class="bg-yellow-100 text-yellow-800 text-sm font-semibold mr-2 px-2.5 py-2 rounded">OI</span>
-                    </template>
-                </Column>
                 <Column field="auth" style="text-align: center; min-width: 7%;">
                     <template #header>
                         <span class="flex-1 text-center font-bold">权限</span>
