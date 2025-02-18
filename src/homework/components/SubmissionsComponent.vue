@@ -235,8 +235,6 @@ const localSubmissionState = async (currentPage: number) => {
     problems.value = res.data ?? [];
     initializePollingQueue();
     startPolling();
-    console.log('这是我写的状态接口返回值',res);
-    console.log('这是我从父组件接受的作业id值',props.homeworkId);
 };
 // 页面切换事件，重新加载数据
 function onPage(event: any) {
@@ -246,7 +244,6 @@ function onPage(event: any) {
 }
 const localSubmissionStateCount = async () => {
     const res = await getSubmissionsMaxCount(props.homeworkId, false);
-    console.log("这是返回多少数量的接口",res);
     totalRecords.value = res.data ?? 0;
 };
 // 格式化内存
