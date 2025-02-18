@@ -34,15 +34,16 @@
                 <Calendar v-model="homework.endTime" showTime hourFormat="24" class="mt-2 w-full" />
             </div>
         </div>
-        <div class="mt-4">
+        <div class="mt-4 flex flex-col space-y-2 w-[20%]">
             <label class="text-gray-500">
-                作业题目在作业列表处编辑
+                <span class="text-red-500">*</span> 作业题目
             </label>
+            <Button severity="secondary" label="点击编辑作业题目" @click="onListPageOpen" />
         </div>
         <div class="flex flex-col space-y-2 mt-4">
             <label class="text-gray-500"><span class="text-red-500">*</span> 允许提交语言:</label>
             <div class="flex flex-wrap gap-4">
-                <div v-for="option in languageOptions " :key="option.id" class="flex items-center mr-2 gap-2">
+                <div v-for="option in languageOptions" :key="option.id" class="flex items-center mr-2 gap-2">
                     <Checkbox v-model="homework.languages" :inputId="option.id.toString()" :value="option.id" />
                     <label :for="option.id.toString()">{{ option.name }}</label>
                 </div>
@@ -95,7 +96,7 @@
             </label>
         </div>
         <div v-if="homework.auth !== 0" class="p-0 mt-4 space-y-4">
-            <Select v-model="homework.selectedClasses" :options="filteredClasses" optionLabel="name"
+            <Select v-model="homework.selectedClasses" :options="filteredClasses" optionLabel="name" optionValue="id"
                 placeholder="选择班级..." class="w-[150px]">
                 <template #header>
                     <div class="flex items-center gap-2 p-2">
@@ -140,6 +141,135 @@
             <Button label="保存" @click="onSubmitEvent" icon="pi pi-check" class="w-full mt-4" />
         </div>
     </Panel>
+    <Dialog v-model:visible="contestProblemsDialog" header="选择题目" :modal="true" :style="{ width: '80%' }">
+        <div id="functionArea">
+            <!-- 操作栏 -->
+            <div class="flex items-center space-x-5 p-4">
+                <!-- 搜索框 -->
+                <span class="relative">
+                    <InputText placeholder="输入关键词" class="p-2 w-64 rounded-md border border-gray-300" />
+                    <i class="pi pi-search absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </span>
+                <!-- 按钮：创建 -->
+                <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded shadow-md"
+                    @click="onAddPageOpen">
+                    + 添加题目
+                </button>
+            </div>
+        </div>
+        <DataTable :value="contestProblems" class="mt-2" :sortOrder="1" sortField="number" removableSort scrollable
+            scrollHeight="400px">
+            <Column field="id">
+                <template #header>
+                    <span class="flex-1 text-center font-bold">ID</span>
+                </template>
+            </Column>
+            <Column field="title">
+                <template #header>
+                    <span class="flex-1 text-center font-bold">标题</span>
+                </template>
+            </Column>
+            <Column class="w-48">
+                <template #header>
+                    <span class="flex-1 text-center font-bold">题号</span>
+                </template>
+                <template #body="slotProps">
+                    <InputNumber v-model="slotProps.data.number" inputId="numIn" showButtons buttonLayout="horizontal"
+                        variant="filled" :step="1" :min="0" :max="100" :allow-empty="false" class="w-full" fluid>
+                        <template #incrementicon>
+                            <span class="pi pi-plus" />
+                        </template>
+                        <template #decrementicon>
+                            <span class="pi pi-minus" />
+                        </template>
+                    </InputNumber>
+                </template>
+            </Column>
+            <Column field="number" class="text-center" style="text-align: center;" sortable>
+                <template #header>
+                    <span class="flex-1 text-center font-bold">实际显示题号</span>
+                </template>
+                <template #body="slotProps">
+                    <span class="flex-1 text-center">{{ convertToLetter(slotProps.data.number + 1) }}</span>
+                </template>
+            </Column>
+            <Column field="difficulty">
+                <template #header>
+                    <span class="flex-1 text-center font-bold">难度</span>
+                </template>
+                <template #body="slotProps">
+                    <span v-if="slotProps.data.difficulty === 0"
+                        class="bg-green-100 text-green-800 text-sm font-semibold mr-2 px-2.5 py-2 rounded">简单</span>
+                    <span v-else-if="slotProps.data.difficulty === 1"
+                        class="bg-yellow-100 text-yellow-800 text-sm font-semibold mr-2 px-2.5 py-2 rounded">中等</span>
+                    <span v-else
+                        class="bg-red-100 text-red-800 text-sm font-semibold mr-2 px-2.5 py-2 rounded">困难</span>
+                </template>
+            </Column>
+            <Column field="createTime" header="添加时间"></Column>
+            <Column field="operation" header="操作">
+                <template #body="slotProps">
+                    <button
+                        class="bg-red-500 text-white p-1 rounded flex items-center justify-center w-12 h-8 hover:bg-red-600"
+                        v-tooltip.top="'删除题目'" @click="deleteContestProblems(slotProps.data.id)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </template>
+            </Column>
+        </DataTable>
+        <Button label="保存" class="mt-4 w-full" @click="problemFinalSaveEvent" />
+    </Dialog>
+    <Dialog v-model:visible="addProblemDialog" class="mt-2" :style="{ width: '60%' }" scrollable scrollHeight="400px">
+        <DataTable v-model:selection="selectedProblems" selectionMode="multiple" :metaKeySelection="false" dataKey="id"
+            :value="allProblems" stripedRows scrollable class="m-0 p-0" lazy paginator :rows="20"
+            :totalRecords="problemTotalRecords" :first="problemFirst" @page="onProblemPage">
+            <template #header>
+                <div class="flex justify-between items-center">
+                    <span class="text-xl font-bold text-surface-700 dark:text-surface-0">题目列表</span>
+                    <span class="text-base font-bold text-surface-400 dark:text-surface-0">保存按钮在最底下</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="relative">
+                            <InputText placeholder="输入关键词" class="p-2 w-64 rounded-md border border-gray-300"
+                                v-model="problemSearchContent" @keyup.enter="searchProblemInAllEvent" />
+                            <i class="pi pi-search absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
+                                @click="searchProblemInAllEvent"></i>
+                        </span>
+                        <div class="flex items-center gap-1">
+                            <ToggleSwitch v-tooltip.top="'仅显示我创建的'" @change="searchProblemInAllEvent" id="myProblems"
+                                v-model="filterType" />
+                            <label for="myProblems" class="text-gray-500">仅显示我创建的</label>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            <Column field="id" header="题目ID"></Column>
+            <Column field="title" header="标题"></Column>
+            <Column field="difficulty" header="难度">
+                <template #body="slotProps">
+                    <span v-if="slotProps.data.difficulty === 0"
+                        class="bg-green-100 text-green-800 text-sm font-semibold mr-2 px-2.5 py-2 rounded">简单</span>
+                    <span v-else-if="slotProps.data.difficulty === 1"
+                        class="bg-yellow-100 text-yellow-800 text-sm font-semibold mr-2 px-2.5 py-2 rounded">中等</span>
+                    <span v-else
+                        class="bg-red-100 text-red-800 text-sm font-semibold mr-2 px-2.5 py-2 rounded">困难</span>
+                </template>
+            </Column>
+            <Column field="tags" header="标签"></Column>
+            <Column field="total" header="总提交">
+                <template #body="slotProps">
+                    <span v-if="slotProps.data.total">{{ slotProps.data.total }}</span>
+                    <span v-else>0</span>
+                </template>
+            </Column>
+            <Column header="通过率">
+                <template #body="slotProps">
+                    <span>{{ isNaN(slotProps.data.solved * 100 / slotProps.data.total) ? '0' : (slotProps.data.solved
+                        * 100 / slotProps.data.total).toFixed(2) }}%</span>
+                </template>
+            </Column>
+        </DataTable>
+        <Button label="保存" class="w-full" @click="selectedProblemSaveEvent" />
+    </Dialog>
 </template>
 <script lang="ts">
 import { languageOptions } from '@/common/constant/AllConstant'
@@ -147,7 +277,7 @@ import CustomToggleButton from './CustomToggleButton.vue';
 import { reactive, ref, defineComponent, onMounted } from 'vue'
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { parseUsers, getHomeworkGroup, createHomework, getHomeworkDetail, updateHomework, type ContestSpace } from '@/admin/api/contestAPI'
+import { parseUsers, getHomeworkGroup, createHomework, updateContestProblems, deleteHomeworkProblem, getHomeworkDetail, addProblems, updateHomework, getAdminAllProblems, getAdminProblems, getAdminProblemsCount, type ContestSpace } from '@/admin/api/contestAPI'
 import globalMessage from '@/common/utils/toast';
 
 export default defineComponent({
@@ -188,10 +318,116 @@ export default defineComponent({
             duplicateCheck: false,
             languages: [1, 2, 3, 4, 9, 10],
             users: '',
-            selectedClasses: { id: -1, name: '' },
+            selectedClasses: -1,
             startTime: new Date(),
             endTime: new Date()
         })
+        // problem
+        const contestProblemsDialog = ref(false);
+        const addProblemDialog = ref(false);
+        const contestProblems = ref<ContestSpace.AdminProblemVO[]>([]);
+        const selectedProblems = ref<ContestSpace.AdminAllProblemVO[]>([]);
+        const allProblems = ref<ContestSpace.AdminAllProblemVO[]>([]);
+        const problemTotalRecords = ref<number>(0);
+        const problemFirst = ref<number>(0);
+        const filterType = ref<boolean>(false);
+        const problemSearchContent = ref<string>('');
+
+        function convertToLetter(num: number) {
+            let str = '';
+            while (num > 0) {
+                let m = num % 26;
+                if (m === 0) {
+                    m = 26;
+                }
+                str = String.fromCharCode(m + 64) + str;
+                num = (num - m) / 26;
+            }
+            return str;
+        }
+        function searchProblemInAllEvent() {
+            loadAllProblems();
+            loadAllProblemCount();
+        }
+        function problemFinalSaveEvent() {
+            contestProblemsDialog.value = false;
+            updateContestProblemsFun();
+        }
+        function selectedProblemSaveEvent() {
+            addProblemDialog.value = false;
+            saveSelectedProblems();
+        }
+        function onAddPageOpen() {
+            selectedProblems.value = [];
+            addProblemDialog.value = true;
+            loadAllProblems();
+            loadAllProblemCount();
+        }
+        function onListPageOpen() {
+            contestProblemsDialog.value = true;
+            loadHomeworkProblems();
+        }
+        function onProblemPage(event: { first: number, rows: number }) {
+            problemFirst.value = event.first;
+            loadAllProblems();
+        }
+        async function deleteContestProblems(pid: number) {
+            await deleteHomeworkProblem(props.id as number, pid).then(() => {
+                globalMessage.success("删除题目", "操作成功");
+                loadHomeworkProblems();
+            }).catch(err => {
+                globalMessage.error("删除题目失败", err.message);
+            });
+        }
+        async function updateContestProblemsFun() {
+            const tempProblems: ContestSpace.UpdateContestProblemEntityDTO[] = contestProblems.value.map(problem => ({
+                id: problem.id,
+                number: problem.number
+            }));
+            const dto: ContestSpace.UpdateContestProblemDTO = {
+                id: props.id as number,
+                problems: tempProblems
+            }
+            await updateContestProblems(dto).then(() => {
+                globalMessage.success("更新题目", "操作成功");
+            }).catch(err => {
+                globalMessage.error("更新题目失败", err.message);
+            });
+        }
+        async function saveSelectedProblems() {
+            let ids: number[] = [];
+            ids = selectedProblems.value.map(problem => problem.id);
+            await addProblems(props.id as number, ids).then(() => {
+                globalMessage.success("保存题目", "操作成功");
+                loadHomeworkProblems();
+            }).catch(err => {
+                globalMessage.error("保存题目失败", err.message);
+            });
+        }
+        async function loadAllProblems() {
+            const type = filterType.value ? 'own' : 'all';
+            await getAdminAllProblems(problemFirst.value, type, problemSearchContent.value).then(res => {
+                allProblems.value = res.data as ContestSpace.AdminAllProblemVO[];
+            }).catch(err => {
+                globalMessage.error("加载题目失败", err.message);
+            });
+        }
+        async function loadHomeworkProblems() {
+            await getAdminProblems(props.id as number).then(res => {
+                contestProblems.value = res.data as ContestSpace.AdminProblemVO[];
+            }).catch(err => {
+                globalMessage.error("加载题目失败", err.message);
+            });
+        }
+        async function loadAllProblemCount() {
+            const type = filterType.value ? 'own' : 'all';
+            await getAdminProblemsCount(type, problemSearchContent.value).then(res => {
+                problemTotalRecords.value = res.data as number;
+            }).catch(err => {
+                globalMessage.error("加载题目失败", err.message);
+            });
+        }
+        // event
         onMounted(() => {
             loadClasses();
             if (props.type === 'edit') {
@@ -233,7 +469,7 @@ export default defineComponent({
                 duplicateCheck: homework.duplicateCheck,
                 languages: homework.languages,
                 users: stu,
-                groupId: homework.selectedClasses.id,
+                groupId: homework.selectedClasses,
                 startTime: homework.startTime.getTime(),
                 endTime: homework.endTime.getTime()
             }
@@ -253,12 +489,10 @@ export default defineComponent({
                 homework.visible = data.visible;
                 homework.duplicateCheck = data.duplicateCheck;
                 homework.languages = data.languages;
-                homework.selectedClasses = { id: data.groupId, name: '' };
+                homework.selectedClasses = data.groupId;
                 homework.startTime = new Date(data.startTime);
                 homework.endTime = new Date(data.endTime);
                 studentInput.value = data.users.join('\n');
-
-                console.log(res.data);
             }).catch(err => {
                 globalMessage.error("加载数据失败", err.message);
             });
@@ -276,7 +510,7 @@ export default defineComponent({
                 duplicateCheck: homework.duplicateCheck,
                 languages: homework.languages,
                 users: stu,
-                groupId: homework.selectedClasses.id,
+                groupId: homework.selectedClasses,
                 startTime: homework.startTime.getTime(),
                 endTime: homework.endTime.getTime()
             }
@@ -295,12 +529,22 @@ export default defineComponent({
         }
         return {
             homework, authOptions, languageOptions, visibleOptions, searchContent, onlyMyClasses, filteredClasses, studentInput, students,
-            onOwnClassesChange, parseButtonEvent, createHomeworkFun, onSubmitEvent
+            onOwnClassesChange, parseButtonEvent, createHomeworkFun, onSubmitEvent, contestProblemsDialog, contestProblems, addProblemDialog,
+            allProblems, selectedProblems, problemTotalRecords, problemFirst, onProblemPage, onAddPageOpen, onListPageOpen, problemFinalSaveEvent,
+            selectedProblemSaveEvent, filterType, problemSearchContent, searchProblemInAllEvent, convertToLetter, deleteContestProblems
         }
     }
 })
 </script>
 <style scoped>
+::v-deep(.p-datatable-tbody > tr.p-datatable-row-selected) {
+    background-color: black !important;
+    /* 选中变淡蓝色 */
+    color: white !important;
+    border-color: black !important;
+    /* 文字颜色 */
+}
+
 ::v-deep(svg.md-editor-icon) {
     width: 23px !important;
     height: 23px !important;

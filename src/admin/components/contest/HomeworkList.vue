@@ -91,7 +91,7 @@
                     </template>
                     <template #body="slotProps">
                         <div class="flex space-x-2 justify-center">
-                            <router-link :to="`/admin/problem/edit/${slotProps.data.id}`"
+                            <router-link :to="`/admin/homework/edit/${slotProps.data.id}`"
                                 class="bg-blue-500 text-white p-2 rounded flex items-center justify-center w-14 h-9 hover:bg-blue-600"
                                 v-tooltip.top="'编辑作业'">
                                 <i class="fas fa-edit"></i>
