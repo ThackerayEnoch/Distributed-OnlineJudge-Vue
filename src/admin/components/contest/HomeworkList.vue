@@ -34,7 +34,7 @@
                     </template>
                     <template #body="slotProps">
                         <router-link :to="'/admin/contest/edit/' + slotProps.data.id">{{ slotProps.data.title
-                            }}</router-link>
+                        }}</router-link>
                     </template>
                 </Column>
                 <Column field="auth" style="text-align: center; min-width: 7%;">
@@ -101,7 +101,7 @@
                                 v-tooltip.top="'复制作业'">
                                 <i class="fas fa-copy"></i>
                             </button>
-                            <router-link :to="`/admin/problem/stats/${slotProps.data.id}`"
+                            <router-link :to="`/admin/homework/status/${slotProps.data.id}`"
                                 class="bg-purple-500 text-white p-2 rounded flex items-center justify-center w-14 h-9 hover:bg-purple-600"
                                 v-tooltip.top="'查看统计信息'">
                                 <i class="fas fa-chart-bar"></i>

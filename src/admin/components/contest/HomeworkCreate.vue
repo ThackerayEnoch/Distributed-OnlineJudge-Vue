@@ -219,7 +219,7 @@
         </DataTable>
         <Button label="保存" class="mt-4 w-full" @click="problemFinalSaveEvent" />
     </Dialog>
-    <Dialog v-model:visible="addProblemDialog" class="mt-2" :style="{ width: '60%' }" scrollable scrollHeight="400px">
+    <Dialog v-model:visible="addProblemDialog" class="mt-2" :style="{ width: '60%' }" scrollable>
         <DataTable v-model:selection="selectedProblems" selectionMode="multiple" :metaKeySelection="false" dataKey="id"
             :value="allProblems" stripedRows scrollable class="m-0 p-0" lazy paginator :rows="20"
             :totalRecords="problemTotalRecords" :first="problemFirst" @page="onProblemPage">
@@ -285,7 +285,7 @@ export default defineComponent({
     components: { MdEditor, CustomToggleButton },
     props: {
         id: {
-            type: Number,
+            type: String,
             required: false
         },
         type: {
@@ -372,7 +372,7 @@ export default defineComponent({
             loadAllProblems();
         }
         async function deleteContestProblems(pid: number) {
-            await deleteHomeworkProblem(props.id as number, pid).then(() => {
+            await deleteHomeworkProblem(Number(props.id), pid).then(() => {
                 globalMessage.success("删除题目", "操作成功");
                 loadHomeworkProblems();
             }).catch(err => {
@@ -385,7 +385,7 @@ export default defineComponent({
                 number: problem.number
             }));
             const dto: ContestSpace.UpdateContestProblemDTO = {
-                id: props.id as number,
+                id: Number(props.id),
                 problems: tempProblems
             }
             await updateContestProblems(dto).then(() => {
@@ -397,7 +397,7 @@ export default defineComponent({
         async function saveSelectedProblems() {
             let ids: number[] = [];
             ids = selectedProblems.value.map(problem => problem.id);
-            await addProblems(props.id as number, ids).then(() => {
+            await addProblems(Number(props.id), ids).then(() => {
                 globalMessage.success("保存题目", "操作成功");
                 loadHomeworkProblems();
             }).catch(err => {
@@ -413,7 +413,7 @@ export default defineComponent({
             });
         }
         async function loadHomeworkProblems() {
-            await getAdminProblems(props.id as number).then(res => {
+            await getAdminProblems(Number(props.id)).then(res => {
                 contestProblems.value = res.data as ContestSpace.AdminProblemVO[];
             }).catch(err => {
                 globalMessage.error("加载题目失败", err.message);
@@ -431,7 +431,7 @@ export default defineComponent({
         onMounted(() => {
             loadClasses();
             if (props.type === 'edit') {
-                loadHomeworkDetail(props.id as number);
+                loadHomeworkDetail(Number(props.id));
             }
         })
         const parseButtonEvent = () => {
@@ -500,7 +500,7 @@ export default defineComponent({
         async function updateHomeworkFun() {
             const stu: string[] = studentInput.value.split('\n');
             const homeworkDTO: ContestSpace.CreateHomeworkDTO = {
-                id: props.id as number,
+                id: Number(props.id),
                 title: homework.title,
                 description: homework.description,
                 auth: homework.auth,

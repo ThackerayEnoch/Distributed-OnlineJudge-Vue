@@ -74,6 +74,41 @@ export namespace ContestSpace{
         id:number;
         problems:UpdateContestProblemEntityDTO[];
     }
+    export interface DataSetVO {
+        type: string;
+        label: string;
+        data: number[];
+    }
+
+    export interface ProblemVO {
+        id: number;
+        displayId: number;
+        title: string;
+        submissions: number;
+        passRate: number;
+    }
+
+    export interface StudentsVO {
+        id: number;
+        nickname: string;
+        solved: number;
+        attempts: number;
+    }
+
+    export interface TopRateVO {
+        submitRate: number;
+        passRate: number;
+        avgRate: number;
+        difficultTitle: string;
+    }
+
+    export interface StatVO {
+        topRateVO: TopRateVO;
+        studentsVO: StudentsVO[];
+        problemVO: ProblemVO[];
+        countDataSetVO: DataSetVO[];
+        submitDataSetVO: number[];
+    }
 }
 export const getHomeworkList = (offset:number,type:string) => {
     return request.get<ContestSpace.HomeworkListVO[]>('/api/c/admin/homeworks',{offset,type});
@@ -108,9 +143,12 @@ export const getAdminProblems = (id:number) => {
 export const addProblems = (id:number,problems:number[]) => {
     return request.post<string>('/api/c/admin/homework/problems',{id,problems});
 }
-export const updateContestProblems = (data:ContestSpace.updateContestProblemDTO) => {
+export const updateContestProblems = (data:ContestSpace.UpdateContestProblemDTO) => {
     return request.put<string>('/api/c/admin/homework/problems',data);
 }
 export const deleteHomeworkProblem = (cid:number,pid:number) => {
     return request.delete<string>(`/api/c/admin/homework/problems/${cid}/${pid}`);
+}
+export const getHomeworkStat = (cid:number) => {
+    return request.get<ContestSpace.StatVO>('/api/c/admin/homework/statistics',{cid});
 }

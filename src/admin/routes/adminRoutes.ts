@@ -120,6 +120,14 @@ export default [
                 admin:()=>import('@/admin/components/contest/HomeworkEdit.vue')
               },
               props:true
+            },
+            {
+              path:'/admin/homework/status/:id',
+              name:'AdminHomeworkStatus',
+              components:{
+                admin:()=>import('@/admin/components/contest/HomeworkStatus.vue')
+              }, 
+              props:true
             }
           ]
         }

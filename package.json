@@ -19,6 +19,7 @@
     "@vee-validate/rules": "^4.13.2",
     "autoprefixer": "^10.4.20",
     "axios": "^1.7.6",
+    "chart.js": "^4.4.7",
     "katex": "^0.16.19",
     "md-editor-v3": "^5.2.2",
     "pinia": "^2.1.7",
