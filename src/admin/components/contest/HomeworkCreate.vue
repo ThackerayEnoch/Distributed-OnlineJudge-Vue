@@ -285,7 +285,7 @@ export default defineComponent({
     components: { MdEditor, CustomToggleButton },
     props: {
         id: {
-            type: String,
+            type: Number,
             required: false
         },
         type: {

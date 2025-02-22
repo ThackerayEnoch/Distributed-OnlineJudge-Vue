@@ -103,6 +103,8 @@ export namespace ContestSpace{
     }
 
     export interface StatVO {
+        totalUser: number;
+        auth: number;
         topRateVO: TopRateVO;
         studentsVO: StudentsVO[];
         problemVO: ProblemVO[];
@@ -110,11 +112,11 @@ export namespace ContestSpace{
         submitDataSetVO: number[];
     }
 }
-export const getHomeworkList = (offset:number,type:string) => {
-    return request.get<ContestSpace.HomeworkListVO[]>('/api/c/admin/homeworks',{offset,type});
+export const getHomeworkList = (offset:number,type:string,searchContent:string) => {
+    return request.get<ContestSpace.HomeworkListVO[]>('/api/c/admin/homeworks',{offset,type,searchContent});
 }
-export const getHomeworksCount = (type:string) => {
-    return request.get<number>('/api/c/admin/homeworks/count',{type});
+export const getHomeworksCount = (type:string,searchContent:string) => {
+    return request.get<number>('/api/c/admin/homeworks/count',{type,searchContent});
 }
 export const parseUsers = (usernames:string[])=>{
     return request.post<ContestSpace.AdminParseUsers[]>('/api/c/admin/homework/create/parse',usernames);

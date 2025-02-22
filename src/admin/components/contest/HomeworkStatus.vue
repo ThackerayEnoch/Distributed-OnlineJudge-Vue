@@ -1,5 +1,11 @@
 <template>
-    <div class="p-6 space-y-6">
+    <div v-show="isloading" class="flex flex-col items-center justify-center h-screen">
+        <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="8" fill="transparent" animationDuration=".5s"
+            aria-label="Custom ProgressSpinner" />
+        <span class="mt-2 text-gray-500">加载统计信息中...</span>
+    </div>
+
+    <div v-show="!isloading" class="p-6 space-y-6">
         <!-- 作业整体统计 -->
         <div class="grid grid-cols-4 gap-4">
             <Card v-for="stat in stats" :key="stat.label" class="p-0 shadow-md rounded">
@@ -18,7 +24,13 @@
                     <span>{{ convertToLetter(data.displayId) }}</span>
                 </template>
             </Column>
-            <Column field="title" header="题目" />
+            <Column field="title" header="题目">
+                <template #body="slotProps">
+                    <router-link :to="'/problem/' + slotProps.data.id">{{ slotProps.data.title
+                        }}</router-link>
+                </template>
+            </Column>
+
             <Column field="submissions" header="总提交次数" sortable />
             <Column field="passRate" header="通过率" sortable>
                 <template #body="{ data }">
@@ -49,7 +61,14 @@
             <Column field="id" header="#" />
             <Column field="nickname" header="姓名" />
             <Column field="solved" header="通过题数" sortable />
-            <Column field="passRate" header="完成率" sortable />
+            <Column field="passRate" header="完成率" sortable>
+                <template #body="slotProps">
+                    <span
+                        :class="slotProps.data.solved * 100.0 / problems.length > 50 ? 'text-green-500' : 'text-red-500'">
+                        {{ (slotProps.data.solved * 100.0 / problems.length).toFixed(2) }}%
+                    </span>
+                </template>
+            </Column>
             <Column field="attempts" header="提交次数" sortable />
             <Column header="操作">
                 <template #body>
@@ -63,6 +82,7 @@
 <script setup lang="ts">
 import { reactive, ref, defineProps, onMounted } from 'vue';
 import { getHomeworkStat, type ContestSpace } from '@/admin/api/contestAPI';
+import globalMessage from '@/common/utils/toast';
 
 const props = defineProps<{
     id: number;
@@ -77,9 +97,8 @@ const stats = ref([
 ]);
 
 const problems = ref<ContestSpace.ProblemVO[]>([]);
-
 const students = ref<ContestSpace.StudentsVO[]>([]);
-
+const isloading = ref(true);
 const documentStyle = getComputedStyle(document.documentElement);
 const textColor = documentStyle.getPropertyValue('--p-text-color');
 const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color');
@@ -199,21 +218,33 @@ onMounted(() => {
     loadData();
 });
 async function loadData() {
+    isloading.value = true;
     await getHomeworkStat(props.id as number).then(res => {
         const data: ContestSpace.StatVO = res.data as ContestSpace.StatVO;
         // Top 显示数据
-        stats.value = [
-            { label: '提交率', value: data.topRateVO.submitRate.toString() + '%', color: 'text-green-500' },
+        const commonStats = [
             { label: '通过率', value: data.topRateVO.passRate.toString() + '%', color: 'text-green-500' },
             { label: '平均提交次数', value: data.topRateVO.avgRate.toString(), color: 'text-blue-500' },
             { label: '最难题目(通过率最低)', value: data.topRateVO.difficultTitle, color: 'text-red-500' }
         ];
+
+        if (data.auth == 0) {
+            stats.value = [
+                { label: '参与人数', value: data.totalUser.toString(), color: 'text-green-500' },
+                ...commonStats
+            ];
+        } else {
+            stats.value = [
+                { label: '提交率', value: data.topRateVO.submitRate.toString() + '%', color: 'text-green-500' },
+                ...commonStats
+            ];
+        }
         // 题目统计数据
         problems.value = data.problemVO;
         // 学生数据
         students.value = data.studentsVO;
         // 题目提交矩形图数据
-        barChartData.labels = data.problemVO.map(problem => convertToLetter(problem.displayId));
+        barChartData.labels = data.countDataSetVO.map(dataset => convertToLetter(Number(dataset.label)));
         barChartData.datasets[0].data = data.countDataSetVO.map(dataset => dataset.data[0]);
         barChartData.datasets[1].data = data.countDataSetVO.map(dataset => dataset.data[1]);
         barChartData.datasets[2].data = data.countDataSetVO.map(dataset => dataset.data[2]);
@@ -221,6 +252,9 @@ async function loadData() {
         barChartData.datasets[4].data = data.countDataSetVO.map(dataset => dataset.data[4]);
         // 提交次数折线图数据
         lineChartData.datasets[0].data = data.submitDataSetVO;
+        isloading.value = false;
+    }).catch(() => {
+        globalMessage.error('加载数据失败', '请刷新重试');
     });
 }
 function convertToLetter(num: number) {

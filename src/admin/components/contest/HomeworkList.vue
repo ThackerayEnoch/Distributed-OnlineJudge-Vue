@@ -15,8 +15,10 @@
                 </router-link>
                 <!-- 搜索框 -->
                 <span class="relative">
-                    <InputText placeholder="输入关键词" class="p-2 w-64 rounded-md border border-gray-300" />
-                    <i class="pi pi-search absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <InputText placeholder="输入关键词" v-model="searchContent" @keyup.enter="search"
+                        class="p-2 w-64 rounded-md border border-gray-300" />
+                    <i class="pi pi-search absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
+                        @click="search"></i>
                 </span>
             </div>
         </div>
@@ -34,7 +36,7 @@
                     </template>
                     <template #body="slotProps">
                         <router-link :to="'/admin/contest/edit/' + slotProps.data.id">{{ slotProps.data.title
-                        }}</router-link>
+                            }}</router-link>
                     </template>
                 </Column>
                 <Column field="auth" style="text-align: center; min-width: 7%;">
@@ -129,13 +131,14 @@ const homeworks = ref<ContestSpace.HomeworkListVO[]>([]);
 const first = ref<number>(0);
 const totalRecords = ref<number>(0);
 const displayMode = ref<boolean>(true);
+const searchContent = ref<string>('');
 onMounted(() => {
     loadHomeworks();
     loadHomeworksCount();
 });
 async function loadHomeworks() {
     const mode = displayMode.value ? 'own' : 'all';
-    await getHomeworkList(first.value, mode).then(res => {
+    await getHomeworkList(first.value, mode, searchContent.value).then(res => {
         homeworks.value = res.data as ContestSpace.HomeworkListVO[];
     }).catch(err => {
         globalMessage.error("加载数据失败", err.message);
@@ -143,7 +146,7 @@ async function loadHomeworks() {
 }
 async function loadHomeworksCount() {
     const mode = displayMode.value ? 'own' : 'all';
-    await getHomeworksCount(mode).then(res => {
+    await getHomeworksCount(mode, searchContent.value).then(res => {
         totalRecords.value = res.data as number;
     }).catch(err => {
         globalMessage.error("加载数据失败", err.message);
@@ -151,6 +154,12 @@ async function loadHomeworksCount() {
 }
 function visibleChange(visible: boolean, id: number) {
     console.log(visible, id);
+}
+function search() {
+    first.value = 0;
+    displayMode.value = false;
+    loadHomeworks();
+    loadHomeworksCount();
 }
 function modeChange() {
     first.value = 0;
