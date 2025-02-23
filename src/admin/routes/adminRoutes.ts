@@ -130,6 +130,23 @@ export default [
               props:true
             }
           ]
+        },
+        {
+          path:'/admin/users',
+          name:'UserAdmin',
+          children:[
+            {
+              path:'/admin/users',
+              redirect: '/admin/users/list'
+            },
+            {
+              path:'/admin/users/list',
+              name:'AdminUserList',
+              components:{
+                admin:()=>import('@/admin/components/user/UserList.vue')
+              }
+            }
+          ]
         }
       ]
     }

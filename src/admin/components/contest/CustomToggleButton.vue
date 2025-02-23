@@ -1,7 +1,7 @@
 <template>
     <button class="w-16 h-8 flex items-center justify-center rounded-md font-semibold text-xs transition-all"
         :class="modelValue ? 'bg-green-500 text-white' : 'bg-red-500 text-white'" @click="toggle">
-        {{ modelValue ? '是' : '否' }}
+        {{ modelValue ? trueLabel : falseLabel }}
     </button>
 </template>
 
@@ -10,6 +10,14 @@ import { defineProps, defineEmits } from 'vue';
 
 const props = defineProps({
     modelValue: [Boolean, Number],
+    trueLabel: {
+        type: String,
+        default: '是',
+    },
+    falseLabel: {
+        type: String,
+        default: '否',
+    },
 });
 const emit = defineEmits(['update:modelValue', 'change']);
 
