@@ -145,6 +145,13 @@ export default [
               components:{
                 admin:()=>import('@/admin/components/user/UserList.vue')
               }
+            },
+            {
+              path:'/admin/users/import',
+              name:'AdminUserImport',
+              components:{
+                admin:()=>import('@/admin/components/user/UserImport.vue')
+              }
             }
           ]
         }

@@ -29,7 +29,7 @@
                     </div>
                     <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">忘记密码?</span>
                 </div>
-                <Button label="登录" class="w-full p-button-primary" type="submit" />
+                <Button label="登录" class="w-full p-button-primary" :loading="isloading" type="submit" />
             </form>
             <div class="flex justify-center mt-8 mb-2">
                 <RouterLink to="/auth/register" class="font-medium no-underline cursor-pointer text-primary">没有账户? 点击注册
@@ -52,6 +52,7 @@ import { User } from '@/common/entity/user'
 const counterStore = useUserStore();
 const isRememberMe = ref(false);
 
+const isloading = ref(false);
 // 定义表单验证规则
 const schema = yup.object({
     username: yup.string().required('用户名是必填项'),
@@ -69,6 +70,7 @@ const { value: password, errorMessage: passwordError } = useField<string>('passw
 
 // 提交表单(触发整体验证)
 const onSubmit = handleSubmit(async values => {
+    isloading.value = true;
     const result = await login({
         username: values.username,
         password: values.password,
@@ -83,8 +85,10 @@ const onSubmit = handleSubmit(async values => {
             counterStore.setUser(user);
             globalMessage.success('成功', '登录成功');
             router.push('/');
+            isloading.value = false;
         } else {
             globalMessage.error('失败', '登录失败');
+            isloading.value = false;
         }
     }
 });

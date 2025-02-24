@@ -4,6 +4,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import ProblemEdit from '@/admin/components/ProblemEdit.vue'
+import ProblemEdit from '@/admin/components/problem/ProblemEdit.vue'
 </script>
 <style scoped></style>

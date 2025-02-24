@@ -34,6 +34,11 @@ export namespace UserSpace{
         password?: string;
         status: boolean;
     }
+    export interface AdminCreateUserBatchDTO {
+        username: string;
+        nickname: string;
+        password: string;
+    }
 }
 export const getAdminUsers = (offset:number,limit:number,content:string|null) => {
     return request.get<UserSpace.UserInfoVO[]>('/api/u/admin/users',{offset,limit,content});
@@ -53,3 +58,7 @@ export const createUser = (data:UserSpace.AdminCreateUserInfoDTO) => {
 export const assignRole = (data:UserSpace.RoleAssignDTO) => {
     return request.post<string>('/api/u/role/user',data)
 }
+export const createUserBatch = (data:UserSpace.AdminCreateUserBatchDTO[]) => {
+    return request.post<string>('/api/u/admin/users',data)
+}
+
