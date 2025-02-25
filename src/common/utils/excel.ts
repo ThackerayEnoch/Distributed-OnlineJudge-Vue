@@ -168,7 +168,7 @@ export async function parseXLS(file: File): Promise<ExcelUser[]> {
   return userDataList;
 }
 
-interface ExportHeader {
+export interface ExportHeader {
   key: string; // 数据对象的属性名
   title: string; // Excel 中显示的表头名
   width?: number; // 可选，列宽
@@ -179,6 +179,7 @@ interface ExportHeader {
  * @param data 导出的数据数组
  * @param headers 表头映射 [{ key: 'name', title: '姓名' }]
  * @param filename 导出的文件名（默认：export.xlsx）
+ * @param includeIndex 是否包含序号列（默认：false）
  */
 export async function exportToExcel<T>(
   data: T[],

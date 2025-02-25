@@ -152,6 +152,13 @@ export default [
               components:{
                 admin:()=>import('@/admin/components/user/UserImport.vue')
               }
+            },
+            {
+              path:'/admin/users/generate',
+              name:'AdminUserGenerate',
+              components:{
+                admin:()=>import('@/admin/components/user/UserGenerate.vue')
+              }
             }
           ]
         }

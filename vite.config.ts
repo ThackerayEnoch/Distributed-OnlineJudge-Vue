@@ -8,6 +8,10 @@ import { prismjsPlugin } from 'vite-plugin-prismjs'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    host: true, // 绑定 0.0.0.0
+    port: 5173, // 可选，指定端口
+  },
   plugins: [
     vue(),
     Components({
