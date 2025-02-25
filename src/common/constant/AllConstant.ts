@@ -1,8 +1,8 @@
 export const languageOptions = [
-    { id: 1, content_type: "text/x-csrc", description: "GCC 9.4.0", name: "C" },
-    { id: 2, content_type: "text/x-csrc", description: "GCC 9.4.0", name: "C With O2" },
-    { id: 3, content_type: "text/x-c++src", description: "G++ 9.4.0", name: "C++" },
-    { id: 4, content_type: "text/x-c++src", description: "G++ 9.4.0", name: "C++ With O2" },
+    { id: 1, content_type: "text/x-csrc", description: "GCC 9.4.0", name: "C 11" },
+    { id: 2, content_type: "text/x-csrc", description: "GCC 9.4.0", name: "C 11 With O2" },
+    { id: 3, content_type: "text/x-c++src", description: "G++ 9.4.0", name: "C++ 11" },
+    { id: 4, content_type: "text/x-c++src", description: "G++ 9.4.0", name: "C++ 11 With O2" },
     { id: 5, content_type: "text/x-c++src", description: "G++ 9.4.0", name: "C++ 17" },
     { id: 6, content_type: "text/x-c++src", description: "G++ 9.4.0", name: "C++ 17 With O2" },
     { id: 7, content_type: "text/x-c++src", description: "G++ 9.4.0", name: "C++ 20" },

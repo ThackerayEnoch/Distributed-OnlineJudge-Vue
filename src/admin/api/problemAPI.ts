@@ -92,11 +92,11 @@ export namespace ProblemSpace{
         updateTime: Date;
     }
 }
-export const getAdminProblems = (offset:number) => {
-    return request.get<ProblemSpace.ProblemVO[]>('/api/p/admin/problems',{offset})
+export const getAdminProblems = (offset:number,own:boolean,auth:number,content:string) => {
+    return request.get<ProblemSpace.ProblemVO[]>('/api/p/admin/problems',{offset,own,auth,content})
 }
-export const getAdminProblemCount = () => {
-    return request.get<number>('/api/p/admin/problems/count',{})
+export const getAdminProblemCount = (offset:number,own:boolean,auth:number,content:string) => {
+    return request.get<number>('/api/p/admin/problems/count',{offset,own,auth,content})
 }
 export const updateAdminProblem = (id:number,status:number) => {
     return request.put<ProblemSpace.ProblemVO>(`/api/p/admin/problem/${id}/status`,{status})
