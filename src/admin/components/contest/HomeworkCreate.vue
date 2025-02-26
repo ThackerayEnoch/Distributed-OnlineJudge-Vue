@@ -291,6 +291,10 @@ export default defineComponent({
         type: {
             type: String,
             required: true
+        },
+        copyId: {
+            type: String,
+            required: false
         }
     },
     setup(props) {
@@ -364,8 +368,13 @@ export default defineComponent({
             loadAllProblemCount();
         }
         function onListPageOpen() {
-            contestProblemsDialog.value = true;
-            loadHomeworkProblems();
+            if (props.id === undefined) {
+                globalMessage.warn("警告", "请先保存作业再编辑题目");
+                return;
+            } else {
+                contestProblemsDialog.value = true;
+                loadHomeworkProblems();
+            }
         }
         function onProblemPage(event: { first: number, rows: number }) {
             problemFirst.value = event.first;
@@ -430,8 +439,10 @@ export default defineComponent({
         // event
         onMounted(() => {
             loadClasses();
-            if (props.type === 'edit') {
+            if (props.type !== undefined && props.type === 'edit') {
                 loadHomeworkDetail(Number(props.id));
+            } else if (props.copyId !== undefined && props.copyId != '') {
+                loadHomeworkDetail(Number(props.copyId));
             }
         })
         const parseButtonEvent = () => {

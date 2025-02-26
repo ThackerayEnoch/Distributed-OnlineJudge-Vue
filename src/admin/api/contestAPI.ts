@@ -111,6 +111,10 @@ export namespace ContestSpace{
         countDataSetVO: DataSetVO[];
         submitDataSetVO: number[];
     }
+    export interface ContestUpdateStatusDTO{
+        id:number;
+        status:boolean;
+    }
 }
 export const getHomeworkList = (offset:number,type:string,searchContent:string) => {
     return request.get<ContestSpace.HomeworkListVO[]>('/api/c/admin/homeworks',{offset,type,searchContent});
@@ -153,4 +157,7 @@ export const deleteHomeworkProblem = (cid:number,pid:number) => {
 }
 export const getHomeworkStat = (cid:number) => {
     return request.get<ContestSpace.StatVO>('/api/c/admin/homework/statistics',{cid});
+}
+export const updateHomeworkStatus = (data:ContestSpace.ContestUpdateStatusDTO) => {
+    return request.put<string>('/api/c/admin/homework/status',data);
 }

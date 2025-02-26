@@ -98,11 +98,11 @@
                                 v-tooltip.top="'编辑作业'">
                                 <i class="fas fa-edit"></i>
                             </router-link>
-                            <button
+                            <router-link :to="`/admin/homework/create/${slotProps.data.id}`"
                                 class="bg-green-500 text-white p-2 rounded flex items-center justify-center w-14 h-9 hover:bg-green-600"
                                 v-tooltip.top="'复制作业'">
                                 <i class="fas fa-copy"></i>
-                            </button>
+                            </router-link>
                             <router-link :to="`/admin/homework/status/${slotProps.data.id}`"
                                 class="bg-purple-500 text-white p-2 rounded flex items-center justify-center w-14 h-9 hover:bg-purple-600"
                                 v-tooltip.top="'查看统计信息'">
@@ -122,7 +122,7 @@
 </template>
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
-import { type ContestSpace, getHomeworkList, getHomeworksCount } from '@/admin/api/contestAPI'
+import { type ContestSpace, getHomeworkList, getHomeworksCount, updateHomeworkStatus } from '@/admin/api/contestAPI'
 import globalMessage from '@/common/utils/toast';
 import ToggleSwitch from 'primevue/toggleswitch';
 import CustomToggleButton from './CustomToggleButton.vue';
@@ -152,8 +152,13 @@ async function loadHomeworksCount() {
         globalMessage.error("加载数据失败", err.message);
     });
 }
-function visibleChange(visible: boolean, id: number) {
-    console.log(visible, id);
+async function visibleChange(status: boolean, id: number) {
+    const dto: ContestSpace.ContestUpdateStatusDTO = { id, status };
+    await updateHomeworkStatus(dto).then(() => {
+        globalMessage.success('提升', "修改成功");
+    }).catch(err => {
+        globalMessage.error("修改失败", err.message);
+    });
 }
 function search() {
     first.value = 0;

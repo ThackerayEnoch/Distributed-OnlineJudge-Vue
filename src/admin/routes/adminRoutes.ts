@@ -107,11 +107,12 @@ export default [
               }
             },
             {
-              path:'/admin/homework/create',
+              path:'/admin/homework/create/:copyId?',
               name:'AdminHomeworkCreate',
               components:{
                 admin:()=>import('@/admin/components/contest/HomeworkCreate.vue')
-              }
+              },
+              props:true
             },
             {
               path:'/admin/homework/edit/:id',
