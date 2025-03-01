@@ -1,7 +1,7 @@
 <template>
-    <div class="w-full h-full flex flex-col">
+    <div class="w-full h-full flex flex-col items-start">
+        <div class="w-[70%] p-4 shadow-lg bg-white dark:bg-gray-800">
 
-        <div class="w-[70%] h-full p-4 shadow-lg bg-white dark:bg-gray-800 flex-glow">
             <h1 class="text-3xl font-bold mb-4" v-html="problemDetail?.title"></h1>
             <div class="mb-4 flex items-center">
                 <Tag class="mr-2" severity="info">
@@ -29,35 +29,58 @@
             </div>
             <div class="mb-4">
                 <h2 class="text-xl font-semibold mb-2 text-blue-500">题目描述</h2>
-                <div class="ml-4 contain-math-html-css" v-html="problemDetail?.description"></div>
+                <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css"
+                    v-html="problemDetail.description"></div>
+                <div v-else>
+                    <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'"
+                        :modelValue="problemDetail.description" />
+                </div>
             </div>
             <div class="mb-4">
                 <h2 class="text-xl font-semibold mb-2 text-blue-500">输入格式</h2>
-                <div class="ml-4 contain-math-html-css" v-html="problemDetail?.input"></div>
+                <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css" v-html="problemDetail.input">
+                </div>
+                <div v-else>
+                    <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'" :modelValue="problemDetail.input" />
+                </div>
             </div>
             <div class="mb-4">
                 <h2 class="text-xl font-semibold mb-2 text-blue-500">输出格式</h2>
-                <div class="ml-4 contain-math-html-css" v-html="problemDetail?.output"></div>
-            </div>
-            <div class="mb-4 flex">
-                <div class="mr-4">
-                    <h2 class="text-xl font-semibold mb-2 text-blue-500">输入样例</h2>
-                    <pre class="ml-4 contain-math-html-css bg-gray-100 dark:bg-gray-900 p-4 rounded-md inline-block"
-                        v-html="problemDetail?.inputExamples"></pre>
+                <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css" v-html="problemDetail.output">
                 </div>
-                <div>
-                    <div class="flex items-center">
-                        <h2 class="text-xl font-semibold mb-2 text-blue-500">输出样例</h2>
-                        <button @click="copyToClipboard(problemDetail?.outputExamples as string)"
-                            class="mt-2 mr-2 bg-blue-500 text-white px-2 py-1 rounded">Copy</button>
+                <div v-else>
+                    <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'" :modelValue="problemDetail.output" />
+                </div>
+            </div>
+            <div class="mb-4">
+                <!-- 输入输出样例 标题 -->
+                <h2 class="text-xl font-semibold mb-2 text-blue-500">输入输出样例</h2>
+
+                <div v-for="(input, index) in inputs" :key="index" class="flex items-start p-4 pb-0 pt-0 rounded">
+                    <!-- 输入样例 -->
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm text-gray-500 font-bold">输入样例 #{{ index + 1 }}</span>
+                            <Button icon="pi pi-copy" class="p-button-text" @click="copyToClipboard(input)" />
+                        </div>
+                        <pre class="p-3 bg-gray-100 dark:bg-black rounded-md border">{{ input }}</pre>
                     </div>
-                    <pre class="ml-4 contain-math-html-css bg-gray-100 dark:bg-gray-900 p-4 rounded-md inline-block"
-                        v-html="problemDetail?.outputExamples"></pre>
+
+                    <!-- 输出样例 -->
+                    <div class="flex-1 ml-4">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm text-gray-500 font-bold">输出样例 #{{ index + 1 }}</span>
+                            <Button icon="pi pi-copy" class="p-button-text" @click="copyToClipboard(outputs[index])" />
+                        </div>
+                        <pre class="p-3 bg-gray-100 dark:bg-black rounded-md border">{{ outputs[index] }}</pre>
+                    </div>
                 </div>
             </div>
-            <div v-if="problemDetail?.hint" class="mb-4">
+            <div v-if="problemDetail.hint" class="mb-4">
                 <h2 class="text-xl font-semibold mb-2 text-blue-500">提示</h2>
-                <div class="ml-4 contain-math-html-css" v-html="problemDetail?.hint"></div>
+                <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css" v-html="problemDetail.hint">
+                </div>
+                <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'" :modelValue="problemDetail.hint" />
             </div>
         </div>
         <!-- ...existing code... -->
@@ -100,42 +123,69 @@
             </div>
         </div>
     </div>
-    <Dialog v-model:visible="visible" header="提交代码" :modal="true" :closable="false">
-        <div class="p-4">
-            <form @submit.prevent="handleSubmit">
-                <div class="mb-4">
-                    <label for="code" class="block text-sm font-medium text-gray-700">代码</label>
-                    <textarea id="code" v-model="code" rows="5"
-                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500"
-                        required></textarea>
-                </div>
-                <div class="flex justify-end">
-                    <Button type="submit" label="提交" class="mr-2" />
-                    <Button label="取消" @click="closeDialog" class="p-button-secondary" />
-                </div>
-                <div class="flex justify-end mt-2">
-                    <Dropdown v-model="selectedLanguage" :options="languageOptions" optionLabel="label"
-                        placeholder="选择语言" class="w-full md:w-14rem" />
-                </div>
+    <Dialog v-model:visible="visible" header="代码提交" :modal="true" :breakpoints="{ '960px': '75vw', '640px': '90vw' }"
+        :style="{ width: '50vw' }" :draggable="false">
+        <form @submit.prevent="handleSubmit" class="space-y-4">
+            <!-- 语言选择 -->
+            <div class="flex justify-between items-center">
+                <label class="text-gray-600 font-medium">编程语言</label>
+                <Dropdown v-model="selectedLanguage" :options="languages" optionLabel="name" placeholder="选择语言"
+                    class="w-48" :filter="true" required />
+            </div>
 
-            </form>
-        </div>
+            <!-- 代码编辑区 -->
+            <div class="">
+                <CodeMirror v-model="code" :dark="true" :extensions="extensions" basic :lang="lang"
+                    style="height: 400px;background-color: #282C34;" :tab-size="40" />
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="flex justify-end space-x-3 pt-4">
+                <Button label="取消" @click="closeDialog"
+                    class="px-5 py-2 text-gray-600 hover:bg-gray-100 transition-colors" text />
+                <Button type="submit" label="提交代码"
+                    class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white transition-colors" />
+            </div>
+        </form>
     </Dialog>
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, onMounted, watch } from 'vue';
+import { defineProps, ref, onMounted, watch, reactive } from 'vue';
 import { getProblemDetail, type Problem } from '../problemAPI';
 import { Judge, submitProblem } from '@/common/api/judgeAPI'
 import { number } from 'yup';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { useRouter } from 'vue-router';
+import { MdPreview } from 'md-editor-v3';
+import 'md-editor-v3/lib/preview.css';
+import { layoutConfig } from '@/common/views/layout/layout'
 
+import CodeMirror from 'vue-codemirror6';
+import { oneDark } from '@codemirror/theme-one-dark'
+import { cpp } from '@codemirror/lang-cpp';
+const extensions = [oneDark];
 const router = useRouter();
 const visible = ref(false);
-const code = ref('');
+const code = ref("Hello World");
+const lang = cpp();
+const inputs = ref([]);
+const outputs = ref([]);
+function handleInputOutput() {
+    const inputExamples = problemDetail.value.inputExamples;
+    const outputExamples = problemDetail.value.outputExamples;
 
+    try {
+        const inputJson = JSON.parse(inputExamples);
+        const outputJson = JSON.parse(outputExamples);
+
+        inputs.value = Object.values(inputJson);
+        outputs.value = Object.values(outputJson);
+    } catch (error) {
+        console.error('Error parsing JSON:', error);
+    }
+}
 function closeDialog() {
     visible.value = false;
 }
@@ -162,6 +212,13 @@ interface LanguageOption {
 }
 // 语言选择
 const selectedLanguage = ref<LanguageOption>({ label: 'C', value: Judge.Language.C });
+const languages = ref([
+    { name: 'Python', value: 'py' },
+    { name: 'JavaScript', value: 'js' },
+    { name: 'Java', value: 'java' },
+    { name: 'C++', value: 'cpp' },
+    { name: 'HTML', value: 'html' },
+]);
 const languageOptions: LanguageOption[] = [
     { label: 'C', value: Judge.Language.C },
     { label: 'C++', value: Judge.Language.Cpp },
@@ -171,7 +228,39 @@ const languageOptions: LanguageOption[] = [
 ];
 
 // 题目详情数据
-const problemDetail = ref<Problem.ProblemResData | null>(null);
+const problemDetail = ref<Problem.ProblemResData>({
+    id: 0,
+    displayId: '',
+    judgeMode: '',
+    title: '',
+    type: 0,
+    timeLimit: 0,
+    memoryLimit: 0,
+    stackLimit: 0,
+    description: '',
+    input: '',
+    output: '',
+    inputExamples: '',
+    outputExamples: '',
+    source: 0,
+    difficulty: 0,
+    hint: '',
+    auth: 0,
+    ioScore: 0,
+    codeShare: 0,
+    spjCode: '',
+    spjLanguage: '',
+    userExtraFile: '',
+    judgeExtraFile: '',
+    isRemoveEndBlank: 0,
+    openCaseResult: 0,
+    caseversion: '',
+    isUploadCase: 0,
+    modifiedUser: 0,
+    nickname: '',
+    createTime: new Date(),
+    updateTime: new Date()
+});
 // 定义props，获取URL中的pid参数
 const props = defineProps({
     pid: number
@@ -195,6 +284,7 @@ watch(problemDetail, () => {
 const getProblemDetailData = async () => {
     const result = await getProblemDetail(props.pid as unknown as number);
     problemDetail.value = result.data as Problem.ProblemResData;
+    handleInputOutput()
 }
 // 渲染数学公式
 const renderMath = (content: string) => {
@@ -277,5 +367,10 @@ const judgeModeMap = (judgeMode: string) => {
     text-align: left;
     white-space: pre-wrap;
     flex: none;
+}
+
+/* required! */
+.cm-editor {
+    height: 100%;
 }
 </style>

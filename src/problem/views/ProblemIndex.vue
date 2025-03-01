@@ -9,31 +9,24 @@
                 <div class="flex justify-between items-center mb-4">
                     <h1 class="text-2xl font-bold">题目列表</h1>
                     <InputGroup style="max-width: 75%;">
-                        <InputText placeholder="题目名" style="border-radius: 0;" />
+                        <InputText placeholder="题目名" @keyup.enter="onSearch" v-model:modelValue="searchContent"
+                            style="border-radius: 0;" />
                         <InputGroupAddon style="margin: 0;padding: 0;border-radius: 0;">
-                            <Button icon="pi pi-search" severity="secondary" style="border-radius: 0;" variant="text" />
+                            <Button icon="pi pi-search" @click="onSearch" severity="secondary" style="border-radius: 0;"
+                                variant="text" />
                         </InputGroupAddon>
                     </InputGroup>
-                    <Button icon="pi pi-sync" rounded />
-                    <Button icon="fa-solid fa-shuffle" label="随机一题" />
+                    <Button icon="pi pi-sync" @click="onSearch" rounded />
+                    <Button icon="fa-solid fa-shuffle" @click="randomProblem" label="随机一题" />
                 </div>
-                <div class="flex flex-col mb-4">
-                    <div class="flex items-center mb-4">
+                <div class="flex flex-col mb-0">
+                    <div class="flex items-center mb-0">
                         <span class="mr-2 text-lg font-bold">题库</span>
                         <div class="ml-2">
                             <Button label="全部" class="p-button-outlined custom-button p-button-md mr-3" />
                             <Button label="主题库" class="p-button-outlined custom-button mr-3" />
                             <Button label="HDU" class="p-button-outlined custom-button mr-3" />
                             <Button label="POJ" class="p-button-outlined custom-button" />
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <span class="mr-2 text-lg font-bold">难度</span>
-                        <div class="ml-2">
-                            <Button label="全部" class="p-button-outlined custom-buttonm mr-3" />
-                            <Button label="简单" class="p-button-outlined custom-button mr-3" />
-                            <Button label="中等" class="p-button-outlined custom-button mr-3" />
-                            <Button label="困难" class="p-button-outlined custom-button" />
                         </div>
                     </div>
                 </div>
@@ -129,6 +122,8 @@ export default {
         const route = useRoute();
         const router = useRouter();
         // Problem data
+        const searchContent = ref('');
+        const totalProblems = ref(0);
         const problems = ref([]);
         const totalRecords = ref(30);
         const first = ref((parseInt(route.query.currentPage as string || '1') - 1) * 30 || 0);
@@ -151,16 +146,28 @@ export default {
             getCount();
             getProblems(first.value);
         });
+        const onSearch = () => {
+            first.value = 0;
+            getCount();
+            getProblems(0);
+        };
+        const randomProblem = () => {
+            // 从1000开始到1000+totalProblems中随机选取一个题目
+            const randomId = Math.floor(Math.random() * totalProblems.value) + 1000;
+            router.push({ path: '/problem/' + randomId });
+
+        };
         // 获取题目列表
         const getProblems = async (page: number) => {
-            const response = await getProblemPage(page);
+            const response = await getProblemPage(page, searchContent.value);
             problems.value = response.data as any;
         };
         // 获取题目总数
         const getCount = async () => {
-            const response = await getProblemCount();
+            const response = await getProblemCount(searchContent.value);
             if (response.data) {
                 totalRecords.value = response.data.count;
+                totalProblems.value = response.data.totalProblems;
             }
         };
         // 分页的页面切换
@@ -216,7 +223,7 @@ export default {
                 behavior: 'smooth', // 平滑滚动
             });
         };
-        return { problems, selectRow, getProgressBarColor, getTagSeverity, totalRecords, first, onPage, statTitle, selectedProblem };
+        return { problems, randomProblem, onSearch, searchContent, selectRow, getProgressBarColor, getTagSeverity, totalRecords, first, onPage, statTitle, selectedProblem };
     },
 };
 </script>

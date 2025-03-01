@@ -56,14 +56,15 @@ export namespace Problem{
     }
     export interface ProblemCountJSONObject {
         count: number;
+        totalProblems: number;
     }
 }
 // GET获取用户数据
-export const getProblemPage = (currentPage:number) => {
-    return request.get<Problem.ProblemListJSONObject[]>('/api/p/problems',{currentPage})
+export const getProblemPage = (currentPage:number,content:string) => {
+    return request.get<Problem.ProblemListJSONObject[]>('/api/p/problems',{currentPage,content})
 }
-export const getProblemCount = () => {
-    return request.get<Problem.ProblemCountJSONObject>('/api/p/problems/count')
+export const getProblemCount = (content:string) => {
+    return request.get<Problem.ProblemCountJSONObject>('/api/p/problems/count',{content})
 }
 export const getProblemDetail = (problemId :number) => {
     return request.get<Problem.ProblemResData>(`/api/p/problem/${problemId}`);

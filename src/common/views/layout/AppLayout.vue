@@ -50,8 +50,6 @@ body {
     display: flex;
     justify-content: center;
     /* 水平方向居中 */
-    align-items: center;
-    /* 垂直方向居中 */
     flex: 1;
 }
 </style>
