@@ -1,12 +1,12 @@
 <template>
     <div class="rankings">
-        <DataTable :value="users" tableStyle="min-width: 50rem" showGridlines>
+        <DataTable :value="data" tableStyle="min-width: 50rem" showGridlines>
             <Column field="ranking" style="text-align: center;">
                 <template #header>
                     <span class="flex-1 text-center font-bold">排名</span>
                 </template>
                 <template #body="slotProps">
-                    <span>{{ slotProps.data.index + 1 }}</span>
+                    <span>{{ slotProps.index + 1 }}</span>
                 </template>
             </Column>
             <Column field="userName" style="text-align: center;">
@@ -14,7 +14,7 @@
                     <span class="flex-1 text-center font-bold">用户名</span>
                 </template>
                 <template #body="slotProps">
-                    <span>{{ slotProps.data.userName }}</span>
+                    <span>{{ slotProps.data.user_id }}</span>
                 </template>
             </Column>
             <Column field="nickName" style="text-align: center;">
@@ -22,7 +22,7 @@
                     <span class="flex-1 text-center font-bold">姓名</span>
                 </template>
                 <template #body="slotProps">
-                    <span>{{ slotProps.data.nickName }}</span>
+                    <span>{{ slotProps.data.nickname }}</span>
                 </template>
             </Column>
             <Column field="time" style="text-align: center;">
@@ -30,7 +30,7 @@
                     <span class="flex-1 text-center font-bold">总时间</span>
                 </template>
                 <template #body="slotProps">
-                    <span>{{ slotProps.data.time }}</span>
+                    <span>{{ slotProps.data.user_id }}</span>
                 </template>
             </Column>
             <Column field="totalAcceptCount" style="text-align: center;">
@@ -38,14 +38,16 @@
                     <span class="flex-1 text-center font-bold">AC</span>
                 </template>
                 <template #body="slotProps">
-                    <span>{{ slotProps.data.totalAcceptCount }}</span>
+                    <span>{{ slotProps.data.totalAccept}}</span>
                 </template>
             </Column>
 
-            <Column v-for="problem in problems" :key="problem.id" :header="problem.name"
-                style="text-align: center;">
+            <Column v-for="problem in problems" :key="problem.id" style="text-align: center;">
+                <template #header>
+                    <span class="flex-1 text-center font-bold">{{ problem.name }}</span>
+                </template>
                 <template #body="slotProps">
-                    <div>{{ slotProps.data.problems[problem.id] }}</div>
+                    <div>{{ slotProps.data[problem.id] }}</div>
                 </template>
             </Column>
         </DataTable>
@@ -53,7 +55,9 @@
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';
-
+import { onMounted } from 'vue';
+import { getHomeworkRankingById } from '../api/homeworkRankingAPI';
+const data = ref([]);
 const users = ref([
     {
         index: 0,
@@ -61,20 +65,9 @@ const users = ref([
         nickName: 'User One',
         totalAcceptCount: 10,
         time: '1:30:00',
-        problems: [
-            { Problem0: 440, count: 3 },
-            { Problem1: 220, count: 2 },
-            { Problem2: 1, count: 5 },
-            { Problem3: 2, count: 1 },
-            { Problem4: 3, count: 4 },
-            { Problem5: 20, count: 2 },
-            { Problem6: 30, count: 3 },
-            { Problem7: 200, count: 1 },
-            { Problem8: 259, count: 0 },
-            { Problem9: 476, count: 2 }
-            // problem0: 这里该题目提交时间 
-            // count: 表示提交次数用于计算罚时
-        ]
+        problems: {
+            Problem0: 1
+        }
     },
     {
         index: 1,
@@ -82,18 +75,9 @@ const users = ref([
         nickName: 'User two',
         totalAcceptCount: 10,
         time: '1:40:00',
-        problems: [
-            { Problem0: 440, count: 3 },
-            { Problem1: 220, count: 2 },
-            { Problem2: 1, count: 5 },
-            { Problem3: 2, count: 1 },
-            { Problem4: 3, count: 4 },
-            { Problem5: 20, count: 2 },
-            { Problem6: 30, count: 3 },
-            { Problem7: 200, count: 1 },
-            { Problem8: 259, count: 0 },
-            { Problem9: 476, count: 2 }
-        ]
+        problems: {
+            Problem0: 1,
+        }
     },
 ]);
 
@@ -107,7 +91,16 @@ const problems = ref([
     { id: 'Problem6', name: 'G' },
     { id: 'Problem7', name: 'H' },
     { id: 'Problem8', name: 'I' },
-    { id: 'Problem9', name: 'J' }
+    { id: 'Problem9', name: 'J' },
+    { id: 'Problem10',name: 'K' },
 ]);
 
+onMounted(() => {
+    console.time('getHomeworkRankingById');
+    getHomeworkRankingById(1457).then((res: any) => {
+        console.timeEnd('getHomeworkRankingById');
+        console.log('只是排行榜数据',res);
+        data.value = res.data;
+    });
+});
 </script>

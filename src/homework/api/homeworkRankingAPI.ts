@@ -14,4 +14,8 @@ export namespace Ranking {
         title: string;
         count: number;
     }
+
+}
+export const getHomeworkRankingById = (homeworkId: number) => {
+    return request.get<Array<Map<string, object>>>('/api/c/homeworks/rank', { homeworkId })
 }
