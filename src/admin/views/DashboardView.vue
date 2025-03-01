@@ -252,20 +252,20 @@
                         <DataTable :value="errorLogs" class="p-datatable-sm" :rows="5" scrollable scrollHeight="400px">
                             <Column field="time" header="时间" header-class="font-semibold" sortable class="w-28">
                                 <template #body="{ data }">
-                                    <span class="text-gray-600 text-xs">{{ data.time }}</span>
+                                    <span class="text-gray-600 text-xs">{{ formatDate(data.date) }}</span>
                                 </template>
                             </Column>
                             <Column field="level" header="级别" header-class="font-semibold" class="w-20">
                                 <template #body="{ data }">
-                                    <Tag :severity="data.level === 'ERROR' ? 'danger' : 'warning'" rounded>
-                                        {{ data.level }}
+                                    <Tag :severity="data.errorLevel === 'ERROR' ? 'danger' : 'warning'" rounded>
+                                        {{ data.errorLevel }}
                                     </Tag>
                                 </template>
                             </Column>
                             <Column field="message" header="错误信息" header-class="font-semibold">
                                 <template #body="{ data }">
                                     <div class="font-mono text-sm text-gray-700 truncate hover:text-clip">
-                                        {{ data.message }}
+                                        {{ data.errorMessage }}
                                     </div>
                                 </template>
                             </Column>
@@ -322,7 +322,7 @@
 
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
-import { type DashboardSpace, getServerInfoMetrics, getJudgeMetrics } from '@/admin/api/dashboardAPI';
+import { type DashboardSpace, getServerInfoMetrics, getJudgeMetrics, getErrorList } from '@/admin/api/dashboardAPI';
 const services = ref<DashboardSpace.ServiceVO[]>([]);
 // 图表配置
 const chartOptions = ref({
@@ -360,7 +360,13 @@ const totalUsers = ref(0);
 onMounted(() => {
     loadServerData();
     loadJudgeData();
+    loadErrorLogs();
 });
+async function loadErrorLogs() {
+    await getErrorList().then((res) => {
+        errorLogs.value = res.data as DashboardSpace.ErrorVO[];
+    });
+}
 async function loadJudgeData() {
     await getJudgeMetrics().then((res) => {
         const data = res.data as DashboardSpace.JudgeMonitorVO;
@@ -405,43 +411,22 @@ function formatUptime(seconds: number): string {
 
     return result;
 }
+function formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
 const dbNodes = ref<DashboardSpace.DbNode[]>([]);
 const qps = ref(0);
 const healthNodes = ref(0);
 const masterLoad = ref(0);
 const copyDelay = ref(0);
 const avgDelay = ref(0);
-const errorLogs = ref([
-    {
-        time: '08:45:16',
-        level: 'ERROR',
-        message: 'Database connection pool exhausted - waiting for available connection'
-    },
-    {
-        time: '09:12:34',
-        level: 'WARNING',
-        message: 'High memory usage detected (89%) on server node-03'
-    },
-    {
-        time: '10:23:05',
-        level: 'ERROR',
-        message: 'File upload failed: Maximum file size exceeded (limit: 50MB)'
-    },
-    {
-        time: '11:45:22',
-        level: 'ERROR',
-        message: 'Authentication service timeout - 3 retries failed'
-    },
-    {
-        time: '13:15:08',
-        level: 'WARNING',
-        message: 'Suspicious login attempt from 192.168.1.243'
-    },
-    {
-        time: '14:30:17',
-        level: 'ERROR',
-        message: 'Redis cache cluster node failure - switching to replica'
-    }
+const errorLogs = ref<DashboardSpace.ErrorVO[]>([
 ]);
 
 const importantLogs = ref([
