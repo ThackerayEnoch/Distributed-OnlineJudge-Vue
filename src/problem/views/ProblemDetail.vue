@@ -1,5 +1,6 @@
 <template>
-    <div class="w-full h-full flex flex-col items-start">
+    <AccessDenied v-if="isAccessDenied" :message="message" btnLabel="返回题库" btnTo="/problems" btnIcon="pi pi-book" />
+    <div v-else class="w-full h-full flex flex-col items-start">
         <div class="w-[70%] p-4 shadow-lg bg-white dark:bg-gray-800">
 
             <h1 class="text-3xl font-bold mb-4" v-html="problemDetail?.title"></h1>
@@ -80,95 +81,123 @@
                 <h2 class="text-xl font-semibold mb-2 text-blue-500">提示</h2>
                 <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css" v-html="problemDetail.hint">
                 </div>
-                <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'" :modelValue="problemDetail.hint" />
+                <MdPreview v-else :theme="layoutConfig.darkTheme ? 'dark' : 'light'" :modelValue="problemDetail.hint" />
             </div>
         </div>
         <!-- ...existing code... -->
         <div class="fixed top-22 right-10 w-[25%] shadow-lg h-auto p-4 bg-white dark:bg-gray-800 rounded-lg">
-            <!-- 卡片布局 -->
+            <!-- 卡片其他内容保持原样 -->
             <!-- 标题部分 -->
             <div class="flex justify-between items-center mb-4">
-                <span class="text-gray-600 font-semibold  font-medium">题目提供者</span>
-                <span class="text-gray-800 ml-2">{{ problemDetail?.nickname }}</span>
+                <span class="text-gray-600 font-semibold font-medium">题目提供者</span>
+                <span class="text-gray-800 ml-2">{{ problemDetail.nickname }}</span>
             </div>
-
             <!-- 难度 -->
             <div class="flex justify-between items-center mb-4">
-                <span class="text-gray-600 font-semibold font-medium">难度</span>
-                <span class="text-orange-500 font-semibold">普及-</span>
+                <span class="text-gray-600 font-semibold font-medium">难度等级</span>
+                <span class="text-orange-500 font-semibold">{{ difficultyMap(problemDetail.difficulty) }}</span>
             </div>
-
-            <!-- 历史分数 -->
+            <!-- 统计信息组 -->
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-gray-600 font-semibold font-medium">提交总数</span>
+                <span class="text-gray-800 font-semibold">{{ totalSubmissions }}</span>
+            </div>
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-gray-600 font-semibold font-medium">正确提交</span>
+                <span class="text-green-500 font-semibold">{{ passedSubmissions }}</span>
+            </div>
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-gray-600 font-semibold font-medium">通过率</span>
+                <span class="text-blue-500 font-semibold">
+                    {{ (passedSubmissions / totalSubmissions * 100 || 0).toFixed(1) }}%
+                </span>
+            </div>
+            <!-- 题目元数据 -->
             <div class="flex justify-between items-center mb-6">
-                <span class="text-gray-600 font-semibold font-medium">历史分数</span>
+                <span class="text-gray-600 font-semibold font-medium">最高得分</span>
                 <span class="text-green-500 font-semibold">100</span>
             </div>
-
-            <!-- 底部按钮 -->
-            <div class="flex justify-between">
-                <!-- 提交记录 -->
-                <button class="text-blue-500 hover:text-blue-700 font-medium flex items-center">
-                    <i class="pi pi-chart-bar mr-2"></i> 提交记录
-                </button>
-
-                <!-- 查看题解 -->
-                <button class="text-blue-500 hover:text-blue-700 font-medium flex items-center">
-                    <i class="pi pi-book mr-2"></i> 查看题解
-                </button>
-            </div>
-            <div class="mt-4">
-                <Button class="text-blue-500 hover:text-blue-700 font-medium flex items-center" @click="visible = true">
-                    提交
+            <!-- 按钮组区域 -->
+            <div class="mt-4 space-y-2">
+                <!-- 主要操作按钮 -->
+                <Button class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium" @click="visible = true">
+                    提交解答
                 </Button>
+
+                <!-- 辅助操作按钮组 -->
+                <div class="flex flex-wrap gap-2">
+                    <Button v-if="contestId != null"
+                        class="flex-1 text-purple-500 hover:text-purple-700 border border-gray-200 font-medium"
+                        outlined>
+                        排行榜
+                    </Button>
+                    <Button class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium"
+                        outlined>
+                        提交记录
+                    </Button>
+                    <Button v-if="contestId != null"
+                        class="flex-1 text-green-500 hover:text-green-700 border border-gray-200 font-medium" outlined>
+                        返回竞赛
+                    </Button>
+                </div>
             </div>
         </div>
     </div>
     <Dialog v-model:visible="visible" header="代码提交" :modal="true" :breakpoints="{ '960px': '75vw', '640px': '90vw' }"
         :style="{ width: '50vw' }" :draggable="false">
-        <form @submit.prevent="handleSubmit" class="space-y-4">
+        <form @submit.prevent="handleSubmit" class="flex flex-col space-y-4">
             <!-- 语言选择 -->
             <div class="flex justify-between items-center">
                 <label class="text-gray-600 font-medium">编程语言</label>
-                <Dropdown v-model="selectedLanguage" :options="languages" optionLabel="name" placeholder="选择语言"
-                    class="w-48" :filter="true" required />
+                <Dropdown v-model="selectedLanguage" :options="allowLanguagesList" placeholder="选择语言" class="w-48"
+                    :filter="true" required />
             </div>
 
-            <!-- 代码编辑区 -->
-            <div class="">
-                <CodeMirror v-model="code" :dark="true" :extensions="extensions" basic :lang="lang"
-                    style="height: 400px;background-color: #282C34;" :tab-size="40" />
+            <!-- 代码编辑区（允许扩展） -->
+            <div class="flex flex-col w-full">
+                <CodeMirror v-model:model-value="code" :dark="true" :extensions="extensions" basic :lang="lang"
+                    class="w-full min-h-[400px] bg-[#282C34]" style="height: auto;" :tab-size="40" />
             </div>
 
-            <!-- 操作按钮 -->
+            <!-- 操作按钮（保持在底部） -->
             <div class="flex justify-end space-x-3 pt-4">
                 <Button label="取消" @click="closeDialog"
                     class="px-5 py-2 text-gray-600 hover:bg-gray-100 transition-colors" text />
-                <Button type="submit" label="提交代码"
+                <Button type="submit" label="提交代码" :loading="isSubmtting"
                     class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white transition-colors" />
             </div>
         </form>
+
     </Dialog>
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, onMounted, watch, reactive } from 'vue';
-import { getProblemDetail, type Problem } from '../problemAPI';
-import { Judge, submitProblem } from '@/common/api/judgeAPI'
+import { defineProps, ref, onMounted, watch } from 'vue';
+import { getProblemDetail, submitProblem, type Problem, type Judge } from '../problemAPI';
 import { number } from 'yup';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
 import { layoutConfig } from '@/common/views/layout/layout'
-
+import { languageOptions } from '@/common/constant/AllConstant'
 import CodeMirror from 'vue-codemirror6';
 import { oneDark } from '@codemirror/theme-one-dark'
 import { cpp } from '@codemirror/lang-cpp';
+import globalMessage from '@/common/utils/toast';
+import { ProblemStatus } from '../status/problemStatus'
+import AccessDenied from '@/common/components/AccessDenied.vue'
 const extensions = [oneDark];
 const router = useRouter();
+const route = useRoute();
 const visible = ref(false);
-const code = ref("Hello World");
+
+// 从URL中获取contestId
+const contestId = route.query.contestId ? Number(route.query.contestId) : null;
+const totalSubmissions = ref(0);
+const passedSubmissions = ref(0);
+const code = ref<string>('');
 const lang = cpp();
 const inputs = ref([]);
 const outputs = ref([]);
@@ -179,7 +208,6 @@ function handleInputOutput() {
     try {
         const inputJson = JSON.parse(inputExamples);
         const outputJson = JSON.parse(outputExamples);
-
         inputs.value = Object.values(inputJson);
         outputs.value = Object.values(outputJson);
     } catch (error) {
@@ -189,44 +217,38 @@ function handleInputOutput() {
 function closeDialog() {
     visible.value = false;
 }
+const isSubmtting = ref(false);
 // 提交代码
 async function handleSubmit() {
     visible.value = false;
+    if (isSubmtting.value) return;
+    isSubmtting.value = true;
     const dto: Judge.SubmitReqData = {
         pid: props.pid as unknown as number,
         code: code.value,
-        language: selectedLanguage.value.value,
-        cid: 0,
+        language: selectedLanguage.value,
+        cid: contestId as number,
         tid: 0,
         gid: 0,
         isRemote: false
     }
     submitProblem(dto).then(() => {
         router.push('/statuses');
+    }).finally(() => {
+        isSubmtting.value = false;
     })
 }
-// 语言选择定义
-interface LanguageOption {
-    label: string;
-    value: Judge.Language;
-}
 // 语言选择
-const selectedLanguage = ref<LanguageOption>({ label: 'C', value: Judge.Language.C });
-const languages = ref([
-    { name: 'Python', value: 'py' },
-    { name: 'JavaScript', value: 'js' },
-    { name: 'Java', value: 'java' },
-    { name: 'C++', value: 'cpp' },
-    { name: 'HTML', value: 'html' },
-]);
-const languageOptions: LanguageOption[] = [
-    { label: 'C', value: Judge.Language.C },
-    { label: 'C++', value: Judge.Language.Cpp },
-    { label: 'Java', value: Judge.Language.Java },
-    { label: 'Python2', value: Judge.Language.PyPy2 },
-    { label: 'Python3', value: Judge.Language.PyPy3 }
-];
-
+const selectedLanguage = ref<string>('C 11');
+const allowLanguagesList = ref<string[]>([]);
+function languageOptionsHandle(languageIds: number[]) {
+    if (languageIds != null && languageIds.length > 0) {
+        allowLanguagesList.value = languageOptions.filter((item) => languageIds.includes(item.id)).map((item) => item.name);
+    } else {
+        allowLanguagesList.value = languageOptions.map((item) => item.name);
+        console.log(allowLanguagesList.value);
+    }
+}
 // 题目详情数据
 const problemDetail = ref<Problem.ProblemResData>({
     id: 0,
@@ -248,15 +270,11 @@ const problemDetail = ref<Problem.ProblemResData>({
     auth: 0,
     ioScore: 0,
     codeShare: 0,
-    spjCode: '',
-    spjLanguage: '',
     userExtraFile: '',
-    judgeExtraFile: '',
     isRemoveEndBlank: 0,
     openCaseResult: 0,
-    caseversion: '',
-    isUploadCase: 0,
     modifiedUser: 0,
+    allowLanguages: [],
     nickname: '',
     createTime: new Date(),
     updateTime: new Date()
@@ -271,7 +289,7 @@ onMounted(() => {
 });
 // 当异步请求得到数据后，渲染数学公式
 watch(problemDetail, () => {
-    if (problemDetail.value && problemDetail.value.description) {
+    if (problemDetail.value.id <= 2493 && problemDetail.value && problemDetail.value.description) {
         problemDetail.value.description = renderMath(problemDetail.value.description);
         problemDetail.value.input = renderMath(problemDetail.value.input);
         problemDetail.value.output = renderMath(problemDetail.value.output);
@@ -280,11 +298,31 @@ watch(problemDetail, () => {
         problemDetail.value.hint = renderMath(problemDetail.value.hint);
     }
 });
+const message = ref<string>('您没有权限查看此题目');
+const isAccessDenied = ref<boolean>(false);
 // 异步获取题目详情数据
 const getProblemDetailData = async () => {
-    const result = await getProblemDetail(props.pid as unknown as number);
-    problemDetail.value = result.data as Problem.ProblemResData;
-    handleInputOutput()
+    await getProblemDetail(props.pid as unknown as number, contestId as number).then((res) => {
+        const data = res.data as Problem.ProblemResData;
+        problemDetail.value = data;
+        languageOptionsHandle(data.allowLanguages);
+        handleInputOutput();
+    }).catch((error) => {
+        if (error.code === ProblemStatus.ACCESS_DENIED) {
+            isAccessDenied.value = true;
+            message.value = '您没有权限查看此题目, 可能是题目未开放';
+            globalMessage.warn('提示', '您没有权限查看此题目');
+            return;
+        }
+        if (error.code === ProblemStatus.CONTEST_NOT_START) {
+            isAccessDenied.value = true;
+            message.value = '比赛未开始';
+            globalMessage.warn('提示', '比赛未开始');
+            return;
+        }
+        globalMessage.error('题目详情数据获取失败', error.message);
+    });
+
 }
 // 渲染数学公式
 const renderMath = (content: string) => {

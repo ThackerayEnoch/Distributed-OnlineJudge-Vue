@@ -21,16 +21,12 @@ export namespace Problem{
         hint: string;
         auth: number;
         ioScore: number;
-        codeShare: number;
-        spjCode: string;
-        spjLanguage: string;
         userExtraFile: string;
-        judgeExtraFile: string;
+        codeShare: number;
         isRemoveEndBlank: number;
         openCaseResult: number;
-        caseversion: string;
-        isUploadCase: number;
         modifiedUser: number;
+        allowLanguages: number[];
         nickname: string;
         createTime: Date;
         updateTime: Date;
@@ -59,6 +55,19 @@ export namespace Problem{
         totalProblems: number;
     }
 }
+export namespace Judge{
+    // Axios会自动解包ResultData并处理错误 这里只定义请求成功的data里的数据类型 
+    // 请求成功后的数据
+    export interface SubmitReqData {
+        pid: number;
+        language: string;
+        code: string;
+        cid?:number;
+        tid?:number;
+        gid?:number;
+        isRemote: boolean;
+    }
+}
 // GET获取用户数据
 export const getProblemPage = (currentPage:number,content:string) => {
     return request.get<Problem.ProblemListJSONObject[]>('/api/p/problems',{currentPage,content})
@@ -66,23 +75,10 @@ export const getProblemPage = (currentPage:number,content:string) => {
 export const getProblemCount = (content:string) => {
     return request.get<Problem.ProblemCountJSONObject>('/api/p/problems/count',{content})
 }
-export const getProblemDetail = (problemId :number) => {
-    return request.get<Problem.ProblemResData>(`/api/p/problem/${problemId}`);
+export const getProblemDetail = (problemId :number,contestId?:number) => {
+    return request.get<Problem.ProblemResData>(`/api/p/problem/${problemId}`,{contestId});
 }
-/*// GET获取demo数据
-export const getDemoData = (params:Demo.DemoReqParams) => {
-    return request.get<Demo.DemoResData>('/demo/'+params.id)
+
+export const submitProblem = (submitJudgeDTO:Judge.SubmitReqData) => {
+    return request.post('/api/j/judge/submit',submitJudgeDTO);
 }
-// POST请求demo数据
-export const sendCaptcha = (params: Demo.DemoReqParams) => {
-    return request.post('/email-service/captcha', params)
-}
-// PUT修改demo数据
-export const register = (params: Demo.DemoReqParams) => {
-    return request.put('/user-service/api/users', params)
-}
-// DELETE删除demo数据
-export const deleteDemoData = (params: Demo.DemoReqParams) => {
-    return request.delete('/api/demo/'+params.id)
-}
-*/
