@@ -54,6 +54,12 @@ export namespace Problem{
         count: number;
         totalProblems: number;
     }
+    export interface ProblemStatistics {
+        totalSubmission: number;
+        solvedCount: number;
+        userScore: number;
+        isSolved: boolean;
+    }
 }
 export namespace Judge{
     // Axios会自动解包ResultData并处理错误 这里只定义请求成功的data里的数据类型 
@@ -78,7 +84,9 @@ export const getProblemCount = (content:string) => {
 export const getProblemDetail = (problemId :number,contestId?:number) => {
     return request.get<Problem.ProblemResData>(`/api/p/problem/${problemId}`,{contestId});
 }
-
 export const submitProblem = (submitJudgeDTO:Judge.SubmitReqData) => {
     return request.post('/api/j/judge/submit',submitJudgeDTO);
+}
+export const getProblemStatistics = (problemId:number,contestId?:number) => {
+    return request.get<Problem.ProblemStatistics>(`/api/p/problem/${problemId}/statistics`,{contestId});
 }

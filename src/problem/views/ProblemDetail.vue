@@ -113,9 +113,13 @@
                 </span>
             </div>
             <!-- 题目元数据 -->
-            <div class="flex justify-between items-center mb-6">
+            <div v-if="problemDetail.type === 1" class="flex justify-between items-center mb-6">
                 <span class="text-gray-600 font-semibold font-medium">最高得分</span>
-                <span class="text-green-500 font-semibold">100</span>
+                <span class="text-green-500 font-semibold">{{ score }}</span>
+            </div>
+            <div v-if="problemDetail.type === 0" class="flex justify-between items-center mb-6">
+                <span class="text-gray-600 font-semibold font-medium">是否AC</span>
+                <span class="text-green-500 font-semibold">{{ isSolved ? 'AC' : '' }}</span>
             </div>
             <!-- 按钮组区域 -->
             <div class="mt-4 space-y-2">
@@ -173,21 +177,24 @@
 
 <script setup lang="ts">
 import { defineProps, ref, onMounted, watch } from 'vue';
-import { getProblemDetail, submitProblem, type Problem, type Judge } from '../problemAPI';
+import { useRouter, useRoute } from 'vue-router';
 import { number } from 'yup';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import { useRouter, useRoute } from 'vue-router';
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
-import { layoutConfig } from '@/common/views/layout/layout'
-import { languageOptions } from '@/common/constant/AllConstant'
 import CodeMirror from 'vue-codemirror6';
-import { oneDark } from '@codemirror/theme-one-dark'
+import { oneDark } from '@codemirror/theme-one-dark';
 import { cpp } from '@codemirror/lang-cpp';
+
+import { getProblemDetail, submitProblem, getProblemStatistics, type Problem, type Judge } from '../problemAPI';
+import { layoutConfig } from '@/common/views/layout/layout';
+import { languageOptions } from '@/common/constant/AllConstant';
 import globalMessage from '@/common/utils/toast';
-import { ProblemStatus } from '../status/problemStatus'
-import AccessDenied from '@/common/components/AccessDenied.vue'
+import { ProblemStatus } from '../status/problemStatus';
+import AccessDenied from '@/common/components/AccessDenied.vue';
+
+
 const extensions = [oneDark];
 const router = useRouter();
 const route = useRoute();
@@ -197,6 +204,8 @@ const visible = ref(false);
 const contestId = route.query.contestId ? Number(route.query.contestId) : null;
 const totalSubmissions = ref(0);
 const passedSubmissions = ref(0);
+const isSolved = ref(false);
+const score = ref(0);
 const code = ref<string>('');
 const lang = cpp();
 const inputs = ref([]);
@@ -286,6 +295,7 @@ const props = defineProps({
 // 获取题目详情数据
 onMounted(() => {
     getProblemDetailData();
+    loadProblemStatistics();
 });
 // 当异步请求得到数据后，渲染数学公式
 watch(problemDetail, () => {
@@ -301,6 +311,17 @@ watch(problemDetail, () => {
 const message = ref<string>('您没有权限查看此题目');
 const isAccessDenied = ref<boolean>(false);
 // 异步获取题目详情数据
+const loadProblemStatistics = async () => {
+    await getProblemStatistics(props.pid as unknown as number, contestId as unknown as number).then((res) => {
+        const data = res.data as Problem.ProblemStatistics;
+        totalSubmissions.value = data.totalSubmission;
+        passedSubmissions.value = data.solvedCount;
+        isSolved.value = data.isSolved;
+        score.value = data.userScore;
+    }).catch((error) => {
+        globalMessage.error('题目统计数据获取失败', error.message);
+    });
+}
 const getProblemDetailData = async () => {
     await getProblemDetail(props.pid as unknown as number, contestId as number).then((res) => {
         const data = res.data as Problem.ProblemResData;
