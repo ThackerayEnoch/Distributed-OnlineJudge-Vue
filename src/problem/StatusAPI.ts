@@ -54,11 +54,11 @@ export namespace Status{
         testcase: TestCase[];
     }
 }
-export const getStatPage = (currentPage:number) => {
-    return request.get<Status.StatJSONObject[]>('/api/p/statuses',{currentPage})
+export const getStatPage = (currentPage:number,problemId?:number,contestId?:number,userId?:number,type?:string,status?:number) => {
+    return request.get<Status.StatJSONObject[]>('/api/p/statuses',{currentPage,problemId,contestId,userId,type,status})
 }
-export const getStatMaxCount = () => {
-    return request.get<Status.StatusmMaxCountJSONObject>('/api/p/status/count')
+export const getStatMaxCount = (problemId?:number,contestId?:number,userId?:number,type?:string,status?:number) => {
+    return request.get<Status.StatusmMaxCountJSONObject>('/api/p/status/count',{problemId,contestId,userId,type,status})
 }
 export const getStatBySubmitid = (submitId:number) => {
     return request.get<Status.StatusItem>(`/api/j/judge/status/${submitId}`)
