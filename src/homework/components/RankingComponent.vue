@@ -30,7 +30,7 @@
                     <span class="flex-1 text-center font-bold">总时间</span>
                 </template>
                 <template #body="slotProps">
-                    <span>{{ slotProps.data.user_id }}</span>
+                    <span>{{ calculateTotalTime(slotProps.data) }}</span>
                 </template>
             </Column>
             <Column field="totalAcceptCount" style="text-align: center;">
@@ -42,12 +42,18 @@
                 </template>
             </Column>
 
-            <Column v-for="problem in problems" :key="problem.id" style="text-align: center;">
+            <Column v-for="problem in problems" :key="problem.id" style="text-align: center;padding: 0;">
                 <template #header>
-                    <span class="flex-1 text-center font-bold">{{ problem.name }}</span>
+                    <span class="flex-1 text-center font-bold" >{{ problem.name }}</span>
                 </template>
                 <template #body="slotProps">
-                    <div>{{ slotProps.data[problem.id] }}</div>
+                    <div class="p-4" :class="{ 'bg-green-500': slotProps.data[problem.id] >= 1 }">
+                        <div v-if="!isNaN(slotProps.data['usetime' + problem.id.slice(7)])">
+                            {{ Math.floor(slotProps.data['usetime' + problem.id.slice(7)] / 60) }} 
+                        </div>
+                        <div v-if="slotProps.data[problem.id] <= 1">{{ slotProps.data[problem.id] }} try </div>
+                        <div v-else>{{ slotProps.data[problem.id] }} tries </div>                      
+                    </div>
                 </template>
             </Column>
         </DataTable>
@@ -57,50 +63,39 @@
 import { ref } from 'vue';
 import { onMounted } from 'vue';
 import { getHomeworkRankingById } from '../api/homeworkRankingAPI';
-const data = ref([]);
-const users = ref([
-    {
-        index: 0,
-        userName: 'user1',
-        nickName: 'User One',
-        totalAcceptCount: 10,
-        time: '1:30:00',
-        problems: {
-            Problem0: 1
-        }
-    },
-    {
-        index: 1,
-        userName: 'user2',
-        nickName: 'User two',
-        totalAcceptCount: 10,
-        time: '1:40:00',
-        problems: {
-            Problem0: 1,
-        }
-    },
-]);
+const data = ref<any[]>([]);
+const problems = ref<{ id: string, name: string }[]>([]);
 
-const problems = ref([
-    { id: 'Problem0', name: 'A' },
-    { id: 'Problem1', name: 'B' },
-    { id: 'Problem2', name: 'C' },
-    { id: 'Problem3', name: 'D' },
-    { id: 'Problem4', name: 'E' },
-    { id: 'Problem5', name: 'F' },
-    { id: 'Problem6', name: 'G' },
-    { id: 'Problem7', name: 'H' },
-    { id: 'Problem8', name: 'I' },
-    { id: 'Problem9', name: 'J' },
-    { id: 'Problem10',name: 'K' },
-]);
+function extractProblems(dataItem: any) {
+    const problemKeys = Object.keys(dataItem).filter(key => key.startsWith('Problem'));
+    problems.value = problemKeys.map((key, index) => ({
+        id: key,
+        name: String.fromCharCode(65 + index)
+    }));
+}
+
+function calculateTotalTime(dataItem: any) {
+    let totalTime = 0;
+    problems.value.forEach(problem => {
+        const problemId = problem.id;
+        const usetime = dataItem['usetime' + problemId.slice(7)];
+        const tries = dataItem[problemId];
+        if (!isNaN(usetime) && !isNaN(tries)) {
+            totalTime += Math.floor(usetime / 60) + tries * 20;
+        }
+    });
+    return totalTime;
+}
 
 onMounted(() => {
     console.time('getHomeworkRankingById');
     getHomeworkRankingById(1457).then((res: any) => {
         console.timeEnd('getHomeworkRankingById');
-        console.log('只是排行榜数据',res);
-        data.value = res.data;
+        console.log('这是排行榜数据',res);
+        data.value = res.data.map((item: any, index: number) => ({ ...item, index }));
+        if (data.value.length >= 0) {
+            extractProblems(data.value[0]);
+        }
     });
 });
 </script>
