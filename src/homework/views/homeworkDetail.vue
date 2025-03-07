@@ -89,7 +89,7 @@
                     <ProblemsComponent :homeworkId="homework.id" />
                 </div>
                 <div v-if="selectedTab === 'ranking'">
-                    <RankingComponent />
+                    <RankingComponent :homeworkId="homework.id"/>
                 </div>
                 <div v-if="selectedTab === 'submissions'">
                     <SubmissionsComponent :homeworkId="homework.id" />
