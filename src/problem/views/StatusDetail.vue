@@ -152,14 +152,14 @@
         <div class="bg-white dark:bg-gray-800 mt-6 p-4 rounded-md shadow">
             <h2 class="text-custom font-semibold mb-4">代码</h2>
             <hr class="border-gray-300 my-2 mb-4">
-            <pre><code :class="`language-${languageClassMap[status.language]}`" class="line-numbers">{{ status.code
+            <pre><code :class="`language-cpp`" class="line-numbers">{{ status.code
             }}</code></pre>
         </div>
     </div>
 </template>
 <script setup lang="ts">
 import { type Status, getStatDetail } from '../StatusAPI';
-import { Judge } from '@/common/api/judgeAPI';
+import { languageOptions } from '@/common/constant/AllConstant';
 import Column from 'primevue/column';
 import { ref, defineProps, onMounted, onUpdated } from 'vue'
 import Prism from "prismjs";
@@ -265,13 +265,7 @@ function isAbnormalStatus(status: Status.StatusDetail): boolean {
     return status.status !== -3 && status.status !== -2 && status.status !== -1 && status.status !== 0 && status.status !== 1 && status.status !== 2 && status.status !== 3
 }
 // 语言映射，用于Prism高亮代码
-const languageClassMap: Record<string, string> = {
-    [Judge.Language.C]: 'c',
-    [Judge.Language.Cpp]: 'cpp',
-    [Judge.Language.Java]: 'java',
-    [Judge.Language.PyPy2]: 'python',
-    [Judge.Language.PyPy3]: 'python',
-};
+
 // 加载数据
 onMounted(() => {
     isLoading.value = true;

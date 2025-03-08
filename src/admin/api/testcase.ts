@@ -29,6 +29,10 @@ export namespace TestCaseSpace{
         fileType: string;
         id: number;
     }
+    export interface RenameTestcaseDTO {
+        id: number;
+        name: string;
+    }
 }
 export const uploadTestcase = (files:FormData,headers:object) => {
     return request.post<string>('/api/p/admin/testcase/upload',files, headers);
@@ -47,4 +51,7 @@ export const updateTestcase = (id:number, testcase:TestCaseSpace.CreateAndUpdate
 }
 export const deleteTestcase = (ids:string) => {
     return request.delete(`/api/p/admin/testcase/${ids}`,{});
+}
+export const renameTestcase = (data:TestCaseSpace.RenameTestcaseDTO) => {
+    return request.put(`/api/p/admin/testcase/rename`,{data});
 }

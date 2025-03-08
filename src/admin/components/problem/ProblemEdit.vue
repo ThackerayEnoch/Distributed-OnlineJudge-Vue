@@ -81,9 +81,9 @@
             <div class="flex flex-col space-y-2 mt-4">
                 <label class="text-gray-500"><span class="text-red-500">*</span> 允许提交语言:</label>
                 <div class="flex flex-wrap gap-4">
-                    <div v-for="option in languageOptions " :key="option.id" class="flex items-center mr-2 gap-2">
+                    <div v-for="option in languageOptions" :key="option.id" class="flex items-center mr-2 gap-2">
                         <Checkbox v-model="selectedLanguages" :inputId="option.id.toString()" :value="option.id" />
-                        <label :for="option.id.toString()">{{ option.name }}</label>
+                        <label v-tooltip.top="option.description" :for="option.id.toString()">{{ option.name }}</label>
                     </div>
                 </div>
             </div>

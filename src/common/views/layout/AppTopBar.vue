@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router'
 import { useLayout } from '@/common/views/layout/layout';
 // 主题设置
 import AppConfigurator from './AppConfigurator.vue';
 const { toggleDarkMode, isDarkTheme } = useLayout();
 const router = useRouter();
+const route = useRoute();
 // 当前页面
 const activeMenu = ref('/');
 // 导航栏
@@ -60,10 +61,35 @@ const navigateTo = (menu: string) => {
 }
 // 根据当前页面自动切换导航栏的项
 onMounted(() => {
-    const route = useRoute();
-    const currentRoute = route.path.split('/')[1];
-    activeMenu.value = currentRoute.toLowerCase(); // 例如 '/b' 转为 'B'
-    console.log(activeMenu.value, currentRoute);
+    const currentRoute = route.path.split('/')[1].toLowerCase();
+    switchMenu(currentRoute);
+
+});
+function switchMenu(menu: string) {
+    switch (menu) {
+        case 'problem':
+            activeMenu.value = 'problems';
+            break;
+        case 'status':
+            activeMenu.value = 'statuses';
+            break;
+        case 'homework':
+            activeMenu.value = 'homeworks';
+            break;
+        case 'contest':
+            activeMenu.value = 'contests';
+            break;
+        case 'class':
+            activeMenu.value = 'classes';
+            break;
+        default:
+            activeMenu.value = menu;
+    }
+}
+// 监听路由变化
+watch(route, (newRoute) => {
+    const currentRoute = newRoute.path.split('/')[1].toLowerCase();
+    switchMenu(currentRoute);
 });
 </script>
 

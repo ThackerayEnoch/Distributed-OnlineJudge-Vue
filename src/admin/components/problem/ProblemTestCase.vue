@@ -50,7 +50,7 @@
                         </button>
                         <button
                             class="bg-green-500 text-white p-2 rounded flex items-center justify-center w-14 h-9 hover:bg-green-600"
-                            v-tooltip.top="'重命名'">
+                            v-tooltip.top="'重命名'" @click="open(slotProps.data.id)">
                             <i class="fas fa-pencil-alt"></i>
                         </button>
                         <button
@@ -182,13 +182,34 @@
             </div>
         </div>
     </Dialog>
+    <Dialog v-model:visible="renameDialogVisible" header="重命名测试点" :modal="true" :style="{ minWidth: '400px' }"
+        :dismissableMask="true" class="rounded-lg">
+        <div class="p-6">
+            <!-- 输入区域 -->
+            <div class="space-y-4">
+                <label class=" block text-gray-600 text-sm font-medium">
+                    新名称
+                </label>
+                <InputText v-model="newObject.name" placeholder="请输入新名称"
+                    class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    autocomplete="off" autofocus />
+            </div>
 
+            <!-- 操作按钮 -->
+            <div class="flex justify-end space-x-2 mt-6">
+                <Button label="取消" severity="secondary" @click="renameDialogVisible = false"
+                    class="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors" />
+                <Button label="确认" severity="primary" @click="handleConfirm"
+                    class="px-4 py-2 rounded-lg transition-colors" />
+            </div>
+        </div>
+    </Dialog>
 
 
 </template>
 <script setup lang="ts">
-import { defineProps, onMounted, ref } from 'vue'
-import { type TestCaseSpace, getTestcases, getTestcase, uploadTestcase, addTestcase, updateTestcase, deleteTestcase } from '@/admin/api/testcase'
+import { defineProps, onMounted, reactive, ref } from 'vue'
+import { type TestCaseSpace, renameTestcase, getTestcases, getTestcase, uploadTestcase, addTestcase, updateTestcase, deleteTestcase } from '@/admin/api/testcase'
 import globalMessage from '@/common/utils/toast';
 import InputNumber from 'primevue/inputnumber';
 import { useConfirm } from "primevue/useconfirm";
@@ -207,6 +228,32 @@ const testcaseInfo = ref<TestCaseSpace.TestCaseInfo>({
     score: 0,
     subtask: 0,
 })
+
+const renameDialogVisible = ref(false);
+const newObject: TestCaseSpace.RenameTestcaseDTO = reactive({
+    id: 0,
+    name: '',
+});
+
+const open = (id: number) => {
+    newObject.id = id;
+    newObject.name = ''
+    renameDialogVisible.value = true;
+};
+
+const handleConfirm = async () => {
+    if (!newObject.name) {
+        globalMessage.error('错误', '名称不能为空');
+        return;
+    }
+    await renameTestcase(newObject).then(res => {
+        globalMessage.success('重命名成功', res.message);
+        loadTestcases()
+    }).catch(err => {
+        globalMessage.error('重命名失败', err.message);
+    });
+    renameDialogVisible.value = false;
+};
 const isUploading = ref<boolean>(false);
 const uploadProgress = ref(0);
 const selectedFiles = ref<File[]>([]);
@@ -296,6 +343,7 @@ const props = defineProps<{
 onMounted(() => {
     loadTestcases()
 })
+
 async function loadTestcases() {
     if (!props.id) {
         return

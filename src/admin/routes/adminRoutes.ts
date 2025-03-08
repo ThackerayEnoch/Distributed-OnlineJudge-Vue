@@ -101,9 +101,64 @@ export default [
             },
             {
               path:'/admin/homeworks/list',
-              name:'AdminContestList',
+              name:'AdminHomeworkList',
               components:{
-                admin:()=>import('@/admin/components/contest/ContestList.vue')
+                admin:()=>import('@/admin/components/contest/HomeworkList.vue')
+              }
+            },
+            {
+              path:'/admin/homework/create/:copyId?',
+              name:'AdminHomeworkCreate',
+              components:{
+                admin:()=>import('@/admin/components/contest/HomeworkCreate.vue')
+              },
+              props:true
+            },
+            {
+              path:'/admin/homework/edit/:id',
+              name:'AdminHomeworkEdit',
+              components:{
+                admin:()=>import('@/admin/components/contest/HomeworkEdit.vue')
+              },
+              props:true
+            },
+            {
+              path:'/admin/homework/status/:id',
+              name:'AdminHomeworkStatus',
+              components:{
+                admin:()=>import('@/admin/components/contest/HomeworkStatus.vue')
+              }, 
+              props:true
+            }
+          ]
+        },
+        {
+          path:'/admin/users',
+          name:'UserAdmin',
+          children:[
+            {
+              path:'/admin/users',
+              redirect: '/admin/users/list'
+            },
+            {
+              path:'/admin/users/list',
+              name:'AdminUserList',
+              components:{
+                admin:()=>import('@/admin/components/user/UserList.vue')
+              }
+            },
+            {
+              path:'/admin/users/import',
+              name:'AdminUserImport',
+              components:{
+                admin:()=>import('@/admin/components/user/UserImport.vue')
+              }
+            },
+            {
+              path:'/admin/users/generate',
+              name:'AdminUserGenerate',
+              components:{
+                admin:()=>import('@/admin/components/user/UserGenerate.vue')
               }
             }
           ]

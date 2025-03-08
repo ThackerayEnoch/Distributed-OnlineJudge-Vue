@@ -1,7 +1,8 @@
 <template>
-    <div class="w-full h-full flex flex-col">
+    <AccessDenied v-if="isAccessDenied" :message="message" btnLabel="返回题库" btnTo="/problems" btnIcon="pi pi-book" />
+    <div v-else class="w-full h-full flex flex-col items-start">
+        <div class="w-[70%] p-4 shadow-lg bg-white dark:bg-gray-800">
 
-        <div class="w-[70%] h-full p-4 shadow-lg bg-white dark:bg-gray-800 flex-glow">
             <h1 class="text-3xl font-bold mb-4" v-html="problemDetail?.title"></h1>
             <div class="mb-4 flex items-center">
                 <Tag class="mr-2" severity="info">
@@ -29,149 +30,264 @@
             </div>
             <div class="mb-4">
                 <h2 class="text-xl font-semibold mb-2 text-blue-500">题目描述</h2>
-                <div class="ml-4 contain-math-html-css" v-html="problemDetail?.description"></div>
+                <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css"
+                    v-html="problemDetail.description"></div>
+                <div v-else>
+                    <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'"
+                        :modelValue="problemDetail.description" />
+                </div>
             </div>
             <div class="mb-4">
                 <h2 class="text-xl font-semibold mb-2 text-blue-500">输入格式</h2>
-                <div class="ml-4 contain-math-html-css" v-html="problemDetail?.input"></div>
+                <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css" v-html="problemDetail.input">
+                </div>
+                <div v-else>
+                    <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'" :modelValue="problemDetail.input" />
+                </div>
             </div>
             <div class="mb-4">
                 <h2 class="text-xl font-semibold mb-2 text-blue-500">输出格式</h2>
-                <div class="ml-4 contain-math-html-css" v-html="problemDetail?.output"></div>
-            </div>
-            <div class="mb-4 flex">
-                <div class="mr-4">
-                    <h2 class="text-xl font-semibold mb-2 text-blue-500">输入样例</h2>
-                    <pre class="ml-4 contain-math-html-css bg-gray-100 dark:bg-gray-900 p-4 rounded-md inline-block"
-                        v-html="problemDetail?.inputExamples"></pre>
+                <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css" v-html="problemDetail.output">
                 </div>
-                <div>
-                    <div class="flex items-center">
-                        <h2 class="text-xl font-semibold mb-2 text-blue-500">输出样例</h2>
-                        <button @click="copyToClipboard(problemDetail?.outputExamples as string)"
-                            class="mt-2 mr-2 bg-blue-500 text-white px-2 py-1 rounded">Copy</button>
+                <div v-else>
+                    <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'" :modelValue="problemDetail.output" />
+                </div>
+            </div>
+            <div class="mb-4">
+                <!-- 输入输出样例 标题 -->
+                <h2 class="text-xl font-semibold mb-2 text-blue-500">输入输出样例</h2>
+
+                <div v-for="(input, index) in inputs" :key="index" class="flex items-start p-4 pb-0 pt-0 rounded">
+                    <!-- 输入样例 -->
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm text-gray-500 font-bold">输入样例 #{{ index + 1 }}</span>
+                            <Button icon="pi pi-copy" class="p-button-text" @click="copyToClipboard(input)" />
+                        </div>
+                        <pre class="p-3 bg-gray-100 dark:bg-black rounded-md border">{{ input }}</pre>
                     </div>
-                    <pre class="ml-4 contain-math-html-css bg-gray-100 dark:bg-gray-900 p-4 rounded-md inline-block"
-                        v-html="problemDetail?.outputExamples"></pre>
+
+                    <!-- 输出样例 -->
+                    <div class="flex-1 ml-4">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm text-gray-500 font-bold">输出样例 #{{ index + 1 }}</span>
+                            <Button icon="pi pi-copy" class="p-button-text" @click="copyToClipboard(outputs[index])" />
+                        </div>
+                        <pre class="p-3 bg-gray-100 dark:bg-black rounded-md border">{{ outputs[index] }}</pre>
+                    </div>
                 </div>
             </div>
-            <div v-if="problemDetail?.hint" class="mb-4">
+            <div v-if="problemDetail.hint" class="mb-4">
                 <h2 class="text-xl font-semibold mb-2 text-blue-500">提示</h2>
-                <div class="ml-4 contain-math-html-css" v-html="problemDetail?.hint"></div>
+                <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css" v-html="problemDetail.hint">
+                </div>
+                <MdPreview v-else :theme="layoutConfig.darkTheme ? 'dark' : 'light'" :modelValue="problemDetail.hint" />
             </div>
         </div>
         <!-- ...existing code... -->
         <div class="fixed top-22 right-10 w-[25%] shadow-lg h-auto p-4 bg-white dark:bg-gray-800 rounded-lg">
-            <!-- 卡片布局 -->
+            <!-- 卡片其他内容保持原样 -->
             <!-- 标题部分 -->
             <div class="flex justify-between items-center mb-4">
-                <span class="text-gray-600 font-semibold  font-medium">题目提供者</span>
-                <span class="text-gray-800 ml-2">{{ problemDetail?.nickname }}</span>
+                <span class="text-gray-600 font-semibold font-medium">题目提供者</span>
+                <span class="text-gray-800 ml-2">{{ problemDetail.nickname }}</span>
             </div>
-
             <!-- 难度 -->
             <div class="flex justify-between items-center mb-4">
-                <span class="text-gray-600 font-semibold font-medium">难度</span>
-                <span class="text-orange-500 font-semibold">普及-</span>
+                <span class="text-gray-600 font-semibold font-medium">难度等级</span>
+                <span class="text-orange-500 font-semibold">{{ difficultyMap(problemDetail.difficulty) }}</span>
             </div>
-
-            <!-- 历史分数 -->
-            <div class="flex justify-between items-center mb-6">
-                <span class="text-gray-600 font-semibold font-medium">历史分数</span>
-                <span class="text-green-500 font-semibold">100</span>
+            <!-- 统计信息组 -->
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-gray-600 font-semibold font-medium">提交总数</span>
+                <span class="text-gray-800 font-semibold">{{ totalSubmissions }}</span>
             </div>
-
-            <!-- 底部按钮 -->
-            <div class="flex justify-between">
-                <!-- 提交记录 -->
-                <button class="text-blue-500 hover:text-blue-700 font-medium flex items-center">
-                    <i class="pi pi-chart-bar mr-2"></i> 提交记录
-                </button>
-
-                <!-- 查看题解 -->
-                <button class="text-blue-500 hover:text-blue-700 font-medium flex items-center">
-                    <i class="pi pi-book mr-2"></i> 查看题解
-                </button>
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-gray-600 font-semibold font-medium">正确提交</span>
+                <span class="text-green-500 font-semibold">{{ passedSubmissions }}</span>
             </div>
-            <div class="mt-4">
-                <Button class="text-blue-500 hover:text-blue-700 font-medium flex items-center" @click="visible = true">
-                    提交
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-gray-600 font-semibold font-medium">通过率</span>
+                <span class="text-blue-500 font-semibold">
+                    {{ (passedSubmissions / totalSubmissions * 100 || 0).toFixed(1) }}%
+                </span>
+            </div>
+            <!-- 题目元数据 -->
+            <div v-if="problemDetail.type === 1" class="flex justify-between items-center mb-6">
+                <span class="text-gray-600 font-semibold font-medium">最高得分</span>
+                <span class="text-green-500 font-semibold">{{ score }}</span>
+            </div>
+            <div v-if="problemDetail.type === 0" class="flex justify-between items-center mb-6">
+                <span class="text-gray-600 font-semibold font-medium">是否AC</span>
+                <span class="text-green-500 font-semibold">{{ isSolved ? 'AC' : '' }}</span>
+            </div>
+            <!-- 按钮组区域 -->
+            <div class="mt-4 space-y-2">
+                <!-- 主要操作按钮 -->
+                <Button class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium" @click="visible = true">
+                    提交解答
                 </Button>
+
+                <!-- 辅助操作按钮组 -->
+                <div class="flex flex-wrap gap-2">
+                    <Button v-if="contestId != null"
+                        class="flex-1 text-purple-500 hover:text-purple-700 border border-gray-200 font-medium"
+                        outlined>
+                        排行榜
+                    </Button>
+                    <Button class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium"
+                        outlined>
+                        提交记录
+                    </Button>
+                    <Button v-if="contestId != null"
+                        class="flex-1 text-green-500 hover:text-green-700 border border-gray-200 font-medium" outlined>
+                        返回竞赛
+                    </Button>
+                </div>
             </div>
         </div>
     </div>
-    <Dialog v-model:visible="visible" header="提交代码" :modal="true" :closable="false">
-        <div class="p-4">
-            <form @submit.prevent="handleSubmit">
-                <div class="mb-4">
-                    <label for="code" class="block text-sm font-medium text-gray-700">代码</label>
-                    <textarea id="code" v-model="code" rows="5"
-                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500"
-                        required></textarea>
-                </div>
-                <div class="flex justify-end">
-                    <Button type="submit" label="提交" class="mr-2" />
-                    <Button label="取消" @click="closeDialog" class="p-button-secondary" />
-                </div>
-                <div class="flex justify-end mt-2">
-                    <Dropdown v-model="selectedLanguage" :options="languageOptions" optionLabel="label"
-                        placeholder="选择语言" class="w-full md:w-14rem" />
-                </div>
+    <Dialog v-model:visible="visible" header="代码提交" :modal="true" :breakpoints="{ '960px': '75vw', '640px': '90vw' }"
+        :style="{ width: '50vw' }" :draggable="false">
+        <form @submit.prevent="handleSubmit" class="flex flex-col space-y-4">
+            <!-- 语言选择 -->
+            <div class="flex justify-between items-center">
+                <label class="text-gray-600 font-medium">编程语言</label>
+                <Dropdown v-model="selectedLanguage" :options="allowLanguagesList" placeholder="选择语言" class="w-48"
+                    :filter="true" required />
+            </div>
 
-            </form>
-        </div>
+            <!-- 代码编辑区（允许扩展） -->
+            <div class="flex flex-col w-full">
+                <CodeMirror v-model:model-value="code" :dark="true" :extensions="extensions" basic :lang="lang"
+                    class="w-full min-h-[400px] bg-[#282C34]" style="height: auto;" :tab-size="40" />
+            </div>
+
+            <!-- 操作按钮（保持在底部） -->
+            <div class="flex justify-end space-x-3 pt-4">
+                <Button label="取消" @click="closeDialog"
+                    class="px-5 py-2 text-gray-600 hover:bg-gray-100 transition-colors" text />
+                <Button type="submit" label="提交代码" :loading="isSubmtting"
+                    class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white transition-colors" />
+            </div>
+        </form>
+
     </Dialog>
 </template>
 
 <script setup lang="ts">
 import { defineProps, ref, onMounted, watch } from 'vue';
-import { getProblemDetail, type Problem } from '../problemAPI';
-import { Judge, submitProblem } from '@/common/api/judgeAPI'
+import { useRouter, useRoute } from 'vue-router';
 import { number } from 'yup';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import { useRouter } from 'vue-router';
+import { MdPreview } from 'md-editor-v3';
+import 'md-editor-v3/lib/preview.css';
+import CodeMirror from 'vue-codemirror6';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { cpp } from '@codemirror/lang-cpp';
 
+import { getProblemDetail, submitProblem, getProblemStatistics, type Problem, type Judge } from '../problemAPI';
+import { layoutConfig } from '@/common/views/layout/layout';
+import { languageOptions } from '@/common/constant/AllConstant';
+import globalMessage from '@/common/utils/toast';
+import { ProblemStatus } from '../status/problemStatus';
+import AccessDenied from '@/common/components/AccessDenied.vue';
+
+
+const extensions = [oneDark];
 const router = useRouter();
+const route = useRoute();
 const visible = ref(false);
-const code = ref('');
 
+// 从URL中获取contestId
+const contestId = route.query.contestId ? Number(route.query.contestId) : null;
+const totalSubmissions = ref(0);
+const passedSubmissions = ref(0);
+const isSolved = ref(false);
+const score = ref(0);
+const code = ref<string>('');
+const lang = cpp();
+const inputs = ref([]);
+const outputs = ref([]);
+function handleInputOutput() {
+    const inputExamples = problemDetail.value.inputExamples;
+    const outputExamples = problemDetail.value.outputExamples;
+
+    try {
+        const inputJson = JSON.parse(inputExamples);
+        const outputJson = JSON.parse(outputExamples);
+        inputs.value = Object.values(inputJson);
+        outputs.value = Object.values(outputJson);
+    } catch (error) {
+        console.error('Error parsing JSON:', error);
+    }
+}
 function closeDialog() {
     visible.value = false;
 }
+const isSubmtting = ref(false);
 // 提交代码
 async function handleSubmit() {
     visible.value = false;
+    if (isSubmtting.value) return;
+    isSubmtting.value = true;
     const dto: Judge.SubmitReqData = {
         pid: props.pid as unknown as number,
         code: code.value,
-        language: selectedLanguage.value.value,
-        cid: 0,
+        language: selectedLanguage.value,
+        cid: contestId as number,
         tid: 0,
         gid: 0,
         isRemote: false
     }
     submitProblem(dto).then(() => {
         router.push('/statuses');
+    }).finally(() => {
+        isSubmtting.value = false;
     })
 }
-// 语言选择定义
-interface LanguageOption {
-    label: string;
-    value: Judge.Language;
-}
 // 语言选择
-const selectedLanguage = ref<LanguageOption>({ label: 'C', value: Judge.Language.C });
-const languageOptions: LanguageOption[] = [
-    { label: 'C', value: Judge.Language.C },
-    { label: 'C++', value: Judge.Language.Cpp },
-    { label: 'Java', value: Judge.Language.Java },
-    { label: 'Python2', value: Judge.Language.PyPy2 },
-    { label: 'Python3', value: Judge.Language.PyPy3 }
-];
-
+const selectedLanguage = ref<string>('C 11');
+const allowLanguagesList = ref<string[]>([]);
+function languageOptionsHandle(languageIds: number[]) {
+    if (languageIds != null && languageIds.length > 0) {
+        allowLanguagesList.value = languageOptions.filter((item) => languageIds.includes(item.id)).map((item) => item.name);
+    } else {
+        allowLanguagesList.value = languageOptions.map((item) => item.name);
+        console.log(allowLanguagesList.value);
+    }
+}
 // 题目详情数据
-const problemDetail = ref<Problem.ProblemResData | null>(null);
+const problemDetail = ref<Problem.ProblemResData>({
+    id: 0,
+    displayId: '',
+    judgeMode: '',
+    title: '',
+    type: 0,
+    timeLimit: 0,
+    memoryLimit: 0,
+    stackLimit: 0,
+    description: '',
+    input: '',
+    output: '',
+    inputExamples: '',
+    outputExamples: '',
+    source: 0,
+    difficulty: 0,
+    hint: '',
+    auth: 0,
+    ioScore: 0,
+    codeShare: 0,
+    userExtraFile: '',
+    isRemoveEndBlank: 0,
+    openCaseResult: 0,
+    modifiedUser: 0,
+    allowLanguages: [],
+    nickname: '',
+    createTime: new Date(),
+    updateTime: new Date()
+});
 // 定义props，获取URL中的pid参数
 const props = defineProps({
     pid: number
@@ -179,10 +295,11 @@ const props = defineProps({
 // 获取题目详情数据
 onMounted(() => {
     getProblemDetailData();
+    loadProblemStatistics();
 });
 // 当异步请求得到数据后，渲染数学公式
 watch(problemDetail, () => {
-    if (problemDetail.value && problemDetail.value.description) {
+    if (problemDetail.value.id <= 2493 && problemDetail.value && problemDetail.value.description) {
         problemDetail.value.description = renderMath(problemDetail.value.description);
         problemDetail.value.input = renderMath(problemDetail.value.input);
         problemDetail.value.output = renderMath(problemDetail.value.output);
@@ -191,10 +308,42 @@ watch(problemDetail, () => {
         problemDetail.value.hint = renderMath(problemDetail.value.hint);
     }
 });
+const message = ref<string>('您没有权限查看此题目');
+const isAccessDenied = ref<boolean>(false);
 // 异步获取题目详情数据
+const loadProblemStatistics = async () => {
+    await getProblemStatistics(props.pid as unknown as number, contestId as unknown as number).then((res) => {
+        const data = res.data as Problem.ProblemStatistics;
+        totalSubmissions.value = data.totalSubmission;
+        passedSubmissions.value = data.solvedCount;
+        isSolved.value = data.isSolved;
+        score.value = data.userScore;
+    }).catch((error) => {
+        globalMessage.error('题目统计数据获取失败', error.message);
+    });
+}
 const getProblemDetailData = async () => {
-    const result = await getProblemDetail(props.pid as unknown as number);
-    problemDetail.value = result.data as Problem.ProblemResData;
+    await getProblemDetail(props.pid as unknown as number, contestId as number).then((res) => {
+        const data = res.data as Problem.ProblemResData;
+        problemDetail.value = data;
+        languageOptionsHandle(data.allowLanguages);
+        handleInputOutput();
+    }).catch((error) => {
+        if (error.code === ProblemStatus.ACCESS_DENIED) {
+            isAccessDenied.value = true;
+            message.value = '您没有权限查看此题目, 可能是题目未开放';
+            globalMessage.warn('提示', '您没有权限查看此题目');
+            return;
+        }
+        if (error.code === ProblemStatus.CONTEST_NOT_START) {
+            isAccessDenied.value = true;
+            message.value = '比赛未开始';
+            globalMessage.warn('提示', '比赛未开始');
+            return;
+        }
+        globalMessage.error('题目详情数据获取失败', error.message);
+    });
+
 }
 // 渲染数学公式
 const renderMath = (content: string) => {
@@ -277,5 +426,10 @@ const judgeModeMap = (judgeMode: string) => {
     text-align: left;
     white-space: pre-wrap;
     flex: none;
+}
+
+/* required! */
+.cm-editor {
+    height: 100%;
 }
 </style>

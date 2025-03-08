@@ -41,5 +41,4 @@ app.component('Toast', Toast);
 const toast = app.config.globalProperties.$toast;
 app.config.errorHandler = globalErrorHandler(toast);
 app.mount('#app')
-
 export default app;

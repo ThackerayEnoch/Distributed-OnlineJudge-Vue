@@ -57,7 +57,7 @@ export default defineComponent({
                         to: "/admin/homeworks",
                         items: [
                             { label: "作业列表", icon: "pi pi-list", to: "/admin/homeworks/list" },
-                            { label: "创建作业", icon: "pi pi-plus", to: "/admin/homeworks/create" },
+                            { label: "创建作业", icon: "pi pi-plus", to: "/admin/homework/create" },
                         ],
                     },
                     {
@@ -75,9 +75,8 @@ export default defineComponent({
                         to: "/admin/users",
                         items: [
                             { label: "用户列表", icon: "pi pi-user", to: "/admin/users/list" },
-                            { label: "创建用户", icon: "pi pi-user-plus", to: "/admin/users/create" },
                             { label: "导入用户", icon: "pi pi-upload", to: "/admin/users/import" },
-                            { label: "用户组管理", icon: "pi pi-users", to: "/admin/users/groups" },
+                            { label: '账号生成', icon: 'pi pi-plus', to: '/admin/users/generate' }
                         ],
                     },
                 ],

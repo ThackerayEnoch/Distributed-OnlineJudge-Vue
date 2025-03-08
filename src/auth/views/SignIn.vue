@@ -29,7 +29,7 @@
                     </div>
                     <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">忘记密码?</span>
                 </div>
-                <Button label="登录" class="w-full p-button-primary" type="submit" />
+                <Button label="登录" class="w-full p-button-primary" :loading="isloading" type="submit" />
             </form>
             <div class="flex justify-center mt-8 mb-2">
                 <RouterLink to="/auth/register" class="font-medium no-underline cursor-pointer text-primary">没有账户? 点击注册
@@ -52,6 +52,7 @@ import { User } from '@/common/entity/user'
 const counterStore = useUserStore();
 const isRememberMe = ref(false);
 
+const isloading = ref(false);
 // 定义表单验证规则
 const schema = yup.object({
     username: yup.string().required('用户名是必填项'),
@@ -67,27 +68,31 @@ const { handleSubmit } = useForm({
 const { value: username, errorMessage: usernameError } = useField<string>('username');
 const { value: password, errorMessage: passwordError } = useField<string>('password');
 
-// 提交表单(触发整体验证)
-const onSubmit = handleSubmit(async values => {
-    const result = await login({
-        username: values.username,
-        password: values.password,
-    });
+const onSubmit = handleSubmit(async (values) => {
+    isloading.value = true;
+    try {
+        const res = await login({
+            username: values.username,
+            password: values.password,
+        });
 
-    if (result != undefined && result.status === ResponseCode.SUCCESS) {
-        // 将 temporaryToken 存储在本地存储
-        const token = result.data?.token;
-        if (token) {
-            localStorage.setItem('token', token);
-            const user = new User(result.data?.id, result.data?.username, result.data?.nickname, result.data?.roleId);
+        if (res?.data?.token) {
+            localStorage.setItem('token', res.data.token);
+            const user = new User(res.data.id, res.data.username, res.data.nickname, res.data.roleId);
             counterStore.setUser(user);
-            globalMessage.success('成功', '登录成功');
+            globalMessage.success('操作成功', '登录成功');
             router.push('/');
         } else {
-            globalMessage.error('失败', '登录失败');
+            globalMessage.error('操作失败', '登录失败');
         }
+    } catch (error: any) {
+        globalMessage.error('操作失败', error.message);
+    } finally {
+        isloading.value = false;
     }
 });
+
+
 </script>
 
 <style scoped></style>
