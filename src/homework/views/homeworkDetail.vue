@@ -89,10 +89,10 @@
                     <ProblemsComponent :homeworkId="homework.id" />
                 </div>
                 <div v-if="selectedTab === 'ranking'">
-                    <RankingComponent />
+                    <RankingComponent :homeworkId="homework.id"/>
                 </div>
                 <div v-if="selectedTab === 'submissions'">
-                    <SubmissionsComponent />
+                    <SubmissionsComponent :homeworkId="homework.id" />
                 </div>
             </div><!--显示不同导航栏内容-->
         </div>
@@ -101,12 +101,14 @@
 </template>
 <script lang="ts" setup>
 import { onMounted, defineProps, ref } from 'vue';
-import { searchHomeworkById,} from '@/homework/api/homeworkAPI'
+import { searchHomeworkById, getHomeworkAuth } from '@/homework/api/homeworkAPI';
+import globalMessage from '@/common/utils/toast';
 import ProgressBar from 'primevue/progressbar';
 import IntroComponent from '../components/IntroComponent.vue';
 import ProblemsComponent from '../components/ProblemsComponent.vue';
 import RankingComponent from '../components/RankingComponent.vue';
 import SubmissionsComponent from '../components/SubmissionsComponent.vue';
+import router from '@/common/utils/router';
 
 // 获取路径的hid参数
 const { hid } = defineProps(['hid']);
@@ -136,9 +138,17 @@ async function localHomeworkDetail(hid:number) {
     homework.value = res.data as any;
     console.log('作业信息',homework.value);
 }
-onMounted(() => {
+onMounted(async () => {
+    await getAuthPermission(hid);
     localHomeworkDetail(hid);
 })
+async function getAuthPermission(homeworkId:number) {
+    const res = await getHomeworkAuth(homeworkId);
+    if(!res.data){
+        router.push({name:'Homework'});
+        globalMessage.warn('提示','您没有权限访问该作业');
+    }
+}
 </script>
 <style scoped>
 .progress-20 ::v-deep(.p-progressbar-value) {

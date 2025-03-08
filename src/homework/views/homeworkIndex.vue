@@ -24,10 +24,9 @@
                         <span class="flex-1 font-bold">标题</span>
                     </template>
                     <template #body="slotProps">
-                        <router-link :to="{ name: 'HomeworkDetail', params: { hid: slotProps.data.id } }"
-                            class="text-blue-400 hover:text-blue-600 truncate">
+                        <a  @click="handleClick(slotProps.data.id, $event)" class="text-blue-400 hover:text-blue-600 truncate">
                             {{ slotProps.data.title }}
-                        </router-link>
+                        </a>
                     </template>
                 </Column>
                 <Column field="total" style="text-align: center;">
@@ -102,8 +101,9 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, } from 'vue';
-import { getHomeworkPage, getHomeworkCount, type Homework, searchHomeworks, searchHomeworksCount } from '../api/homeworkAPI'
+import { getHomeworkPage, getHomeworkCount, type Homework, searchHomeworks, searchHomeworksCount, getHomeworkAuth } from '../api/homeworkAPI'
 import { useRouter, useRoute } from 'vue-router';
+import globalMessage from '@/common/utils/toast';
 const router = useRouter();
 const route = useRoute();
 const totalRecords = ref(0);
@@ -114,7 +114,21 @@ const homeworks = ref<Homework.HomeworkJSON[]>([]);
 const homeworkName = ref('');
 const selectedHomeworkType = ref('');
 const HomeworkTypeOptions = ref(['All','Own']);
-
+const authPermission = ref(true);
+// 获取用户写作业的权限
+async function getAuthPermission(homeworkId:number) {
+    const res = await getHomeworkAuth(homeworkId);
+    authPermission.value = res.data ?? true;
+}
+async function handleClick(homeworkId:number, event:Event) {
+    await getAuthPermission(homeworkId);
+    if(authPermission.value){
+        router.push({ name: 'HomeworkDetail', params: { hid: homeworkId } });
+    } else{
+        globalMessage.warn('提示', '您没有权限查看该作业');
+    }
+    event.preventDefault();
+}
 // 查询作业 用api查询作业
 function filterHomeworks() {
     loadSearchedData();
@@ -237,7 +251,7 @@ onMounted(() => {
     } else {
         loadData();
         loadCount();
-    }    
+    }
 });
 async function loadData() {
     const result = await getHomeworkPage(first.value);

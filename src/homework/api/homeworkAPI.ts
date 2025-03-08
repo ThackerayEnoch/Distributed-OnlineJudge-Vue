@@ -51,3 +51,7 @@ export const getHomeworkProblems = (homeworkId:number) => {
 export const getHomeworkProblemsStatus = (homeworkId:number) => {
     return request.get<Homework.HomeworkProblemsStatusJSON[]>('/api/c/homeworks/id/problems/status',{homeworkId})
 }
+// 根据作业id查询是否有资格写作业
+export const getHomeworkAuth = (homeworkId:number) => {
+    return request.get<boolean>('/api/c/homeworks/auth',{homeworkId})
+}
