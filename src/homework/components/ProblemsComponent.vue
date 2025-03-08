@@ -22,7 +22,7 @@
                     <span class="flex-1 text-center font-bold">标题</span>
                 </template>
                 <template #body="slotProps">
-                    <router-link :to="{ path: `/problem/${slotProps.data.problemId}`, query: { homeworkId: props.homeworkId } }"
+                    <router-link :to="{ path: `/problem/${slotProps.data.problemId}`, query: { contestId: props.homeworkId } }"
                         class="text-blue-400 hover:text-blue-600 truncate">
                         {{ slotProps.data.title }}
                     </router-link>
