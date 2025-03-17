@@ -68,8 +68,8 @@
                             <label for="ingredient1">ACM</label>
                         </div>
                         <div class="flex items-center gap-2">
-                            <RadioButton v-model="problemType" inputId="type2" name="type" :value="1" />
-                            <label for="ingredient2">OI</label>
+                            <RadioButton v-model="problemType" disabled inputId="type2" name="type" :value="1" />
+                            <label for="ingredient2" v-tooltip.top="'正在开发中'">OI</label>
                         </div>
                     </div>
                 </div>
@@ -134,12 +134,12 @@
             <div class="p-4">
                 <div class="flex flex-wrap gap-4">
                     <div class="flex items-center mr-2 gap-2 w-1/2">
-                        <Checkbox v-model="userJudgeFile" binary />
-                        <label for="checkbox1">选手程序</label>
+                        <Checkbox v-model="userJudgeFile" binary disabled />
+                        <label for="checkbox1" v-tooltip.top="'正在开发中'">选手程序</label>
                     </div>
                     <div class="flex items-center mr-2 gap-2">
-                        <Checkbox v-model="spjJudgeFile" binary />
-                        <label for="checkbox2">特殊或交互程序</label>
+                        <Checkbox v-model="spjJudgeFile" binary disabled />
+                        <label for="checkbox2" v-tooltip.top="'正在开发中'">特殊或交互程序</label>
                     </div>
                 </div>
             </div>
@@ -188,15 +188,16 @@
                 <div class="flex items-center gap-4 mt-4">
                     <div class="flex items-center gap-2">
                         <RadioButton v-model="judgeMode" inputId="judgeMode1" name="judgeMode" :value="0" />
-                        <label for="mode1">普通判题</label>
+                        <label for="mode1" v-tooltip.top="'正在开发中'">普通判题</label>
                     </div>
                     <div class="flex items-center gap-2">
-                        <RadioButton v-model="judgeMode" inputId="judgeMode2" name="judgeMode" :value="1" />
-                        <label for="mode2">特殊判题</label>
+                        <RadioButton v-model="judgeMode" v-tooltip.top="'正在开发中'" disabled inputId="judgeMode2"
+                            name="judgeMode" :value="1" />
+                        <label for="mode2" v-tooltip.top="'正在开发中'">特殊判题</label>
                     </div>
                     <div class="flex items-center gap-2">
-                        <RadioButton v-model="judgeMode" inputId="judgeMode3" name="judgeMode" :value="2" />
-                        <label for="mode3">交互判题</label>
+                        <RadioButton v-model="judgeMode" disabled inputId="judgeMode3" name="judgeMode" :value="2" />
+                        <label for="mode3" v-tooltip.top="'正在开发中'">交互判题</label>
                     </div>
                 </div>
             </div>

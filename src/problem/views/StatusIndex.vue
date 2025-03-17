@@ -1,10 +1,9 @@
 <template>
     <div class="w-full h-full">
-
         <div class="w-full h-[75%] p-4 shadow-lg bg-white dark:bg-gray-800">
             <DataTable :value="problems" v-model:filters="filters" filterDisplay="menu" stripedRows paginator :rows="30"
                 tableStyle="min-width: 60%" responsiveLayout="scroll" class="custom-font-size" size="small"
-                :totalRecords="totalRecords" lazy :first="first" @page="onPage">
+                :totalRecords="totalRecords" lazy :first="first" @page="onPage" headerClass="h-4">
                 <template #header>
                     <div class="flex flex-row space-x-4 items-center">
                         <h1 class="text-2xl font-bold">评测状态</h1>
@@ -27,7 +26,8 @@
                         <span class="flex-1 text-center font-bold">题目</span>
                     </template>
                     <template #body="slotProps">
-                        <router-link :to="`/problem/${slotProps.data.pid}`"
+                        <router-link
+                            :to="contestId != null ? `/problem/${slotProps.data.pid}?contestId=${contestId}` : `/problem/${slotProps.data.pid}`"
                             class="text-blue-400 hover:text-blue-600 truncate">
                             P{{ slotProps.data.pid }} {{ slotProps.data.title }}
                         </router-link>
@@ -42,10 +42,6 @@
                             class="p-2 px-4 text-base inline-block rounded">
                             {{ getStatusText(slotProps.data.status) }}
                         </span>
-                    </template>
-                    <template #filter>
-                        <Select v-model="selectedStatus" :options="statusOptions" optionLabel="name" placeholder="全部"
-                            option-value="code" multiple />
                     </template>
                 </Column>
                 <Column field="oiRankScore" style="text-align: center;">
@@ -91,10 +87,16 @@
                         <span class="flex-1 text-center font-bold">语言</span>
                     </template>
                     <template #body="slotProps">
-                        <router-link :to="`/status/${slotProps.data.submitId}`"
+                        <router-link
+                            v-if="slotProps.data.share || counterStore.currentUser.userId === slotProps.data.uid"
+                            :to="`/status/${slotProps.data.submitId}`"
                             class="text-blue-400 hover:text-blue-600 truncate">
                             {{ slotProps.data.language }}
                         </router-link>
+                        <span v-else>{{
+                            slotProps.data.language }}
+                        </span>
+
                     </template>
                 </Column>
                 <Column field="judger" style="text-align: center;">
@@ -131,18 +133,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { getStatPage, getStatBySubmitid, getStatMaxCount, type Status } from '../StatusAPI'
 import { statusMap, statusClassMap, statusOptions } from '@/common/constant/AllConstant';
 import { useRoute, useRouter } from 'vue-router';
+import { useUserStore } from '@/common/utils/store';
+const counterStore = useUserStore();
 import { FilterMatchMode } from '@primevue/core/api';
-
+//
 const route = useRoute();
 const router = useRouter();
 // 评测状态数据
 const problems = ref<Status.StatJSONObject[]>([]);
 // 总记录数
-const totalRecords = ref(150);
+const totalRecords = ref(0);
 // Url参数
 const first = ref((parseInt(route.query.currentPage as string || '1') - 1) * 30 || 0);
 const problemId = ref(route.query.problemId ? parseInt(route.query.problemId as string) : null);
@@ -150,7 +154,6 @@ const contestId = ref(route.query.contestId ? parseInt(route.query.contestId as 
 const userId = ref(route.query.userId ? parseInt(route.query.userId as string) : null);
 const type = ref(route.query.type as string || 'all');
 const statusProp = ref(route.query.status ? parseInt(route.query.status as string) : null);
-const selectedStatus = ref<string[]>([]);
 // 是否只显示自己
 const isMe = ref(false);
 function onIsMeChange() {
@@ -279,11 +282,12 @@ const startPolling = () => {
         return;
     }
     setInterval(async () => {
-        for (const item of pollingQueue.value) {
-            const statusItem = await fetchStatusUpdate(item.submitId);
+        if (pollingQueue.value.length > 0) {
+            const lastItem = pollingQueue.value[pollingQueue.value.length - 1]; // 获取队列中的最后一个元素
+            const statusItem = await fetchStatusUpdate(lastItem.submitId);
             updateProblems(statusItem);
         }
-    }, 1000);
+    }, 1500);
 };
 </script>
 

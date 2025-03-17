@@ -12,7 +12,7 @@ namespace Auth {
         username: string;
         nickname: string;
         roleId: number;
-        id: number;
+        userId: number;
     }
     // 发送验证码表单
     export interface SendCaptchaReqParams {
@@ -34,7 +34,7 @@ export const login = (params: Auth.LoginReqParams) => {
         urlEncodedParams.append(key, (params as any)[key]);
     });
 
-    return request.post<Auth.LoginResData>('/auth-server/doLogin', urlEncodedParams, {
+    return request.post<Auth.LoginResData>('/api/a/doLogin', urlEncodedParams, {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'loginType':'memberLogin'

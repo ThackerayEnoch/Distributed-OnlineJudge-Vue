@@ -277,7 +277,7 @@ import CustomToggleButton from './CustomToggleButton.vue';
 import { reactive, ref, defineComponent, onMounted } from 'vue'
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { parseUsers, getHomeworkGroup, createHomework, updateContestProblems, deleteHomeworkProblem, getHomeworkDetail, addProblems, updateHomework, getAdminAllProblems, getAdminProblems, getAdminProblemsCount, type ContestSpace } from '@/admin/api/contestAPI'
+import { parseUsers, getHomeworkGroup, createHomework, updateContestProblems, getHomeworkDetail, updateHomework, getAdminAllProblems, getAdminProblems, getAdminProblemsCount, type ContestSpace } from '@/admin/api/contestAPI'
 import globalMessage from '@/common/utils/toast';
 
 export default defineComponent({
@@ -329,6 +329,7 @@ export default defineComponent({
         // problem
         const contestProblemsDialog = ref(false);
         const addProblemDialog = ref(false);
+
         const contestProblems = ref<ContestSpace.AdminProblemVO[]>([]);
         const selectedProblems = ref<ContestSpace.AdminAllProblemVO[]>([]);
         const allProblems = ref<ContestSpace.AdminAllProblemVO[]>([]);
@@ -355,7 +356,6 @@ export default defineComponent({
         }
         function problemFinalSaveEvent() {
             contestProblemsDialog.value = false;
-            updateContestProblemsFun();
         }
         function selectedProblemSaveEvent() {
             addProblemDialog.value = false;
@@ -368,50 +368,28 @@ export default defineComponent({
             loadAllProblemCount();
         }
         function onListPageOpen() {
-            if (props.id === undefined) {
-                globalMessage.warn("警告", "请先保存作业再编辑题目");
-                return;
-            } else {
-                contestProblemsDialog.value = true;
+            if (!props.id === undefined) {
                 loadHomeworkProblems();
             }
+            contestProblemsDialog.value = true;
         }
         function onProblemPage(event: { first: number, rows: number }) {
             problemFirst.value = event.first;
             loadAllProblems();
         }
         async function deleteContestProblems(pid: number) {
-            await deleteHomeworkProblem(Number(props.id), pid).then(() => {
-                globalMessage.success("删除题目", "操作成功");
-                loadHomeworkProblems();
-            }).catch(err => {
-                globalMessage.error("删除题目失败", err.message);
-            });
-        }
-        async function updateContestProblemsFun() {
-            const tempProblems: ContestSpace.UpdateContestProblemEntityDTO[] = contestProblems.value.map(problem => ({
-                id: problem.id,
-                number: problem.number
-            }));
-            const dto: ContestSpace.UpdateContestProblemDTO = {
-                id: Number(props.id),
-                problems: tempProblems
-            }
-            await updateContestProblems(dto).then(() => {
-                globalMessage.success("更新题目", "操作成功");
-            }).catch(err => {
-                globalMessage.error("更新题目失败", err.message);
-            });
+            contestProblems.value = contestProblems.value.filter(problem => problem.id !== pid);
         }
         async function saveSelectedProblems() {
-            let ids: number[] = [];
-            ids = selectedProblems.value.map(problem => problem.id);
-            await addProblems(Number(props.id), ids).then(() => {
-                globalMessage.success("保存题目", "操作成功");
-                loadHomeworkProblems();
-            }).catch(err => {
-                globalMessage.error("保存题目失败", err.message);
-            });
+            let lastNumber = contestProblems.value.length;
+            contestProblems.value = selectedProblems.value.map(problem => ({
+                id: problem.id,
+                title: problem.title,
+                difficulty: problem.difficulty,
+                createTime: '',
+                updateTime: '',
+                number: lastNumber++
+            }));
         }
         async function loadAllProblems() {
             const type = filterType.value ? 'own' : 'all';
@@ -469,6 +447,10 @@ export default defineComponent({
             });
         }
         const createHomeworkFun = async () => {
+            const problemTmp: ContestSpace.contestProblem[] = contestProblems.value.map(problem => ({
+                problemId: problem.id,
+                displayId: problem.number
+            }));
             const stu: string[] = studentInput.value.split('\n');
             const homeworkDTO: ContestSpace.CreateHomeworkDTO = {
                 title: homework.title,
@@ -479,6 +461,7 @@ export default defineComponent({
                 visible: homework.visible,
                 duplicateCheck: homework.duplicateCheck,
                 languages: homework.languages,
+                problems: problemTmp,
                 users: stu,
                 groupId: homework.selectedClasses,
                 startTime: homework.startTime.getTime(),
@@ -509,6 +492,10 @@ export default defineComponent({
             });
         }
         async function updateHomeworkFun() {
+            const problemTmp: ContestSpace.contestProblem[] = contestProblems.value.map(problem => ({
+                problemId: problem.id,
+                displayId: problem.number
+            }));
             const stu: string[] = studentInput.value.split('\n');
             const homeworkDTO: ContestSpace.CreateHomeworkDTO = {
                 id: Number(props.id),
@@ -520,6 +507,7 @@ export default defineComponent({
                 visible: homework.visible,
                 duplicateCheck: homework.duplicateCheck,
                 languages: homework.languages,
+                problems: problemTmp,
                 users: stu,
                 groupId: homework.selectedClasses,
                 startTime: homework.startTime.getTime(),

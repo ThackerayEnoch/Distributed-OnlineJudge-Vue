@@ -1,14 +1,14 @@
 <template>
-    <h1 class="text-gray-600 text-2xl dark:text-white">作业简介</h1>
-    <div class="mt-3 p-4 bg-gray-200 rounded-md dark:text-black">{{ description }}</div>
+    <div>
+        <h1 class="text-gray-600 text-2xl dark:text-white">作业简介</h1>
+        <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'" :modelValue="props.description" />
+    </div>
 </template>
 <script lang="ts" setup>
-import { onMounted } from 'vue';
-
+import { MdPreview } from 'md-editor-v3';
+import 'md-editor-v3/lib/preview.css';
+import { layoutConfig } from '@/common/views/layout/layout';
 const props = defineProps<{
     description: string;
 }>();
-onMounted(() => {
-    console.log(props.description);
-});
 </script>

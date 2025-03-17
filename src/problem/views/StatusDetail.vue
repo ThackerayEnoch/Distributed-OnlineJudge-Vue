@@ -2,6 +2,8 @@
     <div v-if="isLoading" class="w-full min-h-screen p-6 flex flex-col mt-[-2.5rem]">
         <!-- 渲染内容 -->
     </div>
+    <AccessDenied v-else-if="isAccessDenied" :message="message" btnLabel="返回题库" btnTo="/problems"
+        btnIcon="pi pi-book" />
     <div v-else class="w-full min-h-screen p-6 flex flex-col mt-[-2.5rem]">
         <!-- Header -->
         <div class="text-white p-4 rounded-md shadow flex items-center"
@@ -24,7 +26,7 @@
             <div class="mt-2 mb-2">
                 <h1 class="text-2xl text-white font-bold mb-2">{{ statusMap[status.status as unknown as keyof typeof
                     statusMap]
-                    }}</h1>
+                }}</h1>
                 <p class="text-m" v-if="status.status !== -2 && isJudgingComplete(status)">
                     运行时间: <span class="font-medium">{{ status.time }} ms </span> 运行内存: <span class="font-medium">{{
                         formatMemory(status.memory) }} </span>
@@ -162,6 +164,9 @@ import { type Status, getStatDetail } from '../StatusAPI';
 import { languageOptions } from '@/common/constant/AllConstant';
 import Column from 'primevue/column';
 import { ref, defineProps, onMounted, onUpdated } from 'vue'
+import AccessDenied from '@/common/components/AccessDenied.vue';
+import globalMessage from '@/common/utils/toast';
+import { ProblemStatus } from '../status/problemStatus';
 import Prism from "prismjs";
 import { number } from 'yup';
 // 定义props，获取URL中的pid参数
@@ -275,11 +280,21 @@ onMounted(() => {
 onUpdated(() => {
     Prism.highlightAll();
 });
+const message = ref<string>('您没有权限查看此记录');
+const isAccessDenied = ref<boolean>(false);
 // 通过API获取判题详情
 async function getJudgeDetail(submitId: number) {
     // 获取提交详情
-    const result = await getStatDetail(submitId);
-    status.value = result.data as unknown as Status.StatusDetail;
+    getStatDetail(submitId).then((result) => {
+        status.value = result.data as unknown as Status.StatusDetail;
+    }).catch((error) => {
+        if (error.code === ProblemStatus.ACCESS_DENIED) {
+            isAccessDenied.value = true;
+            message.value = '您没有权限查看此记录';
+            globalMessage.warn('提示', '您没有权限查看此记录');
+            return;
+        }
+    });
     isLoading.value = false;
 }
 // 获取状态文本

@@ -1,5 +1,5 @@
 import request from "@/common/utils/api";
-export namespace Homework{
+export namespace HomeworkSpace{
     export interface HomeworkJSON {
         id: number;
         uid: number;
@@ -9,49 +9,39 @@ export namespace Homework{
         auth: number;
         total: number;
         visible: boolean;
-        solved: number;
         startTime: string;
         endTime: string;
-    };
-    export interface PersonalHomeworkProblemsJSON {
+    }
+    export interface HomeworkSummaryVO {
+        id: number;
+        nickname: string;
+        title: string;
+        type: number;
+        description: string;
+        auth: number;
+        total: number;
+        startTime: string;
+        endTime: string;
+        updateTime: string;
+    }
+    export interface HomeworkProblemsVO {
         displayId: number;
         problemId: number;
+        isSolved: boolean;
         title: string;
-        submitCount: number;
-        acceptCount: number;
-    };
-    export interface HomeworkProblemsStatusJSON {
-        displayId: number;
-        problemId: number;
-        title: string;
-        totalSubmitCount: number;
-        totalAcceptCount: number;
-    };
+        totalSubmit: number;
+        totalSolved: number;
+    }
 }
-export const getHomeworkPage = (currentPage:number) => {
-    return request.get<Homework.HomeworkJSON[]>('/api/c/homeworks',{currentPage})
+export const getHomeworkPage = (currentPage:number,type:string,content:string) => {
+    return request.get<HomeworkSpace.HomeworkJSON[]>('/api/c/homeworks',{currentPage,type,content})
 }
-export const getHomeworkCount = () => {
-    return request.get<number>('/api/c/homeworks/count')
+export const getHomeworkCount = (type:string,content:string) => {
+    return request.get<number>('/api/c/homeworks/count',{type,content})
 }
-export const searchHomeworks = (currentPage:number, type:string, homeworkName:string ) => {
-    return request.get<Homework.HomeworkJSON[]>('/api/c/homeworks/search',{currentPage, type, homeworkName})
+export const getHomeworkSummary = (id:number) => {
+    return request.get<HomeworkSpace.HomeworkSummaryVO>(`/api/c/homework/${id}`, {})
 }
-export const searchHomeworksCount = ( type:string, homeworkName:string ) => {
-    return request.get<number>('/api/c/homeworks/search/count',{ type, homeworkName })
-}
-export const searchHomeworkById = (homeworkId:number) => {
-    return request.get<Homework.HomeworkJSON>('/api/c/homeworks/search/id',{homeworkId})
-}
-// 根据作业id获取题目列表
-export const getHomeworkProblems = (homeworkId:number) => {
-    return request.get<Homework.PersonalHomeworkProblemsJSON[]>('/api/c/homeworks/id/problems',{homeworkId})
-}
-// 根据作业id查询所有题目的提交状况
-export const getHomeworkProblemsStatus = (homeworkId:number) => {
-    return request.get<Homework.HomeworkProblemsStatusJSON[]>('/api/c/homeworks/id/problems/status',{homeworkId})
-}
-// 根据作业id查询是否有资格写作业
-export const getHomeworkAuth = (homeworkId:number) => {
-    return request.get<boolean>('/api/c/homeworks/auth',{homeworkId})
+export const getHomeworkProblems = (id:number) => {
+    return request.get<HomeworkSpace.HomeworkProblemsVO[]>(`/api/c/homework/${id}/problems`, {})
 }

@@ -78,7 +78,7 @@ const onSubmit = handleSubmit(async (values) => {
 
         if (res?.data?.token) {
             localStorage.setItem('token', res.data.token);
-            const user = new User(res.data.id, res.data.username, res.data.nickname, res.data.roleId);
+            const user = new User(res.data.userId, res.data.username, res.data.nickname, res.data.roleId);
             counterStore.setUser(user);
             globalMessage.success('操作成功', '登录成功');
             router.push('/');

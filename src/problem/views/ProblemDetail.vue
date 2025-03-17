@@ -130,16 +130,20 @@
 
                 <!-- 辅助操作按钮组 -->
                 <div class="flex flex-wrap gap-2">
-                    <Button v-if="contestId != null"
+                    <Button v-if="contestId != null" @click="routePush(`/homework/${contestId}/ranking`)"
                         class="flex-1 text-purple-500 hover:text-purple-700 border border-gray-200 font-medium"
                         outlined>
                         排行榜
                     </Button>
-                    <Button class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium"
-                        outlined>
+                    <Button v-if="contestId != null" @click="routePush(`/homework/${contestId}/submit`)"
+                        class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium" outlined>
                         提交记录
                     </Button>
-                    <Button v-if="contestId != null"
+                    <Button v-if="contestId == null" @click="routePush(`/statuses?problemId=${props.pid}`)"
+                        class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium" outlined>
+                        提交记录
+                    </Button>
+                    <Button v-if="contestId != null" @click="routePush(`/homework/${contestId}/problems`)"
                         class="flex-1 text-green-500 hover:text-green-700 border border-gray-200 font-medium" outlined>
                         返回竞赛
                     </Button>
@@ -223,6 +227,9 @@ function handleInputOutput() {
         console.error('Error parsing JSON:', error);
     }
 }
+function routePush(path: string) {
+    router.push(path);
+}
 function closeDialog() {
     visible.value = false;
 }
@@ -233,16 +240,24 @@ async function handleSubmit() {
     if (isSubmtting.value) return;
     isSubmtting.value = true;
     const dto: Judge.SubmitReqData = {
-        pid: props.pid as unknown as number,
+        pid: Number(props.pid as unknown as string),
         code: code.value,
         language: selectedLanguage.value,
-        cid: contestId as number,
+        cid: contestId as number ?? 0,
         tid: 0,
         gid: 0,
         isRemote: false
     }
     submitProblem(dto).then(() => {
-        router.push('/statuses');
+        if (contestId != null) {
+            router.push('/statuses?problemId=' + props.pid + '&contestId=' + contestId);
+        }
+        else {
+            router.push('/statuses?problemId=' + props.pid);
+        }
+        globalMessage.success('提交成功', '您的代码已提交成功');
+    }).catch((err) => {
+        globalMessage.error('提交失败', err.message);
     }).finally(() => {
         isSubmtting.value = false;
     })

@@ -19,6 +19,10 @@ export namespace ContestSpace{
         name:string;
         creator:string;
     }
+    export interface contestProblem{
+        problemId:number;
+        displayId:number;
+    }
     export interface CreateHomeworkDTO {
         id?: number;
         title: string;
@@ -29,6 +33,7 @@ export namespace ContestSpace{
         visible: boolean;
         duplicateCheck: boolean;
         languages: number[];
+        problems: contestProblem[];
         groupId: number;
         users: string[];
         startTime: number;
@@ -47,6 +52,7 @@ export namespace ContestSpace{
         startTime: number;
         endTime: number;
         languages: number[];
+        problems: contestProblem[];
         users: string[];
         createTime: string;
         updateTime: string;
@@ -146,14 +152,8 @@ export const getAdminProblemsCount = (type:string,content:string) => {
 export const getAdminProblems = (id:number) => {
     return request.get<ContestSpace.AdminProblemVO[]>('/api/c/admin/homework/problems',{id});
 }
-export const addProblems = (id:number,problems:number[]) => {
-    return request.post<string>('/api/c/admin/homework/problems',{id,problems});
-}
 export const updateContestProblems = (data:ContestSpace.UpdateContestProblemDTO) => {
     return request.put<string>('/api/c/admin/homework/problems',data);
-}
-export const deleteHomeworkProblem = (cid:number,pid:number) => {
-    return request.delete<string>(`/api/c/admin/homework/problems/${cid}/${pid}`);
 }
 export const getHomeworkStat = (cid:number) => {
     return request.get<ContestSpace.StatVO>('/api/c/admin/homework/statistics',{cid});
