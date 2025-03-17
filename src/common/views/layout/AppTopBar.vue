@@ -52,6 +52,13 @@ const items = ref([
         icon: 'pi pi-users',
         command: () => navigateTo('classes'),
         root: true
+    },
+    {
+        label: '反馈',
+        name: 'issues',
+        icon: 'fas fa-bug',
+        command: () => navigateTo('issues'),
+        root: true
     }
 ])
 // 页面跳转函数
@@ -81,6 +88,9 @@ function switchMenu(menu: string) {
             break;
         case 'class':
             activeMenu.value = 'classes';
+            break;
+        case 'issue':
+            activeMenu.value = 'issues';
             break;
         default:
             activeMenu.value = menu;

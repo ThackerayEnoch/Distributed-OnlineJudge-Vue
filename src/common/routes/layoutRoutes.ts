@@ -3,6 +3,7 @@ import demoRoutes from '@/demo/routes/demoRoutes';
 import profileRoutes from '@/user/routes/profileRoutes';
 import problemRoutes from '@/problem/routes/problemRoutes';
 import homeworkRoutes from '@/homework/routes/homework';
+import IssueRoute from '@/issue/routes/IssueRoute';
 export default [
   {
     path: '/',
@@ -17,6 +18,7 @@ export default [
       ...demoRoutes,
       ...problemRoutes,
       ...homeworkRoutes,
+      ...IssueRoute
     ]
   }
 ];
