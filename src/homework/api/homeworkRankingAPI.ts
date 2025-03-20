@@ -8,6 +8,7 @@ export namespace RankingSpace {
     export interface ProblemData {
         problemId: number;
         isSolved: boolean;
+        isFirst: boolean;
         tries: number;
         solvedTime: number;
     }

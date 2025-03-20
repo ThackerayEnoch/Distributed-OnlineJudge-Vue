@@ -60,6 +60,9 @@
                         bg-opacity-75"
                         :class="getBackgroundClass(data.problems[index].isSolved, data.problems[index].tries)">
                         <div v-show="data.problems[index].tries != null && data.problems[index].tries != 0">
+                            <div v-show="data.problems[index].isFirst" class="font-bold">
+                                ※1st
+                            </div>
                             <div v-show="data.problems[index].isSolved">
                                 {{ data.problems[index].solvedTime }}
                             </div>

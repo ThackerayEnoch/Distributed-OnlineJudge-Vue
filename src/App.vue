@@ -1,5 +1,17 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
+import NProgress from 'nprogress';
+import 'nprogress/nprogress.css';
+const router = useRouter();
+// 监听路由变化并更新进度条
+router.beforeEach((to, from, next) => {
+  NProgress.start();
+  next();
+});
+
+router.afterEach(() => {
+  NProgress.done();
+});
 </script>
 
 <template>

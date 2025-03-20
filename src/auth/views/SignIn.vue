@@ -76,8 +76,7 @@ const onSubmit = handleSubmit(async (values) => {
             password: values.password,
         });
 
-        if (res?.data?.token) {
-            localStorage.setItem('token', res.data.token);
+        if (res?.data) {
             const user = new User(res.data.userId, res.data.username, res.data.nickname, res.data.roleId);
             counterStore.setUser(user);
             globalMessage.success('操作成功', '登录成功');

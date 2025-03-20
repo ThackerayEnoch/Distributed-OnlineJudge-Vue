@@ -28,7 +28,7 @@
                                 </div>
                                 <div v-show="!isPreview">
                                     <MdEditor v-model="formData.content" :theme="theme" placeholder="请详细描述您的问题..."
-                                        :toolbars="toolbars" class="markdown-editor" />
+                                        :toolbars="toolbars" class="markdown-editor" @on-upload-img="onUploadImg" />
                                     <small v-if="errors.content" class="p-error">{{ errors.content }}</small>
                                 </div>
                                 <div v-show="isPreview" class="preview-container border p-4 rounded">
@@ -84,16 +84,12 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import type { ToolbarNames } from 'md-editor-v3'
 import { useRouter } from 'vue-router'
 import { MdEditor, MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
-
-interface IssueForm {
-    title: string
-    content: string
-    labels: string[]
-    priority: 'low' | 'medium' | 'high'
-}
+import { type IssueSpace, createIssue, uploadFile } from '@/issue/api/IssueAPI'
+import globalMessage from '@/common/utils/toast'
 
 const router = useRouter()
 const theme = ref<'light' | 'dark'>('light')
@@ -101,11 +97,11 @@ const isPreview = ref(false)
 const isSubmitting = ref(false)
 
 // 表单数据
-const formData = reactive<IssueForm>({
+const formData = reactive<IssueSpace.AddIssueDTO>({
     title: '',
     content: '',
     labels: [],
-    priority: 'low'
+    priority: 0
 })
 
 // 验证错误信息
@@ -116,16 +112,16 @@ const errors = reactive({
 
 // 可用标签选项
 const availableLabels = [
-    { name: '功能请求', value: 'feature' },
-    { name: 'BUG', value: 'bug' },
-    { name: '性能问题', value: 'performance' },
-    { name: '其他', value: 'other' }
+    { name: '功能请求', value: 1 },
+    { name: 'BUG', value: 2 },
+    { name: '性能问题', value: 3 },
+    { name: '其他', value: 4 }
 ]
 
 const priorityOptions = [
-    { label: '低', value: 'low' },
-    { label: '中', value: 'medium' },
-    { label: '高', value: 'high' }
+    { label: '低', value: 0 },
+    { label: '中', value: 1 },
+    { label: '高', value: 2 }
 ]
 
 const toolbars = [
@@ -141,7 +137,7 @@ const toolbars = [
     'prettier',
     'save',
     'pageFullscreen'
-]
+] as ToolbarNames[]
 
 // 提交指南内容（Markdown格式）
 const guidanceContent = `
@@ -195,17 +191,40 @@ const submitForm = async () => {
     validateField('content')
 
     if (errors.title || errors.content) return
-
+    isSubmitting.value = true
     try {
-        isSubmitting.value = true
-        // 模拟API请求
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        console.log('提交数据:', JSON.parse(JSON.stringify(formData)))
-        router.push({ name: 'issues' })
+        await createIssue(formData).then(() => {
+            globalMessage.success('提示', '问题反馈提交成功')
+            router.push('/issues')
+        }).catch((err) => {
+            globalMessage.error('提示', err.message)
+        })
+
     } finally {
         isSubmitting.value = false
     }
 }
+const onUploadImg = async (files: any, callback: any) => {
+    const res = await Promise.all(
+        files.map((file: File) => {
+            return new Promise((rev, rej) => {
+                const form = new FormData();
+                form.append('files', file);
+                uploadFile(form, {
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    },
+                }).then((res) => {
+                    rev(res)
+                }).catch((err) => {
+                    rej(err)
+                })
+            });
+        })
+    );
+
+    callback(res.map((item) => item.data[0]));
+};
 </script>
 
 <style scoped>
@@ -225,5 +244,12 @@ const submitForm = async () => {
 /* 调整卡片间距 */
 .p-card-content {
     @apply space-y-6;
+}
+</style>
+<style scoped>
+/* 自定义滚动条样式 */
+::v-deep(.md-editor-preview-wrapper) {
+    max-height: 500px;
+    overflow-y: auto;
 }
 </style>

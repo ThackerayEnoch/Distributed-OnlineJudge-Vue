@@ -19,6 +19,8 @@ export default [
       components:{
         main: () => import('@/issue/views/IssueDetail.vue')
       },
-      prop:true
+      props: {
+        main:true
+      }
     }
 ]
