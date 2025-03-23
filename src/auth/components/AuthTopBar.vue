@@ -33,7 +33,7 @@ export default {
                     </g>
                 </svg>
 
-                <span>WCFS</span>
+                <span>UJNOJ</span>
             </router-link>
         </div>
         <div class="layout-topbar-actions">

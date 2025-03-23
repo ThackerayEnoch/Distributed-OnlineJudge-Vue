@@ -487,6 +487,15 @@ export default defineComponent({
                 homework.startTime = new Date(data.startTime);
                 homework.endTime = new Date(data.endTime);
                 studentInput.value = data.users.join('\n');
+
+                contestProblems.value = data.problems.map(problem => ({
+                    id: problem.problemId,
+                    title: problem.title as string,
+                    difficulty: 0,
+                    createTime: '',
+                    updateTime: '',
+                    number: problem.displayId
+                }));
             }).catch(err => {
                 globalMessage.error("加载数据失败", err.message);
             });

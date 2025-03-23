@@ -1,7 +1,7 @@
 <template>
     <div class="flex min-h-screen items-center justify-center h-full w-full">
         <div class="bg-surface-50 dark:bg-surface-900 w-full max-w-md p-6 rounded-lg shadow-md">
-            <h2 class="text-2xl font-bold text-center mb-6">欢迎来到 WCFS!</h2>
+            <h2 class="text-2xl font-bold text-center mb-6">欢迎来到 UJNOJ!</h2>
             <h3 class="text-sm text-center mb-6">登录以继续</h3>
             <form @submit.prevent="onSubmit">
                 <div class="mb-4">
@@ -30,11 +30,8 @@
                     <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">忘记密码?</span>
                 </div>
                 <Button label="登录" class="w-full p-button-primary" :loading="isloading" type="submit" />
+                <Button label="统一身份认证" class="w-full mt-2 p-button-secondary" disabled />
             </form>
-            <div class="flex justify-center mt-8 mb-2">
-                <RouterLink to="/auth/register" class="font-medium no-underline cursor-pointer text-primary">没有账户? 点击注册
-                </RouterLink>
-            </div>
         </div>
     </div>
 </template>
@@ -44,7 +41,6 @@ import * as yup from 'yup';
 import { ref } from 'vue';
 import { login } from '@/auth/authAPI'
 import { useForm, useField } from 'vee-validate';
-import { ResponseCode } from '@/common/constant/ResponseCode';
 import globalMessage from '@/common/utils/toast';
 import router from '@/common/utils/router';
 import { useUserStore } from '@/common/utils/store';

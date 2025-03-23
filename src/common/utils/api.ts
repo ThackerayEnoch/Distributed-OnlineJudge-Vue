@@ -21,7 +21,7 @@ const URL: string = 'http://localhost:5100'
 
 const config = {
   // 默认地址
-  baseURL: URL as string,
+  // baseURL: URL as string,
   // 设置超时时间
   timeout: 1000000,
   // 跨域时候允许携带凭证
@@ -42,10 +42,6 @@ class RequestHttp {
      */
     this.service.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        const token = localStorage.getItem('token') || '';
-        if (config.headers) {
-          config.headers['Authorization'] = token; // 直接设置请求头中的 token 信息
-        }
         return config;
       },
       (error: AxiosError) => {

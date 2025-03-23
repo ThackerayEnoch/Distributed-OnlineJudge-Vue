@@ -5,6 +5,10 @@ import { useLayout } from '@/common/views/layout/layout';
 // 主题设置
 import AppConfigurator from './AppConfigurator.vue';
 const { toggleDarkMode, isDarkTheme } = useLayout();
+// 当前用户
+import { Role } from '@/common/constant/Role';
+import { useUserStore } from '@/common/utils/store';
+const counterStore = useUserStore();
 const router = useRouter();
 const route = useRoute();
 // 当前页面
@@ -47,18 +51,18 @@ const items = ref([
         root: true
     },
     {
-        label: '班级',
-        name: 'classes',
-        icon: 'pi pi-users',
-        command: () => navigateTo('classes'),
-        root: true
-    },
-    {
         label: '反馈',
         name: 'issues',
         icon: 'fas fa-bug',
         command: () => navigateTo('issues'),
         root: true
+    },
+    {
+        label: '管理',
+        name: 'admin',
+        icon: 'pi pi-cog',
+        command: () => navigateTo('admin'),
+        root: true,
     }
 ])
 // 页面跳转函数
@@ -89,6 +93,9 @@ function switchMenu(menu: string) {
         case 'class':
             activeMenu.value = 'classes';
             break;
+        case 'admin':
+            activeMenu.value = 'admin';
+            break
         case 'issue':
             activeMenu.value = 'issues';
             break;
@@ -130,7 +137,7 @@ watch(route, (newRoute) => {
                 </div>
             </template>
             <template #item="{ item }">
-                <a v-if="item.root"
+                <a v-if="item.root && (item.name !== 'admin' || item.name === 'admin' && counterStore.currentUser.roleId <= Role.TEACHER)"
                     class="flex items-center w-[7rem] cursor-pointer px-4 py-2 overflow-hidden relative font-semibold text-lg uppercase"
                     :class="[
                         activeMenu === item.name

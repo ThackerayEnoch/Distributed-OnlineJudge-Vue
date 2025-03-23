@@ -21,6 +21,7 @@ export namespace ContestSpace{
     }
     export interface contestProblem{
         problemId:number;
+        title?:string;
         displayId:number;
     }
     export interface CreateHomeworkDTO {

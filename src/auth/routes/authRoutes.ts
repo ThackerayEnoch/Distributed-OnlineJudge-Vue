@@ -16,13 +16,6 @@ export default [
           components: {
             auth: () => import('@/auth/views/SignIn.vue')
           }
-        },
-        {
-          path:'/auth/register',
-          name:'Register',
-          components: {
-            auth: () => import('@/auth/views/SignUp.vue')
-          }
         }
       ]
     }

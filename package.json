@@ -36,8 +36,10 @@
     "primevue": "^4.0.5",
     "prismjs": "^1.29.0",
     "qs": "^6.13.0",
+    "systemjs": "^6.15.1",
     "tailwindcss": "^3.4.10",
     "tailwindcss-primeui": "^0.3.4",
+    "terser": "^5.39.0",
     "ts-node": "^10.9.2",
     "vee-validate": "^4.13.2",
     "vite-plugin-prismjs": "^0.0.11",
@@ -58,7 +60,9 @@
     "@types/nprogress": "^0.2.3",
     "@types/prismjs": "^1.26.5",
     "@types/qs": "^6.9.15",
+    "@types/systemjs": "^6.15.1",
     "@types/vue": "^2.0.0",
+    "@vitejs/plugin-legacy": "^6.0.2",
     "@vitejs/plugin-vue": "^5.0.4",
     "@vue/eslint-config-prettier": "^9.0.0",
     "@vue/eslint-config-typescript": "^13.0.0",
@@ -72,7 +76,7 @@
     "sass-loader": "^16.0.1",
     "typescript": "~5.4.0",
     "unplugin-vue-components": "^0.27.4",
-    "vite": "^5.2.8",
+    "vite": "^6.2.2",
     "vue-tsc": "^2.1.2"
   }
 }
