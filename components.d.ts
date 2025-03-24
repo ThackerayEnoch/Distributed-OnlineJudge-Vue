@@ -16,8 +16,10 @@ declare module 'vue' {
     Chart: typeof import('primevue/chart')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
     Column: typeof import('primevue/column')['default']
+    ConfirmDialog: typeof import('primevue/confirmdialog')['default']
     ConfirmPopup: typeof import('primevue/confirmpopup')['default']
     DataTable: typeof import('primevue/datatable')['default']
+    DatePicker: typeof import('primevue/datepicker')['default']
     Dialog: typeof import('primevue/dialog')['default']
     Divider: typeof import('primevue/divider')['default']
     Dropdown: typeof import('primevue/dropdown')['default']
@@ -49,6 +51,7 @@ declare module 'vue' {
     Textarea: typeof import('primevue/textarea')['default']
     Timeline: typeof import('primevue/timeline')['default']
     Toast: typeof import('primevue/toast')['default']
+    ToggleButton: typeof import('primevue/togglebutton')['default']
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
     TreeTable: typeof import('primevue/treetable')['default']
   }

@@ -34,7 +34,30 @@ class RequestHttp {
   public constructor(config: AxiosRequestConfig) {
     // 实例化axios
     this.service = axios.create(config);
-
+    this.service.defaults.paramsSerializer = (params) => {
+      // 创建一个新的 URLSearchParams 对象
+      const searchParams = new URLSearchParams();
+      
+      Object.keys(params).forEach((key) => {
+        const value = params[key];
+        // 过滤掉 undefined 和 null
+        if (value !== undefined && value !== null) {
+          // 处理数组和非数组情况
+          if (Array.isArray(value)) {
+            value.forEach((item) => {
+              searchParams.append(key, item);
+            });
+          } else {
+            searchParams.append(key, value);
+          }
+        }
+      });
+    
+      // 转换为查询字符串
+      return searchParams.toString();
+    };
+    
+  
     /**
      * 请求拦截器
      * 客户端发送请求 -> [请求拦截器] -> 服务器

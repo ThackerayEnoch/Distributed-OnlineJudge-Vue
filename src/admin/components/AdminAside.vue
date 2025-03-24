@@ -73,8 +73,8 @@ export default defineComponent({
                         icon: 'pi pi-sitemap',
                         to: '/admin/classes',
                         items: [
-                            { label: '班级列表', icon: 'pi pi-list', to: '/admin/classes/list' },
-                            { label: '创建班级', icon: 'pi pi-plus', to: '/admin/classes/create' }
+                            { label: '班级列表', icon: 'pi pi-list', to: '/admin/groups/list' },
+                            { label: '创建班级', icon: 'pi pi-plus', to: '/admin/group/create' }
                         ]
                     }
                 ]

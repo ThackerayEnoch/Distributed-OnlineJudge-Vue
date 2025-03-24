@@ -135,7 +135,8 @@
                         outlined>
                         排行榜
                     </Button>
-                    <Button v-if="contestId != null" @click="routePush(`/homework/${contestId}/submit`)"
+                    <Button v-if="contestId != null"
+                        @click="routePush(`/homework/${contestId}/submit?problemId=${props.pid}&contestId=${contestId}`)"
                         class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium" outlined>
                         提交记录
                     </Button>
@@ -263,14 +264,13 @@ async function handleSubmit() {
     })
 }
 // 语言选择
-const selectedLanguage = ref<string>('C 11');
+const selectedLanguage = ref<string>('C');
 const allowLanguagesList = ref<string[]>([]);
 function languageOptionsHandle(languageIds: number[]) {
     if (languageIds != null && languageIds.length > 0) {
         allowLanguagesList.value = languageOptions.filter((item) => languageIds.includes(item.id)).map((item) => item.name);
     } else {
         allowLanguagesList.value = languageOptions.map((item) => item.name);
-        console.log(allowLanguagesList.value);
     }
 }
 // 题目详情数据
@@ -338,6 +338,7 @@ const loadProblemStatistics = async () => {
     });
 }
 const getProblemDetailData = async () => {
+    if (!props.pid) return;
     await getProblemDetail(props.pid as unknown as number, contestId as number).then((res) => {
         const data = res.data as Problem.ProblemResData;
         problemDetail.value = data;

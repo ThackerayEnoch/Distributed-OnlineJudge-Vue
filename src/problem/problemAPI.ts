@@ -82,11 +82,13 @@ export const getProblemCount = (content:string) => {
     return request.get<Problem.ProblemCountJSONObject>('/api/p/problems/count',{content})
 }
 export const getProblemDetail = (problemId :number,contestId?:number) => {
+    if(contestId === undefined||contestId==null) return request.get<Problem.ProblemResData>(`/api/p/problem/${problemId}`);
     return request.get<Problem.ProblemResData>(`/api/p/problem/${problemId}`,{contestId});
 }
 export const submitProblem = (submitJudgeDTO:Judge.SubmitReqData) => {
     return request.post('/api/j/judge/submit',submitJudgeDTO);
 }
 export const getProblemStatistics = (problemId:number,contestId?:number) => {
+    if(contestId === undefined||contestId==null) return request.get<Problem.ProblemStatistics>(`/api/p/problem/${problemId}/statistics`);
     return request.get<Problem.ProblemStatistics>(`/api/p/problem/${problemId}/statistics`,{contestId});
 }

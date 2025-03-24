@@ -162,6 +162,38 @@ export default [
               }
             }
           ]
+        },
+        {
+          path:'/admin/groups',
+          name:'GroupAdmin',
+          children:[
+            {
+              path:'/admin/groups',
+              redirect: '/admin/groups/list'
+            },
+            {
+              path:'/admin/groups/list',
+              name:'AdminGroupList',
+              components:{
+                admin:()=>import('@/group/GroupManage.vue')
+              }
+            },
+            {
+              path:'/admin/group/create',
+              name:'AdminGroupCreate',
+              components:{
+                admin:()=>import('@/group/GroupCreate.vue')
+              }
+            },
+            {
+              path:'/admin/group/edit/:id',
+              name:'AdminGroupEdit',
+              components:{
+                admin:()=>import('@/group/GroupEdit.vue')
+              },
+              props:true
+            }
+          ]
         }
       ]
     }

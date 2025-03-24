@@ -79,6 +79,15 @@ export default defineComponent({
                             { label: '账号生成', icon: 'pi pi-plus', to: '/admin/users/generate' }
                         ],
                     },
+                    {
+                        label: '班级管理',
+                        icon: 'pi pi-sitemap',
+                        to: '/admin/classes',
+                        items: [
+                            { label: '班级列表', icon: 'pi pi-list', to: '/admin/groups/list' },
+                            { label: '创建班级', icon: 'pi pi-plus', to: '/admin/group/create' }
+                        ]
+                    }
                 ],
             },
             {
