@@ -5,14 +5,31 @@
         <span class="mt-2 text-gray-500">加载排行榜中...</span>
     </div>
     <div v-else class="rankings">
-        <DataTable :value="rankData.users" tableStyle="width: 1000px;min-height:60px" showGridlines>
+        <DataTable :value="rankData.users" tableStyle="width: 1000px;min-height:60px" showGridlines paginator :rows="20"
+            :rowsPerPageOptions="[10, 20, 50]">
+            <template #header>
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <span class="text-xl font-bold text-gray-700">排行榜</span>
+                    <div class="flex gap-3">
+                        <Button label="导出已做名单" icon="pi pi-file-excel" severity="success" @click="exportExcel('solved')"
+                            class="p-button-sm bg-green-500 hover:bg-green-600 border-green-500"
+                            :disabled="isloading || parsing" :loading="parsing" />
+                        <Button label="导出未做名单" icon="pi pi-file-excel" severity="warning"
+                            @click="exportExcel('unsolved')" :disabled="isloading || parsing" :loading="parsing"
+                            class="p-button-sm bg-orange-500 hover:bg-orange-600 border-orange-500" />
+                        <Button label="导出全部名单" icon="pi pi-file-excel" severity="info" @click="exportExcel('all')"
+                            class="p-button-sm bg-blue-500 hover:bg-blue-600 border-blue-500"
+                            :disabled="isloading || parsing" :loading="parsing" />
+                    </div>
+                </div>
+            </template>
             <Column field="ranking" style="text-align: center;" headerStyle="background-color: #F8F8F9"
                 headerClass="bg-red-400">
                 <template #header>
                     <span class="flex-1 text-center font-bold">排名</span>
                 </template>
                 <template #body="slotProps">
-                    <span>{{ slotProps.index + 1 }}</span>
+                    <span>{{ slotProps.data.rank }}</span>
                 </template>
             </Column>
             <Column field="username" style="text-align: center;min-width: 200px;"
@@ -83,12 +100,15 @@
 import { ref, defineProps, shallowRef, markRaw } from 'vue';
 import { onMounted } from 'vue';
 import { getHomeworkRankingById, type RankingSpace } from '../api/homeworkRankingAPI';
+import { exportToExcel, type ExportHeader } from '@/common/utils/excel';
+
 const props = defineProps<{
     homeworkId: string;
+    title: string;
 }>();
 const isloading = ref(true);
 // 排行榜数据
-const rankData = shallowRef<RankingSpace.RankVO>(
+const rankData = ref<RankingSpace.RankVO>(
     {
         problems: [],
         users: [],
@@ -169,8 +189,11 @@ async function loadRankingData(homeworkId: number) {
                 return (displayIdA ?? 0) - (displayIdB ?? 0); // 按照 displayId 排序
             });
         });
-
-        rankData.value = markRaw(tmpData) // 解除深层响应式
+        // 添加排名
+        tmpData.users.forEach((user, index) => {
+            user.rank = index + 1;
+        });
+        rankData.value = tmpData // 解除深层响应式
         isloading.value = false;
     });
 }
@@ -186,7 +209,94 @@ function convertToLetter(num: number) {
     }
     return str;
 }
-
+interface RankExportType {
+    rank: number;
+    username: string;
+    nickname: string;
+    solvedCount: number;
+    totalPenalty: number;
+    [key: string]: number | string;
+}
+const header: ExportHeader[] = [
+    {
+        title: 'Rank',
+        key: 'rank',
+        width: 5
+    },
+    {
+        title: 'Username',
+        key: 'username',
+        width: 12
+    },
+    {
+        title: 'Nickname',
+        key: 'nickname',
+        width: 18
+    },
+    {
+        title: 'Solved',
+        key: 'solvedCount',
+        width: 7
+    },
+    {
+        title: 'Penalty',
+        key: 'totalPenalty',
+        width: 8
+    }
+]
+const parsing = ref(false);
+let isAppended = false;
+async function exportExcel(type: string) {
+    parsing.value = true;
+    // 添加题目到标题数组
+    if (!isAppended) {
+        header.push(...rankData.value.problems.map((problem) => {
+            return {
+                title: convertToLetter(problem.displayId + 1),
+                key: `problem${problem.displayId}`,
+                width: 10
+            }
+        }));
+        isAppended = true;
+    }
+    // 转换用户数据到一个数组。
+    const data: RankExportType[] = rankData.value.users
+        .map((user) => {
+            // 条件：跳过满足某些条件的用户，例如 solvedCount 为 0 的用户
+            if (type === 'solved' && user.solvedCount === 0) {
+                return null; // 跳过该用户
+            } else if (type === 'unsolved' && user.solvedCount !== 0) {
+                return null;
+            }
+            const userExport: RankExportType = {
+                rank: user.rank as number,
+                username: user.username,
+                nickname: user.nickname,
+                solvedCount: user.solvedCount,
+                totalPenalty: user.totalPenalty
+            };
+            user.problems.forEach((problem, index) => {
+                if (problem.tries != 0) {
+                    userExport[`problem${index}`] = problem.solvedTime + '(' + problem.tries + ')';
+                } else {
+                    userExport[`problem${index}`] = '';
+                }
+            });
+            return userExport;
+        })
+        .filter((userExport): userExport is RankExportType => userExport !== null); // 过滤掉 null 值
+    // 导出Excel
+    let typeStr = '';
+    if (type === 'solved') {
+        typeStr = '-已做';
+    } else if (type === 'unsolved') {
+        typeStr = '-未做';
+    } else {
+        typeStr = '-全部';
+    }
+    await exportToExcel(data, header, props.title + typeStr + '-排行榜');
+    parsing.value = false;
+}
 onMounted(async () => {
     loadRankingData(Number(props.homeworkId));
 });

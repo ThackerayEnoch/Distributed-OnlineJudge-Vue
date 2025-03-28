@@ -87,6 +87,11 @@ export default defineComponent({
                             { label: '班级列表', icon: 'pi pi-list', to: '/admin/groups/list' },
                             { label: '创建班级', icon: 'pi pi-plus', to: '/admin/group/create' }
                         ]
+                    },
+                    {
+                        label: '代码重判',
+                        icon: 'pi pi-refresh',
+                        to: '/admin/rejudge',
                     }
                 ],
             },

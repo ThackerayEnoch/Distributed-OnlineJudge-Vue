@@ -44,13 +44,6 @@ const items = ref([
         root: true
     },
     {
-        label: '考试',
-        name: 'contests',
-        icon: 'pi pi-calendar',
-        command: () => navigateTo('contests'),
-        root: true
-    },
-    {
         label: '反馈',
         name: 'issues',
         icon: 'fas fa-bug',
@@ -179,7 +172,7 @@ watch(route, (newRoute) => {
                                 <span>Messages</span>
                             </button>
                             <button type="button" class="layout-topbar-action">
-                                <RouterLink to="/profile/thackerayenochs">
+                                <RouterLink :to="`/profile/${counterStore.currentUser.userId}`">
                                     <i class="pi pi-user"></i>
                                     <span>Profile</span>
                                 </RouterLink>

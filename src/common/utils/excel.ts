@@ -218,7 +218,13 @@ export async function exportToExcel<T>(
     }
     worksheet.addRow(rowData);
   });
-
+  // 设置所有单元格的对齐方式
+    worksheet.eachRow((row) => {
+      row.eachCell((cell) => {
+        cell.font = { name: "DengXian", size: 10 }; // 设置字体
+        cell.alignment = { horizontal: "left" }; // 设置为左对齐
+      });
+    });
   // 设置表头样式
   worksheet.getRow(1).eachCell((cell) => {
     cell.font = { bold: true };
@@ -229,10 +235,16 @@ export async function exportToExcel<T>(
       fgColor: { argb: "FFFFFFFF" },
     };
   });
-  // 设置所有单元格的对齐方式
+
+  // 添加网格线
   worksheet.eachRow((row) => {
     row.eachCell((cell) => {
-      cell.alignment = { horizontal: "left" }; // 设置为左对齐
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
     });
   });
   // 生成 Blob 并保存

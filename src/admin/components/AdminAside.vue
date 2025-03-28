@@ -1,7 +1,7 @@
 <template>
     <div class="w-full h-full bg-white dark:bg-gray-800 flex flex-col">
         <div class="p-4 mt-2 inline-block">
-            <Image class="flex justify-center" width="70%" src="https://r2.wcfs.dokidokiujn.ninja/WCFS/ujn.png" />
+            <Image class="flex justify-center" width="70%" src="/api/p/problem/upload/ujn.png" />
         </div>
         <ul class="layout-menu m-4 mr-0 p-2 overflow-y-auto text-custom flex-1">
             <template v-for="(item, i) in model" :key="item">
@@ -76,6 +76,11 @@ export default defineComponent({
                             { label: '班级列表', icon: 'pi pi-list', to: '/admin/groups/list' },
                             { label: '创建班级', icon: 'pi pi-plus', to: '/admin/group/create' }
                         ]
+                    },
+                    {
+                        label: '代码重判',
+                        icon: 'pi pi-refresh',
+                        to: '/admin/rejudge',
                     }
                 ]
             },

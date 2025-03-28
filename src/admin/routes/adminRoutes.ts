@@ -194,6 +194,13 @@ export default [
               props:true
             }
           ]
+        },
+        {
+          path:'/admin/rejudge',
+          name:'AdminRejudge',
+          components:{
+            admin:()=>import('@/admin/components/judge/RejudgeView.vue')
+          }
         }
       ]
     }

@@ -113,3 +113,6 @@ export const getProblemLanguages = (id:number) => {
 export const updateProblem = (id:number,data:ProblemSpace.AdminCreateProblemDTO) => {
     return request.put<ProblemSpace.ProblemVO>(`/api/p/admin/problem/${id}`,data)
 }
+export const uploadFile = (files:FormData,headers:object) => {
+    return request.post<string>(`/api/p/admin/problem/upload`,files, headers);
+}

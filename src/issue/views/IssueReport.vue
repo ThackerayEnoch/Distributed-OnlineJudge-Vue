@@ -16,6 +16,8 @@
                         <!-- 筛选条 -->
                         <div class="flex items-center gap-2 text-sm">
                             <span class="font-medium">筛选：</span>
+                            <Button label="全部" class="p-button-text p-button-sm"
+                                :class="{ 'font-bold text-primary': selectedFilter === -1 }" @click="filterAll" />
                             <Button v-for="filter in filters" :key="filter.value" :label="filter.label"
                                 class="p-button-text p-button-sm"
                                 :class="{ 'font-bold text-primary': selectedFilter === filter.value }"
@@ -27,7 +29,7 @@
                             <span class="mt-2 text-gray-500">加载数据中...</span>
                         </div>
                         <!-- Issues列表 -->
-                        <div v-else v-for="issue in filteredIssues" :key="issue.id"
+                        <div v-else v-for="issue in issues" :key="issue.id"
                             class="border-b pb-4 hover:bg-gray-50 p-2 rounded transition-colors">
                             <div class="flex gap-4">
                                 <!-- 状态图标 -->
@@ -70,10 +72,17 @@
                             <template #content>
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium mb-2">状态</label>
-                                        <Dropdown v-model:model-value="selectedStatus" :options="statusOptions"
-                                            optionLabel="label" optionValue="value" class="w-full"
+                                        <label class="block text-sm font-medium mb-2">标签</label>
+                                        <Dropdown v-model:model-value="selectedLabels" :options="availableLabels"
+                                            optionLabel="name" optionValue="value" class="w-full"
                                             @change="loadAllIssues" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">状态(多选)</label>
+                                        <MultiSelect v-model:model-value="selectedStatus" :options="statusOptions"
+                                            optionLabel="label" optionValue="value" display="chip" class="w-full"
+                                            @change="loadAllIssues" />
+
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium mb-2">优先级</label>
@@ -88,12 +97,12 @@
                 </div>
                 <div class="mt-4 flex justify-between items-center relative">
                     <div class="text-sm text-gray-600 absolute left-0">
-                        共 {{ totalItems }} 条反馈，当前显示 {{ startIndex }}-{{ endIndex }}
+                        共 {{ totalRecords }} 条反馈，当前显示 {{ startIndex }}-{{ endIndex }}
                     </div>
 
                     <div class="flex justify-center w-full">
-                        <Paginator :rows="pageSize" :totalRecords="filteredIssues.length" @page="onPageChange"
-                            :currentPageReportTemplate="currentPageTemplate" :row="20" />
+                        <Paginator :rows="pageSize" :totalRecords="totalRecords" @page="onPageChange"
+                            :currentPageReportTemplate="currentPageTemplate" />
                     </div>
                 </div>
             </template>
@@ -105,33 +114,60 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { format } from 'date-fns'
 import { useRouter } from 'vue-router';
-import { type IssueSpace, getAllIssues } from '@/issue/api/IssueAPI'
+import { type IssueSpace, getAllIssues, getIssuesCount } from '@/issue/api/IssueAPI'
 import globalMessage from '@/common/utils/toast';
 const router = useRouter();
 
 // Mock数据
 const issues = ref<IssueSpace.IssuesVO[]>([])
-const pageSize = ref(20)
+const pageSize = ref(10)
+const totalRecords = ref(0)
 const currentPage = ref(1)
 const isloading = ref(false)
 onMounted(() => {
     loadAllIssues();
+    loadIssuesCount();
 })
 const filterClick1 = (filter: number) => {
-    selectedFilter.value = filter
-    selectedStatus.value = filter
+    selectedStatus.value = [filter]
     loadAllIssues()
+    loadIssuesCount()
+}
+const filterAll = () => {
+    selectedStatus.value = [0, 1, 2, 3]
+    loadAllIssues()
+    loadIssuesCount()
 }
 
 const loadAllIssues = async () => {
     isloading.value = true
-    await getAllIssues((currentPage.value - 1) * pageSize.value, selectedPriority.value, selectedStatus.value).then((res) => {
+    if (selectedStatus.value.length === 0) {
+        selectedStatus.value = [0, 1, 2, 3]
+    }
+    await getAllIssues((currentPage.value - 1) * pageSize.value, selectedPriority.value, selectedStatus.value, selectedLabels.value).then((res) => {
         issues.value = res.data as unknown as IssueSpace.IssuesVO[];
     }).catch((err) => {
         globalMessage.error("获取问题列表错误", err.message)
     })
     isloading.value = false
 }
+const loadIssuesCount = async () => {
+    if (selectedStatus.value.length === 0) {
+        selectedStatus.value = [0, 1, 2, 3]
+    }
+    await getIssuesCount(selectedPriority.value, selectedStatus.value, selectedLabels.value).then((res) => {
+        totalRecords.value = res.data as number;
+    }).catch((err) => {
+        globalMessage.error("获取问题列表错误", err.message)
+    })
+}
+const availableLabels = [
+    { name: '全部', value: -1 },
+    { name: '功能请求', value: 1 },
+    { name: 'BUG', value: 2 },
+    { name: '性能问题', value: 3 },
+    { name: '其他', value: 4 }
+]
 const priorityOptions = [
     { label: '全部', value: -1 },
     { label: '低', value: 0 },
@@ -139,7 +175,6 @@ const priorityOptions = [
     { label: '高', value: 2 }
 ]
 const filters = [
-    { label: '全部', value: -1 },
     { label: '已提交', value: 0 },
     { label: '待解决', value: 1 },
     { label: '解决中 ', value: 2 },
@@ -148,7 +183,6 @@ const filters = [
 ]
 
 const statusOptions = [
-    { label: '全部', value: -1 },
     { label: '已提交', value: 0 },
     { label: '待解决', value: 1 },
     { label: '解决中 ', value: 2 },
@@ -158,7 +192,8 @@ const statusOptions = [
 
 
 const selectedFilter = ref(-1)
-const selectedStatus = ref(-1)
+const selectedStatus = ref([0, 1, 2, 3])
+const selectedLabels = ref(-1)
 const selectedPriority = ref(-1)
 
 function routePush(path: string) {
@@ -168,15 +203,6 @@ const formatDate = (date: Date) => {
     return format(date, 'yyyy-MM-dd HH:mm')
 }
 
-const filteredIssues = computed(() => {
-    return issues.value.filter(issue => {
-        return selectedFilter.value === -1 ||
-            issue.status === selectedFilter.value
-    }).sort((a, b) => {
-        // 排序逻辑根据selectedSort的值处理
-        return b.id - a.id
-    })
-})
 //
 // 新增分页相关状态
 
@@ -185,16 +211,15 @@ const filteredIssues = computed(() => {
 const startIndex = computed(() => (currentPage.value - 1) * pageSize.value + 1)
 const endIndex = computed(() => {
     const end = currentPage.value * pageSize.value
-    return end > filteredIssues.value.length ? filteredIssues.value.length : end
+    return end > totalRecords.value ? totalRecords.value : end
 })
-const totalItems = computed(() => filteredIssues.value.length)
-
 const currentPageTemplate = ref('{currentPage}/{totalPages}')
 
 // 分页事件处理
 const onPageChange = (event: { page: number; rows: number }) => {
     currentPage.value = event.page + 1    // Paginator的page从0开始
     pageSize.value = event.rows
+    loadAllIssues();
 }
 
 // 原v-for需要改为使用paginatedIssues

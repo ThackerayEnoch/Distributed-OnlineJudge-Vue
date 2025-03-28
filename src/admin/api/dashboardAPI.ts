@@ -48,6 +48,12 @@ export namespace DashboardSpace{
         httpMethod: string;
         clientIp: string;
     }
+    export interface JudgeTaskVO {
+        queueLength: number;
+        judgeCount: number;
+        onlineJudgerCount: number;
+        judgerTotalCount: number;
+    }
 }
 export const getServerInfoMetrics = () => {
     return request.get<DashboardSpace.ServerInfoMetricsVO>('/api/m/dashboard/metrics/server',{})
@@ -60,4 +66,7 @@ export const getErrorList = () => {
 }
 export const getErrorDetail = (id: number) => {
     return request.get<DashboardSpace.LogError>('/api/m/dashboard/error',{id})
+}
+export const getJudgeTask = () => {
+    return request.get<DashboardSpace.JudgeTaskVO>('/api/m/dashboard/judgeTask',{})
 }

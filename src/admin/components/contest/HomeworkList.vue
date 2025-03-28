@@ -35,7 +35,7 @@
                         <span class="flex-1 text-center font-bold">标题</span>
                     </template>
                     <template #body="slotProps">
-                        <router-link :to="'/admin/contest/edit/' + slotProps.data.id">{{ slotProps.data.title
+                        <router-link :to="`/homework/${slotProps.data.id}/intro`">{{ slotProps.data.title
                             }}</router-link>
                     </template>
                 </Column>

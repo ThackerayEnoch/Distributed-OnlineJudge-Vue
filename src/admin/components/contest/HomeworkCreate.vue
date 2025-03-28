@@ -14,7 +14,8 @@
         </div>
         <div class="w-full mt-6">
             <label class="text-gray-500">作业描述</label>
-            <MdEditor class="prose max-w-full shadow-md mt-2" v-model="homework.description" />
+            <MdEditor class="prose max-w-full shadow-md mt-2" @on-upload-img="onUploadImg"
+                v-model="homework.description" />
         </div>
         <!-- 开始时间 & 结束时间 -->
         <div class="grid grid-cols-2 gap-4 mt-6">
@@ -63,7 +64,7 @@
                 </div>
 
                 <!-- 密码 -->
-                <div v-if="homework.auth == 2" class="flex flex-col">
+                <div v-if="homework.auth == 1" class="flex flex-col">
                     <label class="text-gray-500">
                         <span class="text-red-500">*</span> 密码
                     </label>
@@ -88,7 +89,7 @@
                 <i class="ml-1 fa-regular fa-circle-question text-blue-500 cursor-pointer"
                     v-tooltip.top="'代码查重结果详见统计信息'"></i>
             </label>
-            <ToggleSwitch class="mt-2" v-model="homework.duplicateCheck" />
+            <ToggleSwitch class="mt-2" disible v-tooltip.top="'正在开发中'" v-model="homework.duplicateCheck" />
         </div>
         <div v-if="homework.auth !== 0" class="mt-6">
             <label class="text-gray-500">
@@ -277,8 +278,9 @@ import CustomToggleButton from './CustomToggleButton.vue';
 import { reactive, ref, defineComponent, onMounted } from 'vue'
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { parseUsers, getHomeworkGroup, createHomework, updateContestProblems, getHomeworkDetail, updateHomework, getAdminAllProblems, getAdminProblems, getAdminProblemsCount, type ContestSpace } from '@/admin/api/contestAPI'
+import { parseUsers, getHomeworkGroup, createHomework, uploadFile, getHomeworkDetail, updateHomework, getAdminAllProblems, getAdminProblems, getAdminProblemsCount, type ContestSpace } from '@/admin/api/contestAPI'
 import globalMessage from '@/common/utils/toast';
+import router from '@/common/utils/router';
 
 export default defineComponent({
     name: 'HomeworkCreate',
@@ -300,8 +302,8 @@ export default defineComponent({
     setup(props) {
         const authOptions = ref([
             { label: '公开作业', value: 0 },
-            { label: '私有作业', value: 1 },
-            { label: '保护作业', value: 2 },
+            { label: '私有作业', value: 2 },
+            { label: '保护作业', value: 1 },
         ])
         const visibleOptions = ref([
             { label: '可见', value: 1 },
@@ -382,14 +384,16 @@ export default defineComponent({
         }
         async function saveSelectedProblems() {
             let lastNumber = contestProblems.value.length;
-            contestProblems.value = selectedProblems.value.map(problem => ({
-                id: problem.id,
-                title: problem.title,
-                difficulty: problem.difficulty,
-                createTime: '',
-                updateTime: '',
-                number: lastNumber++
-            }));
+            selectedProblems.value.forEach(problem => {
+                contestProblems.value.push({
+                    id: problem.id,
+                    title: problem.title,
+                    difficulty: problem.difficulty,
+                    createTime: '',
+                    updateTime: '',
+                    number: lastNumber++
+                });
+            });
         }
         async function loadAllProblems() {
             const type = filterType.value ? 'own' : 'all';
@@ -468,6 +472,7 @@ export default defineComponent({
                 endTime: homework.endTime.getTime()
             }
             await createHomework(homeworkDTO).then(() => {
+                router.push("/admin/homeworks/list")
                 globalMessage.success("创建作业", "操作成功");
             }).catch(err => {
                 globalMessage.error("创建失败", err.message);
@@ -523,6 +528,7 @@ export default defineComponent({
                 endTime: homework.endTime.getTime()
             }
             await updateHomework(homeworkDTO).then(() => {
+                router.push("/admin/homeworks/list")
                 globalMessage.success("更新作业", "操作成功");
             }).catch(err => {
                 globalMessage.error("加载数据失败", err.message);
@@ -535,11 +541,34 @@ export default defineComponent({
                 createHomeworkFun();
             }
         }
+        const onUploadImg = async (files: any, callback: any) => {
+            const res = await Promise.all(
+                files.map((file: File) => {
+                    return new Promise((rev, rej) => {
+                        const form = new FormData();
+                        form.append('files', file);
+                        uploadFile(form, {
+                            headers: {
+                                "Content-Type": "multipart/form-data"
+                            },
+                        }).then((res) => {
+                            let url = res.data as unknown as string[];
+                            rev(res)
+                        }).catch((err) => {
+                            rej(err)
+                        })
+                    });
+                })
+            );
+
+            callback(res.map((item) => item.data[0]));
+        };
         return {
             homework, authOptions, languageOptions, visibleOptions, searchContent, onlyMyClasses, filteredClasses, studentInput, students,
             onOwnClassesChange, parseButtonEvent, createHomeworkFun, onSubmitEvent, contestProblemsDialog, contestProblems, addProblemDialog,
             allProblems, selectedProblems, problemTotalRecords, problemFirst, onProblemPage, onAddPageOpen, onListPageOpen, problemFinalSaveEvent,
-            selectedProblemSaveEvent, filterType, problemSearchContent, searchProblemInAllEvent, convertToLetter, deleteContestProblems
+            selectedProblemSaveEvent, filterType, problemSearchContent, searchProblemInAllEvent, convertToLetter, deleteContestProblems,
+            onUploadImg
         }
     }
 })

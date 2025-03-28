@@ -37,7 +37,15 @@
                     responsiveLayout="scroll" size="large" :totalRecords="totalRecords" lazy :first="first"
                     @page="onPage" @mouseover="selectRow">
 
-                    <Column field="hasDo" header="状态" style="width: 7%"></Column>
+                    <Column field="hasDo" header="状态" style="width: 7%">
+                        <template #body="slotProps">
+                            <div class="flex-1 text-center font-bold">
+                                <Tag v-if="slotProps.data.hasDo" severity=" success" value="AC"></Tag>
+                                <Tag v-if="slotProps.data.hasDo != null && !slotProps.data.hasDo" severity="danger"
+                                    value="WA"></Tag>
+                            </div>
+                        </template>
+                    </Column>
                     <!-- ID Column -->
                     <Column field="displayId" header="题目ID" style="width: 8%"></Column>
 

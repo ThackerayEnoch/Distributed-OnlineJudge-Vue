@@ -162,3 +162,6 @@ export const getHomeworkStat = (cid:number) => {
 export const updateHomeworkStatus = (data:ContestSpace.ContestUpdateStatusDTO) => {
     return request.put<string>('/api/c/admin/homework/status',data);
 }
+export const uploadFile = (files:FormData,headers:object) => {
+    return request.post<string>(`/api/c/admin/homework/upload`,files, headers);
+}

@@ -8,8 +8,8 @@
             </template>
             <Divider />
             <div class="w-full">
-                <label class="text-gray-500">
-                    <span class="text-red-500">*</span> 展示ID
+                <label class="text-gray-500" v-tooltip.top="'不需要自定义留空即可，默认P题目id'">
+                    <span class="text-red-500"></span> 展示ID
                 </label>
                 <InputText v-model="displayId" class="mt-2 w-full" placeholder="展示ID" />
             </div>
@@ -40,23 +40,26 @@
             </div>
             <div class="w-full mt-6">
                 <label class="text-gray-500"><span class="text-red-500">*</span> 题目描述</label>
-                <MdEditor class="prose max-w-full shadow-md mt-2" v-model="problemDesc" />
+                <MdEditor class="prose max-w-full shadow-md mt-2" @on-upload-img="onUploadImg" v-model="problemDesc" />
             </div>
             <div class="w-full mt-8">
                 <label class="text-gray-500"><span class="text-red-500">*</span> 输入描述</label>
-                <MdEditor class="prose max-w-full shadow-md max-h-[250px] mt-2" v-model="inputDesc" />
+                <MdEditor class="prose max-w-full shadow-md max-h-[250px] mt-2" @on-upload-img="onUploadImg"
+                    v-model="inputDesc" />
             </div>
             <div class="w-full mt-8">
                 <label class="text-gray-500"><span class="text-red-500">*</span> 输出描述</label>
-                <MdEditor class="prose max-w-full shadow-md max-h-[250px] mt-2" v-model="outputDesc" />
+                <MdEditor class="prose max-w-full shadow-md max-h-[250px] mt-2" @on-upload-img="onUploadImg"
+                    v-model="outputDesc" />
             </div>
             <div class="w-full mt-8">
                 <label class="text-gray-500"> 提示</label>
-                <MdEditor class="prose max-w-full shadow-md max-h-[250px] mt-2" v-model="hintDesc" />
+                <MdEditor class="prose max-w-full shadow-md max-h-[250px] mt-2" @on-upload-img="onUploadImg"
+                    v-model="hintDesc" />
             </div>
             <div class="mt-6 flex space-x-3 justify-start max-w-3xl">
                 <div class="flex-1 min-w-[200px]">
-                    <label class="text-gray-500"> 权限</label>
+                    <label class="text-gray-500"> 可见性</label>
                     <Select suffix="ms" v-model="selectedAuth" :options="authOptions" optionLabel="label"
                         optionValue="value" class="mt-2 w-full" />
                 </div>
@@ -253,7 +256,7 @@
                 <ToggleSwitch inputId="autoRemove" v-model="judgeCaseStatus" class="mt-4" />
             </div>
             <div>
-                <Button label="保存" @click="saveProblem" icon="pi pi-check" class="w-full mt-4" />
+                <Button label="保存" @click="saveProblem" :loading="isSaving" icon="pi pi-check" class="w-full mt-4" />
             </div>
         </Panel>
     </div>
@@ -292,8 +295,9 @@ import { languageOptions } from '@/common/constant/AllConstant'
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 
-import { createProblem, getProblem, updateProblem, getProblemLanguages, type ProblemSpace } from '@/admin/api/problemAPI'
+import { createProblem, uploadFile, getProblem, updateProblem, getProblemLanguages, type ProblemSpace } from '@/admin/api/problemAPI'
 import globalMessage from '@/common/utils/toast';
+import router from '@/common/utils/router';
 
 export default defineComponent({
     name: 'ProblemEdit',
@@ -320,7 +324,7 @@ export default defineComponent({
         const hintDesc = ref("");
         const problemType = ref(0);
         const share = ref(false);
-        const selectedLanguages = ref<number[]>([0, 1, 2]); // 绑定选中的值
+        const selectedLanguages = ref<number[]>([1, 2, 3, 4, 5, 6, 9, 10]); // 绑定选中的值
         let sampleId = 0; // 用于生成唯一的样例id
         const samples = ref([
             // 示例数据
@@ -383,7 +387,9 @@ export default defineComponent({
         const toggleSample = (index: number) => {
             samples.value[index].collapsed = !samples.value[index].collapsed;
         };
+        const isSaving = ref(false);
         async function saveProblem() {
+            isSaving.value = true;
             let userFileDTO: ProblemSpace.AdminCreateProblemFileDTO[] = [];
             let spjFileDTO: ProblemSpace.AdminCreateProblemFileDTO[] = [];
             let sampleDTO: ProblemSpace.AdminCreateProblemSampleDTO[] = [];
@@ -443,6 +449,7 @@ export default defineComponent({
                 // 编辑题目
                 await updateProblem(props.id, problem).then(res => {
                     globalMessage.success("题目更新", res.message)
+                    router.push("/admin/problems/list");
                 }).catch(err => {
                     globalMessage.error("更新失败", err.message)
                 })
@@ -451,11 +458,12 @@ export default defineComponent({
                 // 创建题目
                 await createProblem(problem).then(res => {
                     globalMessage.success("题目创建", res.message)
+                    router.push("/admin/problems/list");
                 }).catch(err => {
                     globalMessage.error("创建失败", err.message)
                 })
             }
-
+            isSaving.value = false;
         }
         async function loadProblemLanguages() {
             if (!props.id) {
@@ -534,6 +542,27 @@ export default defineComponent({
                 globalMessage.error("获取题目失败", err.message)
             })
         }
+        const onUploadImg = async (files: any, callback: any) => {
+            const res = await Promise.all(
+                files.map((file: File) => {
+                    return new Promise((rev, rej) => {
+                        const form = new FormData();
+                        form.append('files', file);
+                        uploadFile(form, {
+                            headers: {
+                                "Content-Type": "multipart/form-data"
+                            },
+                        }).then((res) => {
+                            rev(res)
+                        }).catch((err) => {
+                            rej(err)
+                        })
+                    });
+                })
+            );
+
+            callback(res.map((item) => item.data[0]));
+        };
         onMounted(() => {
             if (props.type === 'edit') {
                 getProblemById()
@@ -543,7 +572,7 @@ export default defineComponent({
         return {
             displayId, difficulty, selectedDifficulty, title, timeLimit, memoryLimit, stackLimit, share, problemDesc, inputDesc, outputDesc, hintDesc, problemType, selectedLanguages, languageOptions, samples, addSample, removeSample,
             toggleSample, userJudgeFile, spjJudgeFile, userFiles, spjFiles, newTag, spjDialogVisible, dialogVisible, addTag, removeTag, judgeMode, oiJudgeCaseMode, acmJudgeCaseMode, removeBlank, judgeCaseStatus, saveProblem,
-            authOptions, selectedAuth, newCode
+            authOptions, selectedAuth, newCode, isSaving, onUploadImg
         }
     }
 })

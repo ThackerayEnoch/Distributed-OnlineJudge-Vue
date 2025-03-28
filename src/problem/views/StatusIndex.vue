@@ -89,7 +89,7 @@
                     <template #body="slotProps">
                         <router-link
                             v-if="slotProps.data.share || counterStore.currentUser.userId === slotProps.data.uid"
-                            :to="`/status/${slotProps.data.submitId}`"
+                            :to="contestId != null ? `/status/${slotProps.data.submitId}?contestId=${contestId}` : `/status/${slotProps.data.submitId}`"
                             class="text-blue-400 hover:text-blue-600 truncate">
                             {{ slotProps.data.language }}
                         </router-link>
@@ -109,7 +109,7 @@
                         <span class="flex-1 text-center font-bold">用户</span>
                     </template>
                     <template #body="slotProps">
-                        <router-link :to="`/user/${slotProps.data.uid}`"
+                        <router-link :to="`/profile/${slotProps.data.uid}`"
                             class="text-blue-400 hover:text-blue-600 truncate">
                             {{ slotProps.data.nickname }}
                         </router-link>
@@ -190,6 +190,7 @@ function onPage(event: any) {
     const query = { ...route.query, currentPage: event.page + 1 };
     router.push({ query });
     getStatusData(first.value);
+    pollingQueue.value = [];
 }
 // 获取判题状态数据
 async function getStatusData(currentPage: number) {

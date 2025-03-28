@@ -1,20 +1,37 @@
 import request from "../common/utils/api";
-namespace User {
+export namespace UserSpace {
 
-    // 登录成功后返回的token
-    export interface getUserResData {
-        userId:string;
-        username:string;
-        originalUsername:string;
-        password:string;
-        salt:string;
-        email:string;
-        role:string;
-        createTime:string;
-        updateTime:string;
-    } 
+    export interface UserInfoVO {
+        id?: number;
+        nickname: string;
+        course: string;
+        tag: string;
+        email: string;
+        totalSubmitCount: number;
+        solvedCount: number;
+        rank: number;
+    }
+    export interface UserInfoUpdateDTO {
+        nickname: string;
+        email: string;
+    }
+    
+    export interface UserPasswordUpdateDTO {
+        oldPassword: string;
+        newPassword: string;
+    }
 }
-// GET获取用户数据
-export const getUserInfo = () => {
-    return request.get<User.getUserResData>('/api/users')
-}
+// 获取用户信息
+export const getUserInfoById = (id: number) => {
+    return request.get<UserSpace.UserInfoVO>(`/api/u/user/${id}`);
+};
+
+// 更新用户信息
+export const updateUserInfo = (data: UserSpace.UserInfoUpdateDTO) => {
+    return request.put<string>('/api/u/user', data);
+};
+
+// 更新用户密码
+export const updatePassword = (data: UserSpace.UserPasswordUpdateDTO) => {
+    return request.put<string>('/api/u/user/password', data);
+};

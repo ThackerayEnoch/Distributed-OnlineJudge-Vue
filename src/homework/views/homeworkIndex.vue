@@ -2,8 +2,8 @@
     <div class="w-full h-full">
         <div class="w-full h-[25%] p-4 shadow-lg bg-white dark:bg-gray-800 mb-4">
             <div class="flex items-center space-x-2">
-                <Select class="w-25" v-model="selectedHomeworkType" :options="HomeworkTypeOptions"
-                    placeholder="筛选..." />
+                <Select class="w-25" v-model="selectedHomeworkType" :options="HomeworkTypeOptions" placeholder="筛选..."
+                    @change="filterHomeworks" />
                 <InputGroup style="max-width: 50%;">
                     <InputText v-model="homeworkName" placeholder="请输入作业名" @keyup.enter="filterHomeworks" />
                     <InputGroupAddon style="margin: 0;padding: 0;border-radius: 0;">
@@ -126,12 +126,14 @@ function filterHomeworks() {
 }
 function getPremText(permission: number) {
     if (permission === 0) return '公开';
-    if (permission === 1) return '私有';
+    if (permission === 1) return '保护';
+    if (permission === 2) return '私有';
     return '未知';
 }
 function getPremClass(permission: number) {
-    if (permission === 0) return 'text-blue-400';
-    if (permission === 1) return 'text-red-800';
+    if (permission === 0) return 'text-blue-500';
+    if (permission === 1) return 'text-yellow-500';
+    if (permission === 2) return 'text-red-500';
     return 'text-gray-800';
 }
 function computeStatus(startTime: string, endTime: string) {

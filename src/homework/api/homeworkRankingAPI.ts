@@ -14,6 +14,7 @@ export namespace RankingSpace {
     }
 
     export interface UserProblemData {
+        rank?: number;
         username: string;
         nickname: string;
         userId: number;
@@ -27,7 +28,6 @@ export namespace RankingSpace {
         users: UserProblemData[];
     }
 }
-
 export const getHomeworkRankingById = (homeworkId: number) => {
     return request.get<RankingSpace.RankVO>(`/api/c/homework/${homeworkId}/rank`);
 }

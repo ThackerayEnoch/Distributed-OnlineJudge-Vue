@@ -1,6 +1,8 @@
 <template>
-    <div v-if="isLoading" class="w-full min-h-screen p-6 flex flex-col mt-[-2.5rem]">
-        <!-- 渲染内容 -->
+    <div v-if="isLoading" class="flex flex-col items-center justify-center h-screen">
+        <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="8" fill="transparent" animationDuration=".5s"
+            aria-label="Custom ProgressSpinner" />
+        <span class="mt-2 text-gray-500">加载数据中...</span>
     </div>
     <AccessDenied v-else-if="isAccessDenied" :message="message" btnLabel="返回题库" btnTo="/problems"
         btnIcon="pi pi-book" />
@@ -60,7 +62,8 @@
                     <span class="flex-1 text-center font-bold">标题</span>
                 </template>
                 <template #body="slotProps">
-                    <router-link :to="`/problem/${slotProps.data.pid}`"
+                    <router-link
+                        :to="contestId != null ? `/problem/${slotProps.data.pid}?contestId=${contestId}` : `/problem/${slotProps.data.pid}`"
                         class="text-blue-400 hover:text-blue-600 truncate">
                         {{ slotProps.data.title }}
                     </router-link>
@@ -169,12 +172,16 @@ import globalMessage from '@/common/utils/toast';
 import { ProblemStatus } from '../status/problemStatus';
 import Prism from "prismjs";
 import { number } from 'yup';
+import { useRoute } from 'vue-router';
+const route = useRoute();
 // 定义props，获取URL中的pid参数
 const props = defineProps({
     submitId: number
 });
+// 从URL中获取contestId
+const contestId = route.query.contestId ? Number(route.query.contestId) : null;
 // 定义是否加载中变量
-const isLoading = ref(true);
+const isLoading = ref(false);
 // 题目数据
 const status = ref<Status.StatusDetail>(
     {
@@ -285,7 +292,8 @@ const isAccessDenied = ref<boolean>(false);
 // 通过API获取判题详情
 async function getJudgeDetail(submitId: number) {
     // 获取提交详情
-    getStatDetail(submitId).then((result) => {
+    isLoading.value = true;
+    await getStatDetail(submitId).then((result) => {
         status.value = result.data as unknown as Status.StatusDetail;
     }).catch((error) => {
         if (error.code === ProblemStatus.ACCESS_DENIED) {

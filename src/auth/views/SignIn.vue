@@ -45,6 +45,7 @@ import globalMessage from '@/common/utils/toast';
 import router from '@/common/utils/router';
 import { useUserStore } from '@/common/utils/store';
 import { User } from '@/common/entity/user'
+import { Role } from '@/common/constant/Role'
 const counterStore = useUserStore();
 const isRememberMe = ref(false);
 
@@ -73,7 +74,7 @@ const onSubmit = handleSubmit(async (values) => {
         });
 
         if (res?.data) {
-            const user = new User(res.data.userId, res.data.username, res.data.nickname, res.data.roleId);
+            const user = new User(res.data.userId, res.data.username, res.data.nickname, res.data.roleId ?? Role.STUDENT);
             counterStore.setUser(user);
             globalMessage.success('操作成功', '登录成功');
             router.push('/');

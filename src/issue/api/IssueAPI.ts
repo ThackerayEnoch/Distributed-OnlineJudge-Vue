@@ -48,10 +48,12 @@ export namespace IssueSpace {
         createTime: Date;
     }
 }
-export const getAllIssues = (offset: number, priority: number, status: number) => {
-    return request.get<IssueSpace.IssuesVO[]>('/api/u/issues', { offset, priority, status });
+export const getAllIssues = (offset: number, priority: number, status: number[],type:number) => {
+    return request.get<IssueSpace.IssuesVO[]>('/api/u/issues', { offset, priority, status,type });
 };
-
+export const getIssuesCount = (priority: number, status: number[],type:number) => {
+    return request.get<number>('/api/u/issues/count', { priority, status,type });
+}
 export const getIssueById = (id: number) => {
     return request.get<IssueSpace.IssueVO>(`/api/u/issue/${id}`);
 };

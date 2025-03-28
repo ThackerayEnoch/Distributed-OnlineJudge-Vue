@@ -1,153 +1,170 @@
 <template>
-    <AccessDenied v-if="isAccessDenied" :message="message" btnLabel="返回题库" btnTo="/problems" btnIcon="pi pi-book" />
-    <div v-else class="w-full h-full flex flex-col items-start">
-        <div class="w-[70%] p-4 shadow-lg bg-white dark:bg-gray-800">
+    <div v-if="isloading" class="flex flex-col items-center justify-center h-screen">
+        <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="8" fill="transparent" animationDuration=".5s"
+            aria-label="Custom ProgressSpinner" />
+        <span class="mt-2 text-gray-500">加载数据中...</span>
+    </div>
+    <div v-else class="w-full">
+        <AccessDenied v-if="isAccessDenied" :message="message" btnLabel="返回题库" btnTo="/problems" btnIcon="pi pi-book" />
+        <div v-else class="w-full h-full flex flex-col items-start">
+            <div class="w-[70%] p-4 shadow-lg bg-white dark:bg-gray-800">
 
-            <h1 class="text-3xl font-bold mb-4" v-html="problemDetail?.title"></h1>
-            <div class="mb-4 flex items-center">
-                <Tag class="mr-2" severity="info">
-                    题目ID: {{ problemDetail?.displayId }}
-                </Tag>
-                <Tag class="mr-2" severity="success">
-                    时间限制: {{ (problemDetail?.timeLimit ?? 0) % 1000 === 0 ? ((problemDetail?.timeLimit ?? 0) / 1000) :
-                        ((problemDetail?.timeLimit ?? 0) / 1000).toFixed(3) }} S
-                </Tag>
-                <Tag class="mr-2" severity="danger">
-                    空间限制: {{ problemDetail?.memoryLimit }}MiB
-                </Tag>
-                <Tag class="mr-2" severity="warn">
-                    类型: {{ problemDetail?.type == 0 ? 'ACM' : 'OI' }}
-                </Tag>
-                <Tag v-if="problemDetail?.type" class="mr-2" severity="danger">
-                    OI分数: {{ problemDetail?.ioScore }}
-                </Tag>
-                <Tag class="mr-2" severity="success">
-                    难度: {{ difficultyMap(problemDetail?.difficulty as Number) }}
-                </Tag>
-                <Tag class="mr-2" severity="info">
-                    判题模式: {{ judgeModeMap(problemDetail?.judgeMode as string) }}
-                </Tag>
-            </div>
-            <div class="mb-4">
-                <h2 class="text-xl font-semibold mb-2 text-blue-500">题目描述</h2>
-                <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css"
-                    v-html="problemDetail.description"></div>
-                <div v-else>
-                    <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'"
-                        :modelValue="problemDetail.description" />
+                <h1 class="text-3xl font-bold mb-4" v-html="problemDetail?.title"></h1>
+                <div class="mb-4 flex items-center">
+                    <Tag class="mr-2" severity="info">
+                        题目ID: {{ problemDetail?.displayId }}
+                    </Tag>
+                    <Tag class="mr-2" severity="success">
+                        时间限制: {{ (problemDetail?.timeLimit ?? 0) % 1000 === 0 ? ((problemDetail?.timeLimit ?? 0) / 1000)
+                            :
+                            ((problemDetail?.timeLimit ?? 0) / 1000).toFixed(3) }} S
+                    </Tag>
+                    <Tag class="mr-2" severity="danger">
+                        空间限制: {{ problemDetail?.memoryLimit }}MiB
+                    </Tag>
+                    <Tag class="mr-2" severity="warn">
+                        类型: {{ problemDetail?.type == 0 ? 'ACM' : 'OI' }}
+                    </Tag>
+                    <Tag v-if="problemDetail?.type" class="mr-2" severity="danger">
+                        OI分数: {{ problemDetail?.ioScore }}
+                    </Tag>
+                    <Tag class="mr-2" severity="success">
+                        难度: {{ difficultyMap(problemDetail?.difficulty as Number) }}
+                    </Tag>
+                    <Tag class="mr-2" severity="info">
+                        判题模式: {{ judgeModeMap(problemDetail?.judgeMode as string) }}
+                    </Tag>
                 </div>
-            </div>
-            <div class="mb-4">
-                <h2 class="text-xl font-semibold mb-2 text-blue-500">输入格式</h2>
-                <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css" v-html="problemDetail.input">
-                </div>
-                <div v-else>
-                    <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'" :modelValue="problemDetail.input" />
-                </div>
-            </div>
-            <div class="mb-4">
-                <h2 class="text-xl font-semibold mb-2 text-blue-500">输出格式</h2>
-                <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css" v-html="problemDetail.output">
-                </div>
-                <div v-else>
-                    <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'" :modelValue="problemDetail.output" />
-                </div>
-            </div>
-            <div class="mb-4">
-                <!-- 输入输出样例 标题 -->
-                <h2 class="text-xl font-semibold mb-2 text-blue-500">输入输出样例</h2>
-
-                <div v-for="(input, index) in inputs" :key="index" class="flex items-start p-4 pb-0 pt-0 rounded">
-                    <!-- 输入样例 -->
-                    <div class="flex-1">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-sm text-gray-500 font-bold">输入样例 #{{ index + 1 }}</span>
-                            <Button icon="pi pi-copy" class="p-button-text" @click="copyToClipboard(input)" />
-                        </div>
-                        <pre class="p-3 bg-gray-100 dark:bg-black rounded-md border">{{ input }}</pre>
-                    </div>
-
-                    <!-- 输出样例 -->
-                    <div class="flex-1 ml-4">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-sm text-gray-500 font-bold">输出样例 #{{ index + 1 }}</span>
-                            <Button icon="pi pi-copy" class="p-button-text" @click="copyToClipboard(outputs[index])" />
-                        </div>
-                        <pre class="p-3 bg-gray-100 dark:bg-black rounded-md border">{{ outputs[index] }}</pre>
+                <div class="mb-4">
+                    <h2 class="text-xl font-semibold mb-2 text-blue-500">题目描述</h2>
+                    <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css"
+                        v-html="problemDetail.description"></div>
+                    <div v-else>
+                        <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'"
+                            :modelValue="problemDetail.description" />
                     </div>
                 </div>
-            </div>
-            <div v-if="problemDetail.hint" class="mb-4">
-                <h2 class="text-xl font-semibold mb-2 text-blue-500">提示</h2>
-                <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css" v-html="problemDetail.hint">
+                <div class="mb-4">
+                    <h2 class="text-xl font-semibold mb-2 text-blue-500">输入格式</h2>
+                    <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css"
+                        v-html="problemDetail.input">
+                    </div>
+                    <div v-else>
+                        <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'"
+                            :modelValue="problemDetail.input" />
+                    </div>
                 </div>
-                <MdPreview v-else :theme="layoutConfig.darkTheme ? 'dark' : 'light'" :modelValue="problemDetail.hint" />
-            </div>
-        </div>
-        <!-- ...existing code... -->
-        <div class="fixed top-22 right-10 w-[25%] shadow-lg h-auto p-4 bg-white dark:bg-gray-800 rounded-lg">
-            <!-- 卡片其他内容保持原样 -->
-            <!-- 标题部分 -->
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-gray-600 font-semibold font-medium">题目提供者</span>
-                <span class="text-gray-800 ml-2">{{ problemDetail.nickname }}</span>
-            </div>
-            <!-- 难度 -->
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-gray-600 font-semibold font-medium">难度等级</span>
-                <span class="text-orange-500 font-semibold">{{ difficultyMap(problemDetail.difficulty) }}</span>
-            </div>
-            <!-- 统计信息组 -->
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-gray-600 font-semibold font-medium">提交总数</span>
-                <span class="text-gray-800 font-semibold">{{ totalSubmissions }}</span>
-            </div>
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-gray-600 font-semibold font-medium">正确提交</span>
-                <span class="text-green-500 font-semibold">{{ passedSubmissions }}</span>
-            </div>
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-gray-600 font-semibold font-medium">通过率</span>
-                <span class="text-blue-500 font-semibold">
-                    {{ (passedSubmissions / totalSubmissions * 100 || 0).toFixed(1) }}%
-                </span>
-            </div>
-            <!-- 题目元数据 -->
-            <div v-if="problemDetail.type === 1" class="flex justify-between items-center mb-6">
-                <span class="text-gray-600 font-semibold font-medium">最高得分</span>
-                <span class="text-green-500 font-semibold">{{ score }}</span>
-            </div>
-            <div v-if="problemDetail.type === 0" class="flex justify-between items-center mb-6">
-                <span class="text-gray-600 font-semibold font-medium">是否AC</span>
-                <span class="text-green-500 font-semibold">{{ isSolved ? 'AC' : '' }}</span>
-            </div>
-            <!-- 按钮组区域 -->
-            <div class="mt-4 space-y-2">
-                <!-- 主要操作按钮 -->
-                <Button class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium" @click="visible = true">
-                    提交解答
-                </Button>
+                <div class="mb-4">
+                    <h2 class="text-xl font-semibold mb-2 text-blue-500">输出格式</h2>
+                    <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css"
+                        v-html="problemDetail.output">
+                    </div>
+                    <div v-else>
+                        <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'"
+                            :modelValue="problemDetail.output" />
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <!-- 输入输出样例 标题 -->
+                    <h2 class="text-xl font-semibold mb-2 text-blue-500">输入输出样例</h2>
 
-                <!-- 辅助操作按钮组 -->
-                <div class="flex flex-wrap gap-2">
-                    <Button v-if="contestId != null" @click="routePush(`/homework/${contestId}/ranking`)"
-                        class="flex-1 text-purple-500 hover:text-purple-700 border border-gray-200 font-medium"
-                        outlined>
-                        排行榜
+                    <div v-for="(input, index) in inputs" :key="index" class="flex items-start p-4 pb-0 pt-0 rounded">
+                        <!-- 输入样例 -->
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-gray-500 font-bold">输入样例 #{{ index + 1 }}</span>
+                                <Button icon="pi pi-copy" class="p-button-text" @click="copyToClipboard(input)" />
+                            </div>
+                            <pre class="p-3 bg-gray-100 dark:bg-black rounded-md border">{{ input }}</pre>
+                        </div>
+
+                        <!-- 输出样例 -->
+                        <div class="flex-1 ml-4">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-gray-500 font-bold">输出样例 #{{ index + 1 }}</span>
+                                <Button icon="pi pi-copy" class="p-button-text"
+                                    @click="copyToClipboard(outputs[index])" />
+                            </div>
+                            <pre class="p-3 bg-gray-100 dark:bg-black rounded-md border">{{ outputs[index] }}</pre>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="problemDetail.hint" class="mb-4">
+                    <h2 class="text-xl font-semibold mb-2 text-blue-500">提示</h2>
+                    <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css" v-html="problemDetail.hint">
+                    </div>
+                    <MdPreview v-else :theme="layoutConfig.darkTheme ? 'dark' : 'light'"
+                        :modelValue="problemDetail.hint" />
+                </div>
+            </div>
+            <!-- ...existing code... -->
+            <div class="fixed top-22 right-10 w-[25%] shadow-lg h-auto p-4 bg-white dark:bg-gray-800 rounded-lg">
+                <!-- 卡片其他内容保持原样 -->
+                <!-- 标题部分 -->
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-600 font-semibold font-medium">题目提供者</span>
+                    <span class="text-gray-800 ml-2">{{ problemDetail.nickname }}</span>
+                </div>
+                <!-- 难度 -->
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-600 font-semibold font-medium">难度等级</span>
+                    <span class="text-orange-500 font-semibold">{{ difficultyMap(problemDetail.difficulty) }}</span>
+                </div>
+                <!-- 统计信息组 -->
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-600 font-semibold font-medium">提交总数</span>
+                    <span class="text-gray-800 font-semibold">{{ totalSubmissions }}</span>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-600 font-semibold font-medium">正确提交</span>
+                    <span class="text-green-500 font-semibold">{{ passedSubmissions }}</span>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-600 font-semibold font-medium">通过率</span>
+                    <span class="text-blue-500 font-semibold">
+                        {{ (passedSubmissions / totalSubmissions * 100 || 0).toFixed(1) }}%
+                    </span>
+                </div>
+                <!-- 题目元数据 -->
+                <div v-if="problemDetail.type === 1" class="flex justify-between items-center mb-6">
+                    <span class="text-gray-600 font-semibold font-medium">最高得分</span>
+                    <span class="text-green-500 font-semibold">{{ score }}</span>
+                </div>
+                <div v-if="problemDetail.type === 0" class="flex justify-between items-center mb-6">
+                    <span class="text-gray-600 font-semibold font-medium">是否AC</span>
+                    <span class="text-green-500 font-semibold">{{ isSolved ? 'AC' : '' }}</span>
+                </div>
+                <!-- 按钮组区域 -->
+                <div class="mt-4 space-y-2">
+                    <!-- 主要操作按钮 -->
+                    <Button class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium" @click="visible = true">
+                        提交解答
                     </Button>
-                    <Button v-if="contestId != null"
-                        @click="routePush(`/homework/${contestId}/submit?problemId=${props.pid}&contestId=${contestId}`)"
-                        class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium" outlined>
-                        提交记录
-                    </Button>
-                    <Button v-if="contestId == null" @click="routePush(`/statuses?problemId=${props.pid}`)"
-                        class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium" outlined>
-                        提交记录
-                    </Button>
-                    <Button v-if="contestId != null" @click="routePush(`/homework/${contestId}/problems`)"
-                        class="flex-1 text-green-500 hover:text-green-700 border border-gray-200 font-medium" outlined>
-                        返回竞赛
-                    </Button>
+
+                    <!-- 辅助操作按钮组 -->
+                    <div class="flex flex-wrap gap-2">
+                        <Button v-if="contestId != null" @click="routePush(`/homework/${contestId}/ranking`)"
+                            class="flex-1 text-purple-500 hover:text-purple-700 border border-gray-200 font-medium"
+                            outlined>
+                            排行榜
+                        </Button>
+                        <Button v-if="contestId != null"
+                            @click="routePush(`/homework/${contestId}/submit?problemId=${props.pid}&contestId=${contestId}`)"
+                            class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium"
+                            outlined>
+                            提交记录
+                        </Button>
+                        <Button v-if="contestId == null" @click="routePush(`/statuses?problemId=${props.pid}`)"
+                            class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium"
+                            outlined>
+                            提交记录
+                        </Button>
+                        <Button v-if="contestId != null" @click="routePush(`/homework/${contestId}/problems`)"
+                            class="flex-1 text-green-500 hover:text-green-700 border border-gray-200 font-medium"
+                            outlined>
+                            返回竞赛
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -198,8 +215,9 @@ import { languageOptions } from '@/common/constant/AllConstant';
 import globalMessage from '@/common/utils/toast';
 import { ProblemStatus } from '../status/problemStatus';
 import AccessDenied from '@/common/components/AccessDenied.vue';
+import { useUserStore } from '@/common/utils/store';
 
-
+const userStore = useUserStore();
 const extensions = [oneDark];
 const router = useRouter();
 const route = useRoute();
@@ -251,10 +269,10 @@ async function handleSubmit() {
     }
     submitProblem(dto).then(() => {
         if (contestId != null) {
-            router.push('/statuses?problemId=' + props.pid + '&contestId=' + contestId);
+            router.push('/statuses?problemId=' + props.pid + '&contestId=' + contestId + '&userId=' + userStore.currentUser.userId);
         }
         else {
-            router.push('/statuses?problemId=' + props.pid);
+            router.push('/statuses?problemId=' + props.pid + '&userId=' + userStore.currentUser.userId);
         }
         globalMessage.success('提交成功', '您的代码已提交成功');
     }).catch((err) => {
@@ -334,11 +352,14 @@ const loadProblemStatistics = async () => {
         isSolved.value = data.isSolved;
         score.value = data.userScore;
     }).catch((error) => {
-        globalMessage.error('题目统计数据获取失败', error.message);
+        console.error('获取题目统计数据失败', error);
     });
 }
+// 异步获取题目详情数据
+const isloading = ref<boolean>(false);
 const getProblemDetailData = async () => {
     if (!props.pid) return;
+    isloading.value = true;
     await getProblemDetail(props.pid as unknown as number, contestId as number).then((res) => {
         const data = res.data as Problem.ProblemResData;
         problemDetail.value = data;
@@ -350,14 +371,22 @@ const getProblemDetailData = async () => {
             message.value = '您没有权限查看此题目, 可能是题目未开放';
             globalMessage.warn('提示', '您没有权限查看此题目');
             return;
-        }
-        if (error.code === ProblemStatus.CONTEST_NOT_START) {
-            isAccessDenied.value = true;
-            message.value = '比赛未开始';
-            globalMessage.warn('提示', '比赛未开始');
-            return;
-        }
+        } else
+            if (error.code === ProblemStatus.CONTEST_NOT_START) {
+                isAccessDenied.value = true;
+                message.value = '比赛未开始';
+                globalMessage.warn('提示', '比赛未开始');
+                return;
+            } else
+                if (error.code === ProblemStatus.CONTEST_PROBLEM_USED) {
+                    isAccessDenied.value = true;
+                    message.value = '题目已被用于比赛中';
+                    globalMessage.warn('提示', '题目已被用于比赛中');
+                    return;
+                }
         globalMessage.error('题目详情数据获取失败', error.message);
+    }).finally(() => {
+        isloading.value = false;
     });
 
 }
