@@ -201,6 +201,24 @@ export default [
           components:{
             admin:()=>import('@/admin/components/judge/RejudgeView.vue')
           }
+        },
+        {
+          path:'/admin/notices',
+          name:'AdminNotices',
+          children:[
+            {
+              path:'/admin/notices',
+              redirect: '/admin/notices/list'
+            },
+            {
+              path:'/admin/notices/list',
+              name:'AdminNoticeList',
+              components:{
+                admin:()=>import('@/admin/components/notice/NoticeList.vue')
+              },
+              props:true
+            }
+          ],
         }
       ]
     }

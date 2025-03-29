@@ -7,6 +7,14 @@ export default [
       }
     },
     {
+      path:'/notices/:id',
+      name:'Notices',
+      components: {
+        main: () => import('@/common/views/NoticesView.vue')
+      },
+      props: true
+    },
+    {
       path:'/forbidden',
       name:'Forbidden',
       components: {

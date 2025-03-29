@@ -13,7 +13,7 @@ import Tooltip from 'primevue/tooltip';
 import '@/common/assets/styles.scss';
 import '@/common/assets/tailwind.css';
 import '@fortawesome/fontawesome-free/css/all.css';
-import globalErrorHandler from '@/common/exception/globalErrorHandler';
+import globalErrorHandler from '@/common/entity/exception/globalErrorHandler';
 
 import App from './App.vue'
 import router from './common/utils/router'

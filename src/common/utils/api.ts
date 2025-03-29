@@ -2,7 +2,7 @@ import axios, { HttpStatusCode } from 'axios'
 import router from '@/common/utils/router';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse,InternalAxiosRequestConfig, AxiosError } from 'axios'
 import globalMessage from '@/common/utils/toast';
-import { APIError } from '@/common/exception/APIException';
+import { APIError } from '@/common/entity/exception/APIException';
 // 数据返回的接口
 // 定义请求响应参数，不含data
 interface Result {
@@ -21,7 +21,7 @@ const URL: string = 'http://localhost:8080'
 
 const config = {
   // 默认地址
-  // baseURL: URL as string,
+   baseURL: URL as string,
   // 设置超时时间
   timeout: 1000000,
   // 跨域时候允许携带凭证

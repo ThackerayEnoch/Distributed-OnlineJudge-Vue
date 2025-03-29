@@ -100,8 +100,7 @@ export default defineComponent({
                 icon: "pi pi-cog",
                 to: "/admin/settings",
                 items: [
-                    { label: "公告管理", icon: "pi pi-megaphone", to: "/admin/announcements" },
-                    { label: "通知管理", icon: "pi pi-bell", to: "/admin/notifications" },
+                    { label: '公告管理', icon: 'pi pi-megaphone', to: '/admin/notices' },
                     {
                         label: '权限管理',
                         icon: 'pi pi-lock',

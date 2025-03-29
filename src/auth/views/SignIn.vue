@@ -9,11 +9,11 @@
                         <InputGroupAddon>
                             <i class="pi pi-user"></i>
                         </InputGroupAddon>
-                        <InputText placeholder="用户名" v-model="username" class="w-full" />
+                        <InputText placeholder="用户名(学号)" v-model="username" class="w-full" />
                     </InputGroup>
                     <small v-if="usernameError != ''" class="text-red-500">{{ usernameError }}</small>
                 </div>
-                <div class="mb-6">
+                <div class="mb-8">
                     <InputGroup>
                         <InputGroupAddon>
                             <i class="pi pi-lock"></i>
@@ -22,15 +22,8 @@
                     </InputGroup>
                     <small v-if="passwordError != ''" class="text-red-500">{{ passwordError }}</small>
                 </div>
-                <div class="flex items-center justify-between mt-2 mb-8 gap-8">
-                    <div class="flex items-center">
-                        <Checkbox v-model="isRememberMe" id="rememberme1" binary class="mr-2"></Checkbox>
-                        <label for="rememberme1">保持登录</label>
-                    </div>
-                    <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">忘记密码?</span>
-                </div>
                 <Button label="登录" class="w-full p-button-primary" :loading="isloading" type="submit" />
-                <Button label="统一身份认证" class="w-full mt-2 p-button-secondary" disabled />
+                <Button label="统一身份认证" class="w-full mt-2 p-button-secondary" />
             </form>
         </div>
     </div>
