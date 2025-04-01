@@ -139,7 +139,7 @@
         </div>
 
         <div>
-            <Button label="保存" @click="onSubmitEvent" icon="pi pi-check" class="w-full mt-4" />
+            <Button label="保存" @click="onSubmitEvent" :loading="isSubmiting" icon="pi pi-check" class="w-full mt-4" />
         </div>
     </Panel>
     <Dialog v-model:visible="contestProblemsDialog" header="选择题目" :modal="true" :style="{ width: '80%' }">
@@ -384,7 +384,15 @@ export default defineComponent({
         }
         async function saveSelectedProblems() {
             let lastNumber = contestProblems.value.length;
-            selectedProblems.value.forEach(problem => {
+            // 筛选出需要添加的和需要删除的
+            const selectedIds = selectedProblems.value.map(problem => problem.id);
+            const selectedProblemsToAdd = allProblems.value.filter(problem => selectedIds.includes(problem.id) && !contestProblems.value.some(p => p.id === problem.id));
+            const selectedProblemsToDelete = contestProblems.value.filter(problem => !selectedIds.includes(problem.id));
+            // 删除不需要的题目
+            selectedProblemsToDelete.forEach(problem => {
+                contestProblems.value = contestProblems.value.filter(p => p.id !== problem.id);
+            });
+            selectedProblemsToAdd.forEach(problem => {
                 contestProblems.value.push({
                     id: problem.id,
                     title: problem.title,
@@ -394,11 +402,24 @@ export default defineComponent({
                     number: lastNumber++
                 });
             });
+            // 先按照number排序
+            contestProblems.value.sort((a, b) => a.number - b.number);
+            // 平衡lastNumber
+            lastNumber = 0;
+            contestProblems.value.forEach(problem => {
+                problem.number = lastNumber++;
+            });
         }
         async function loadAllProblems() {
             const type = filterType.value ? 'own' : 'all';
             await getAdminAllProblems(problemFirst.value, type, problemSearchContent.value).then(res => {
                 allProblems.value = res.data as ContestSpace.AdminAllProblemVO[];
+                const problemIds: number[] = contestProblems.value.map(problem => problem.id);
+                allProblems.value.forEach(problem => {
+                    if (problemIds.includes(problem.id) && !selectedProblems.value.some(p => p.id === problem.id)) {
+                        selectedProblems.value.push(problem);
+                    }
+                });
             }).catch(err => {
                 globalMessage.error("加载题目失败", err.message);
             });
@@ -451,6 +472,7 @@ export default defineComponent({
             });
         }
         const createHomeworkFun = async () => {
+            isSubmiting.value = true;
             const problemTmp: ContestSpace.contestProblem[] = contestProblems.value.map(problem => ({
                 problemId: problem.id,
                 displayId: problem.number
@@ -504,8 +526,10 @@ export default defineComponent({
             }).catch(err => {
                 globalMessage.error("加载数据失败", err.message);
             });
+            isSubmiting.value = false;
         }
         async function updateHomeworkFun() {
+            isSubmiting.value = true;
             const problemTmp: ContestSpace.contestProblem[] = contestProblems.value.map(problem => ({
                 problemId: problem.id,
                 displayId: problem.number
@@ -533,7 +557,9 @@ export default defineComponent({
             }).catch(err => {
                 globalMessage.error("加载数据失败", err.message);
             });
+            isSubmiting.value = false;
         }
+        const isSubmiting = ref(false);
         function onSubmitEvent() {
             if (props.type === 'edit') {
                 updateHomeworkFun();
@@ -568,7 +594,7 @@ export default defineComponent({
             onOwnClassesChange, parseButtonEvent, createHomeworkFun, onSubmitEvent, contestProblemsDialog, contestProblems, addProblemDialog,
             allProblems, selectedProblems, problemTotalRecords, problemFirst, onProblemPage, onAddPageOpen, onListPageOpen, problemFinalSaveEvent,
             selectedProblemSaveEvent, filterType, problemSearchContent, searchProblemInAllEvent, convertToLetter, deleteContestProblems,
-            onUploadImg
+            onUploadImg, isSubmiting
         }
     }
 })

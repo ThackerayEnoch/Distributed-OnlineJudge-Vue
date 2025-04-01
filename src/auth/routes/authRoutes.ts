@@ -16,6 +16,13 @@ export default [
           components: {
             auth: () => import('@/auth/views/SignIn.vue')
           }
+        },
+        {
+          path:'/auth/password',
+          name:'ChangePassword',
+          components: {
+            auth: () => import('@/auth/views/ChangePassword.vue')
+          }
         }
       ]
     }

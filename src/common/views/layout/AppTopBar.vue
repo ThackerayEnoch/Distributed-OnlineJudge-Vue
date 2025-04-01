@@ -1,54 +1,57 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router'
 import { useLayout } from '@/common/views/layout/layout';
+import { survive } from '@/common/views/noticeAPI';
 // 主题设置
 import AppConfigurator from './AppConfigurator.vue';
 const { toggleDarkMode, isDarkTheme } = useLayout();
 // 当前用户
 import { Role } from '@/common/constant/Role';
 import { useUserStore } from '@/common/utils/store';
+import type { MenuItem } from 'primevue/menuitem';
 const counterStore = useUserStore();
 const router = useRouter();
 const route = useRoute();
 // 当前页面
 const activeMenu = ref('/');
 // 导航栏
-const items = ref([
+const items = ref<MenuItem[]>([
+
     {
-        label: '首页',         // 菜单项显示的文字
-        name: 'home',          // 唯一标识，用于高亮状态判断
-        icon: 'pi pi-home',    // 图标类名
-        command: () => navigateTo('home'), // 点击事件
-        root: true             // 是否为顶级菜单
+        label: '首页',
+        name: 'home',
+        icon: 'pi pi-home',
+        command: () => navigateTo('home'),
+        root: true,
     },
     {
         label: '题目',
         name: 'problems',
         icon: 'pi pi-book',
         command: () => navigateTo('problems'),
-        root: true
+        root: true,
     },
     {
         label: '评测',
         name: 'statuses',
         icon: 'pi pi-check-circle',
         command: () => navigateTo('statuses'),
-        root: true
+        root: true,
     },
     {
         label: '作业',
         name: 'homeworks',
         icon: 'pi pi-pencil',
         command: () => navigateTo('homeworks'),
-        root: true
+        root: true,
     },
     {
         label: '反馈',
         name: 'issues',
         icon: 'fas fa-bug',
         command: () => navigateTo('issues'),
-        root: true
+        root: true,
     },
     {
         label: '管理',
@@ -56,18 +59,25 @@ const items = ref([
         icon: 'pi pi-cog',
         command: () => navigateTo('admin'),
         root: true,
-    }
-])
+    },
+]
+);
 // 页面跳转函数
 const navigateTo = (menu: string) => {
     activeMenu.value = menu;
     router.push('/' + menu);
 }
 // 根据当前页面自动切换导航栏的项
+let intervalId: number;
 onMounted(() => {
     const currentRoute = route.path.split('/')[1].toLowerCase();
     switchMenu(currentRoute);
-
+    intervalId = setInterval(async () => {
+        await survive();
+    }, 5 * 60 * 1000);
+});
+onUnmounted(() => {
+    clearInterval(intervalId);
 });
 function switchMenu(menu: string) {
     switch (menu) {
@@ -105,7 +115,7 @@ watch(route, (newRoute) => {
 
 <template>
     <div class="fixed top-0 left-0 w-full z-50">
-        <MegaMenu :model="items" class="p-4 bg-surface-0 layout-topbar">
+        <MegaMenu :model="items as MenuItem[][]" class="p-4 bg-surface-0 layout-topbar">
             <template #start>
                 <div class="layout-topbar-logo-container ml-3 relative flex items-center" style="width: 13rem;">
                     <div @click="navigateTo('home')" class="layout-topbar-logo flex items-center">

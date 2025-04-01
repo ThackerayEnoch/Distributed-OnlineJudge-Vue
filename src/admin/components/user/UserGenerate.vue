@@ -66,7 +66,7 @@
                                     {{ data.index + 1 }}
                                 </span>
                                 <span v-else>
-                                    {{ data[field] || '-' }}
+                                    {{ typeof field === 'string' && data[field] ? data[field] : '-' }}
                                 </span>
                             </template>
                         </Column>

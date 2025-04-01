@@ -25,3 +25,6 @@ export const getNoticeById = (id: number) => {
 export const getAllNotices = (limit:number) => {
     return request.get<NoticesSpace.NoticesVO[]>('/api/u/notices', {limit});
 };
+export const survive = () =>{
+    return request.get("/api/p/survive");
+}

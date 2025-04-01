@@ -133,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { getStatPage, getStatBySubmitid, getStatMaxCount, type Status } from '../StatusAPI'
 import { statusMap, statusClassMap, statusOptions } from '@/common/constant/AllConstant';
 import { useRoute, useRouter } from 'vue-router';
@@ -277,12 +277,13 @@ const updateProblems = (statusItem: Status.StatusItem) => {
         }
     }
 };
+let intervalId: number;
 // 开始轮询，1s轮询一次
 const startPolling = () => {
     if (pollingQueue.value.length === 0) {
         return;
     }
-    setInterval(async () => {
+    intervalId = setInterval(async () => {
         if (pollingQueue.value.length > 0) {
             const lastItem = pollingQueue.value[pollingQueue.value.length - 1]; // 获取队列中的最后一个元素
             const statusItem = await fetchStatusUpdate(lastItem.submitId);
@@ -290,6 +291,9 @@ const startPolling = () => {
         }
     }, 1500);
 };
+onUnmounted(() => {
+    clearInterval(intervalId); // 清除轮询
+});
 </script>
 
 <style scoped>

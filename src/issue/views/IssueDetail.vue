@@ -1,6 +1,11 @@
 <!-- IssueDetail.vue -->
 <template>
-    <div class="w-full mx-auto p-0">
+    <div v-if="isloading" class="flex flex-col items-center justify-center h-screen">
+        <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="8" fill="transparent" animationDuration=".5s"
+            aria-label="Custom ProgressSpinner" />
+        <span class="mt-2 text-gray-500">加载数据中...</span>
+    </div>
+    <div v-else class="w-full mx-auto p-0">
         <Card>
             <!-- 头部 -->
             <template #title>
@@ -41,6 +46,8 @@
                                 <div class="flex-1 border p-4 rounded">
                                     <div class="flex items-center gap-2 mb-2">
                                         <span class="font-semibold">{{ comment.author }}</span>
+                                        <Tag v-if="comment.roleId !== null && comment.roleId !== 5" severity="info"
+                                            :value="RoleMap[comment.roleId as keyof typeof RoleMap]" />
                                         <span class="text-xs text-gray-500">{{ formatDate(comment.date) }}</span>
                                     </div>
                                     <MdPreview :modelValue="comment.content" :theme="theme" />
@@ -118,15 +125,15 @@ import {
     uploadFile, updateIssueVisible, updateIssueStatus
 } from '@/issue/api/IssueAPI'
 import { useUserStore } from '@/common/utils/store';
+import { RoleMap } from '@/common/constant/Role';
 const counterStore = useUserStore();
-
+const isloading = ref(false);
 const props = defineProps({
     id: {
         type: string,
         required: true
     }
 })
-
 // Mock数据（实际开发时从API获取）
 const issue = ref<IssueSpace.IssueVO>({
     id: 123,
@@ -144,6 +151,7 @@ const issue = ref<IssueSpace.IssueVO>({
             id: 1,
             content: '已安排实地测量，预计3个工作日内更新地理信息数据',
             author: '李四（信息处）',
+            roleId: 5,
             avatar: '/path/to/avatar.jpg',
             date: new Date(2024, 2, 16)
         }
@@ -213,10 +221,13 @@ const changeStatus = async (status?: number) => {
     })
 }
 const loadDetail = async () => {
+    isloading.value = true
     await getIssueById(Number(props.id)).then((res) => {
         issue.value = res.data as IssueSpace.IssueVO
     }).catch((err) => {
         globalMessage.error("获取问题详情失败", err.message)
+    }).finally(() => {
+        isloading.value = false
     })
 }
 // 主题控制

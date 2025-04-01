@@ -92,3 +92,6 @@ export const getProblemStatistics = (problemId:number,contestId?:number) => {
     if(contestId === undefined||contestId==null) return request.get<Problem.ProblemStatistics>(`/api/p/problem/${problemId}/statistics`);
     return request.get<Problem.ProblemStatistics>(`/api/p/problem/${problemId}/statistics`,{contestId});
 }
+export const survive = () =>{
+    return request.get<string>('/api/p/survive')
+}

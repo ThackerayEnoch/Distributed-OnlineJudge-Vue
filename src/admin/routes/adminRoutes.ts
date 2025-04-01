@@ -160,6 +160,13 @@ export default [
               components:{
                 admin:()=>import('@/admin/components/user/UserGenerate.vue')
               }
+            },
+            {
+              path:'/admin/users/enable',
+              name:'AdminUserEnable',
+              components:{
+                admin:()=>import('@/admin/components/user/EnableUser.vue')
+              }
             }
           ]
         },

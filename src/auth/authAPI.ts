@@ -1,6 +1,6 @@
 import request from "../common/utils/api";
 
-namespace Auth {
+export namespace Auth {
     // 用户登录表单
     export interface LoginReqParams{
         username: string;
@@ -13,6 +13,7 @@ namespace Auth {
         nickname: string;
         roleId: number;
         userId: number;
+        isLoggedIn: boolean;
     }
     // 发送验证码表单
     export interface SendCaptchaReqParams {
@@ -24,6 +25,9 @@ namespace Auth {
         password: string;
         email: string;
         captcha: string;
+    }
+    export interface FirstChangePasswordDTO{
+        password: string;
     }
 }
 // 用户登录
@@ -41,11 +45,6 @@ export const login = (params: Auth.LoginReqParams) => {
         }
     });
 }
-// 发送验证码
-export const sendCaptcha = (params: Auth.SendCaptchaReqParams) => {
-    return request.post('/email-service/captcha', params)
-}
-// 用户注册
-export const register = (params: Auth.RegisterReqParams) => {
-    return request.post('/user-service/api/users', params)
+export const firstChangePassword = (params: Auth.FirstChangePasswordDTO) => {
+    return request.put('/api/u/user/password/first', params)
 }

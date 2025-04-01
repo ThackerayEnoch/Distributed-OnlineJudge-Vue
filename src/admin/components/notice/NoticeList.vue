@@ -1,111 +1,3 @@
-<script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
-import dayjs from 'dayjs';
-import { MdEditor } from 'md-editor-v3';
-import 'md-editor-v3/lib/style.css';
-import globalMessage from '@/common/utils/toast';
-import { type NoticesSpace, getAdminNoticeById, getAdminNotices, createAdminNotice, updateAdminNotice, deleteAdminNotice } from '@/admin/api/noticesAPI';
-
-
-// Mock数据
-const notices = ref<NoticesSpace.AdminNoticesVO[]>([]);
-
-const selectedNotice = reactive<NoticesSpace.AdminNoticesVO>({} as NoticesSpace.AdminNoticesVO);
-const editDialog = ref(false);
-const dt = ref();
-
-// 日期格式显示
-const formatDate = (date: Date) => {
-    return dayjs(date).format('YYYY-MM-DD HH:mm');
-};
-// 新增状态
-const addDialog = ref(false);
-const newNotice = reactive<Partial<NoticesSpace.AddUpdateNoticeDTO>>({
-    title: '',
-    content: '',
-});
-
-// 打开创建对话框
-const openCreateDialog = () => {
-    newNotice.title = '';
-    newNotice.content = '';
-    addDialog.value = true;
-};
-
-// 创建通知
-const createNotice = () => {
-    if (!newNotice.title?.trim() || !newNotice.content?.trim()) {
-        globalMessage.error('错误', '标题和内容不能为空');
-    }
-    const notice: NoticesSpace.AddUpdateNoticeDTO = {
-        id: notices.value.length + 1,
-        title: newNotice.title!,
-        content: newNotice.content!,
-    };
-    createNoticeEvent(notice);
-    addDialog.value = false;
-};
-function onEditOpen(id: number) {
-    editDialog.value = true;
-    loadSingleNotice(id);
-}
-function onDelete(id: number) {
-    deleteNotice(id);
-}
-// 修改编辑界面保存逻辑
-const saveNotice = () => {
-    if (!selectedNotice.title?.trim() || !selectedNotice.content?.trim()) {
-        globalMessage.error('错误', '标题和内容不能为空！');
-    }
-    updateNotice(selectedNotice.id!);
-    editDialog.value = false;
-};
-async function deleteNotice(id: number) {
-    await deleteAdminNotice(id).then(() => {
-        globalMessage.success('成功', '删除通知成功！');
-        loadAllNotices();
-    }).catch((err) => {
-        globalMessage.error('错误', '删除通知失败！' + err.message);
-    });
-}
-async function updateNotice(id: number) {
-    await updateAdminNotice(id, selectedNotice).then(() => {
-        globalMessage.success('成功', '修改通知成功！');
-        loadAllNotices();
-    }).catch((err) => {
-        globalMessage.error('错误', '修改通知失败！' + err.message);
-    });
-}
-async function createNoticeEvent(dto: NoticesSpace.AddUpdateNoticeDTO) {
-    await createAdminNotice(dto).then(() => {
-        globalMessage.success('成功', '创建通知成功！');
-        loadAllNotices();
-    }).catch((err) => {
-        globalMessage.error('错误', '创建通知失败！' + err.message);
-    });
-}
-async function loadSingleNotice(id: number) {
-    await getAdminNoticeById(id).then((res) => {
-        const data = res.data as NoticesSpace.AdminNoticesVO;
-        selectedNotice.id = data.id;
-        selectedNotice.title = data.title;
-        selectedNotice.content = data.content;
-    }).catch((err) => {
-        globalMessage.error('错误', '获取通知详情失败！' + err.message);
-    });
-}
-async function loadAllNotices() {
-    await getAdminNotices().then((res) => {
-        notices.value = res.data as NoticesSpace.AdminNoticesVO[];
-    }).catch((err) => {
-        globalMessage.error('错误', '获取通知列表失败！' + err.message);
-    });
-}
-onMounted(() => {
-    loadAllNotices();
-});
-</script>
-
 <template>
     <div class="p-4 min-h-screen">
         <!-- 顶部操作栏 -->
@@ -193,7 +85,122 @@ onMounted(() => {
         </Dialog>
     </div>
 </template>
+<script lang="ts" setup>
+import { ref, reactive, onMounted } from 'vue';
+import dayjs from 'dayjs';
+import { MdEditor } from 'md-editor-v3';
+import 'md-editor-v3/lib/style.css';
+import globalMessage from '@/common/utils/toast';
+import { type NoticesSpace, getAdminNoticeById, getAdminNotices, createAdminNotice, updateAdminNotice, deleteAdminNotice } from '@/admin/api/noticesAPI';
 
+
+// Mock数据
+const notices = ref<NoticesSpace.AdminNoticesVO[]>([]);
+
+const selectedNotice = reactive<NoticesSpace.AdminNoticesVO>({
+    id: 0,
+    title: '',
+    content: '',
+    author: '',
+    lastUpdater: '',
+    createTime: new Date(),
+    updateTime: new Date()
+
+} as NoticesSpace.AdminNoticesVO);
+const editDialog = ref(false);
+const dt = ref();
+
+// 日期格式显示
+const formatDate = (date: Date) => {
+    return dayjs(date).format('YYYY-MM-DD HH:mm');
+};
+// 新增状态
+const addDialog = ref(false);
+const newNotice = reactive<Partial<NoticesSpace.AddUpdateNoticeDTO>>({
+    title: '',
+    content: '',
+});
+
+// 打开创建对话框
+function openCreateDialog() {
+    newNotice.title = '';
+    newNotice.content = '';
+    addDialog.value = true;
+};
+
+// 创建通知
+function createNotice() {
+    if (!newNotice.title?.trim() || !newNotice.content?.trim()) {
+        globalMessage.error('错误', '标题和内容不能为空');
+    }
+    const notice: NoticesSpace.AddUpdateNoticeDTO = {
+        id: notices.value.length + 1,
+        title: newNotice.title!,
+        content: newNotice.content!,
+    };
+    createNoticeEvent(notice);
+    addDialog.value = false;
+};
+function onEditOpen(id: number) {
+    editDialog.value = true;
+    loadSingleNotice(id);
+}
+function onDelete(id: number) {
+    deleteNotice(id);
+}
+// 修改编辑界面保存逻辑
+function saveNotice() {
+    if (!selectedNotice.title?.trim() || !selectedNotice.content?.trim()) {
+        globalMessage.error('错误', '标题和内容不能为空！');
+    }
+    updateNotice(selectedNotice.id!);
+    editDialog.value = false;
+};
+async function deleteNotice(id: number) {
+    await deleteAdminNotice(id).then(() => {
+        globalMessage.success('成功', '删除通知成功！');
+        loadAllNotices();
+    }).catch((err) => {
+        globalMessage.error('错误', '删除通知失败！' + err.message);
+    });
+}
+async function updateNotice(id: number) {
+    await updateAdminNotice(id, selectedNotice).then(() => {
+        globalMessage.success('成功', '修改通知成功！');
+        loadAllNotices();
+    }).catch((err) => {
+        globalMessage.error('错误', '修改通知失败！' + err.message);
+    });
+}
+async function createNoticeEvent(dto: NoticesSpace.AddUpdateNoticeDTO) {
+    await createAdminNotice(dto).then(() => {
+        globalMessage.success('成功', '创建通知成功！');
+        loadAllNotices();
+    }).catch((err) => {
+        globalMessage.error('错误', '创建通知失败！' + err.message);
+    });
+}
+async function loadSingleNotice(id: number) {
+    await getAdminNoticeById(id).then((res) => {
+        const data = res.data as NoticesSpace.AdminNoticesVO;
+        selectedNotice.id = data.id;
+        selectedNotice.title = data.title;
+        selectedNotice.content = data.content;
+    }).catch((err) => {
+        globalMessage.error('错误', '获取通知详情失败！' + err.message);
+    });
+}
+async function loadAllNotices() {
+    await getAdminNotices().then((res) => {
+        notices.value = res.data as NoticesSpace.AdminNoticesVO[];
+    }).catch((err) => {
+        globalMessage.error('错误', '获取通知列表失败！' + err.message);
+    });
+}
+onMounted(() => {
+    loadAllNotices();
+});
+</script>
 <style scoped>
 :deep(.p-datatable) th {
     @apply bg-gray-50 font-semibold text-gray-700;

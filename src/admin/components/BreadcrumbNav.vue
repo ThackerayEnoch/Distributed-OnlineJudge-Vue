@@ -76,7 +76,8 @@ export default defineComponent({
                         items: [
                             { label: "用户列表", icon: "pi pi-user", to: "/admin/users/list" },
                             { label: "导入用户", icon: "pi pi-upload", to: "/admin/users/import" },
-                            { label: '账号生成', icon: 'pi pi-plus', to: '/admin/users/generate' }
+                            { label: '账号生成', icon: 'pi pi-plus', to: '/admin/users/generate' },
+                            { label: '启用用户', icon: 'pi pi-user-plus', to: '/admin/users/enable' },
                         ],
                     },
                     {

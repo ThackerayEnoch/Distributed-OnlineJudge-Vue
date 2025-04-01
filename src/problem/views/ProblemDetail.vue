@@ -255,7 +255,6 @@ function closeDialog() {
 const isSubmtting = ref(false);
 // 提交代码
 async function handleSubmit() {
-    visible.value = false;
     if (isSubmtting.value) return;
     isSubmtting.value = true;
     const dto: Judge.SubmitReqData = {
@@ -267,7 +266,7 @@ async function handleSubmit() {
         gid: 0,
         isRemote: false
     }
-    submitProblem(dto).then(() => {
+    await submitProblem(dto).then(() => {
         if (contestId != null) {
             router.push('/statuses?problemId=' + props.pid + '&contestId=' + contestId + '&userId=' + userStore.currentUser.userId);
         }
@@ -279,6 +278,7 @@ async function handleSubmit() {
         globalMessage.error('提交失败', err.message);
     }).finally(() => {
         isSubmtting.value = false;
+        visible.value = false;
     })
 }
 // 语言选择

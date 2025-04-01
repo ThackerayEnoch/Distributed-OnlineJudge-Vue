@@ -36,6 +36,7 @@ export namespace IssueSpace {
         id: number;
         content: string;
         author: string;
+        roleId: number;
         avatar: string;
         date: Date;
     }

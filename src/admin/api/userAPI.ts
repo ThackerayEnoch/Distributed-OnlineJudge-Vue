@@ -39,6 +39,14 @@ export namespace UserSpace{
         nickname: string;
         password: string;
     }
+    export interface AdminParseUsers{
+        studentId:string;
+        nickname:string;
+    }
+    export interface EnableUserDTO {
+        username: string;
+        password: string;
+    }
 }
 export const getAdminUsers = (offset:number,limit:number,content:string|null) => {
     return request.get<UserSpace.UserInfoVO[]>('/api/u/admin/users',{offset,limit,content});
@@ -47,7 +55,7 @@ export const getAdminUserCount = (content:string|null) => {
     return request.get<number>('/api/u/admin/users/count',{content});
 }
 export const getRoles = () => {
-    return request.get<UserSpace.Role[]>('/api/u/roles',{})
+    return request.get<UserSpace.Role[]>('/api/u/roles/normal',{})
 }
 export const updateUserInfo = (data:UserSpace.AdminUpdateUserDTO) => {
     return request.put<string>('/api/u/admin/user',data)
@@ -61,4 +69,9 @@ export const assignRole = (data:UserSpace.RoleAssignDTO) => {
 export const createUserBatch = (data:UserSpace.AdminCreateUserBatchDTO[]) => {
     return request.post<string>('/api/u/admin/users',data)
 }
-
+export const parseUsers = (usernames:string[])=>{
+    return request.post<UserSpace.AdminParseUsers[]>('/api/c/admin/homework/create/parse',usernames);
+}
+export const enableUser = (data:UserSpace.EnableUserDTO[]) => {
+    return request.post<string>('/api/u/admin/user/enable',data)
+}

@@ -34,7 +34,7 @@
                             <div class="flex gap-4">
                                 <!-- 状态图标 -->
                                 <div class="pt-1">
-                                    <i v-if="issue.status === -1" class="pi pi-check-circle text-green-500"></i>
+                                    <i v-if="issue.status !== 4" class="pi pi-check-circle text-green-500"></i>
                                     <i v-else class="pi pi-lock text-red-500"></i>
                                 </div>
 

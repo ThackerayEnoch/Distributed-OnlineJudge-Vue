@@ -39,14 +39,14 @@
                             }}</router-link>
                     </template>
                 </Column>
-                <Column field="auth" style="text-align: center; min-width: 7%;">
+                <Column field="auth" style="text-align: center; min-width: 9%;">
                     <template #header>
                         <span class="flex-1 text-center font-bold">权限</span>
                     </template>
                     <template #body="slotProps">
                         <span v-if="slotProps.data.auth === 0"
                             class="bg-green-100 text-green-800 text-sm font-semibold mr-2 px-2.5 py-2 rounded">公开</span>
-                        <span v-else-if="slotProps.data.auth === 1"
+                        <span v-else-if="slotProps.data.auth === 2"
                             class="bg-red-100 text-red-800 text-sm font-semibold mr-2 px-2.5 py-2 rounded">私有</span>
                         <span v-else
                             class="bg-yellow-100 text-yellow-800 text-sm font-semibold mr-2 px-2.5 py-2 rounded">保护</span>
@@ -107,11 +107,6 @@
                                 class="bg-purple-500 text-white p-2 rounded flex items-center justify-center w-14 h-9 hover:bg-purple-600"
                                 v-tooltip.top="'查看统计信息'">
                                 <i class="fas fa-chart-bar"></i>
-                            </router-link>
-                            <router-link :to="`/delete/${slotProps.data.id}`"
-                                class="bg-red-500 text-white p-2 rounded flex items-center justify-center w-14 h-9 hover:bg-red-600"
-                                v-tooltip.top="'删除作业'">
-                                <i class="fas fa-trash"></i>
                             </router-link>
                         </div>
                     </template>

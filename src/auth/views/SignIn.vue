@@ -23,7 +23,7 @@
                     <small v-if="passwordError != ''" class="text-red-500">{{ passwordError }}</small>
                 </div>
                 <Button label="登录" class="w-full p-button-primary" :loading="isloading" type="submit" />
-                <Button label="统一身份认证" class="w-full mt-2 p-button-secondary" />
+                <Button label="统一身份认证" @click="loginByUJN" class="w-full mt-2 p-button-secondary" />
             </form>
         </div>
     </div>
@@ -40,7 +40,6 @@ import { useUserStore } from '@/common/utils/store';
 import { User } from '@/common/entity/user'
 import { Role } from '@/common/constant/Role'
 const counterStore = useUserStore();
-const isRememberMe = ref(false);
 
 const isloading = ref(false);
 // 定义表单验证规则
@@ -70,7 +69,11 @@ const onSubmit = handleSubmit(async (values) => {
             const user = new User(res.data.userId, res.data.username, res.data.nickname, res.data.roleId ?? Role.STUDENT);
             counterStore.setUser(user);
             globalMessage.success('操作成功', '登录成功');
-            router.push('/');
+            if (!res.data.isLoggedIn) {
+                router.push('/auth/password');
+            } else {
+                router.push('/');
+            }
         } else {
             globalMessage.error('操作失败', '登录失败');
         }
@@ -80,7 +83,9 @@ const onSubmit = handleSubmit(async (values) => {
         isloading.value = false;
     }
 });
-
+const loginByUJN = () => {
+    globalMessage.info('操作提示', '正在开发中，请耐心等待！');
+};
 
 </script>
 

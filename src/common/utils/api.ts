@@ -21,7 +21,7 @@ const URL: string = 'http://localhost:8080'
 
 const config = {
   // 默认地址
-   baseURL: URL as string,
+  //: URL as string,
   // 设置超时时间
   timeout: 1000000,
   // 跨域时候允许携带凭证
