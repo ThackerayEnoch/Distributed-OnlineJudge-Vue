@@ -20,6 +20,7 @@
                     <i class="pi pi-search absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
                         @click="search"></i>
                 </span>
+                <ToggleSwitch v-tooltip.top="'只显示未结束的作业'" @change="modeChange" v-model="displayMode" />
             </div>
         </div>
         <div>

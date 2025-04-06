@@ -18,6 +18,7 @@ export namespace RankingSpace {
         username: string;
         nickname: string;
         userId: number;
+        totalTries: number;
         solvedCount: number;
         totalPenalty: number;
         problems: ProblemData[];

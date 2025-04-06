@@ -37,7 +37,7 @@
                     responsiveLayout="scroll" size="large" :totalRecords="totalRecords" lazy :first="first"
                     @page="onPage" @mouseover="selectRow">
 
-                    <Column field="hasDo" header="状态" style="width: 7%">
+                    <Column field="hasDo" header="状态" style="width: 5%;">
                         <template #body="slotProps">
                             <div class="flex-1 text-center font-bold">
                                 <Tag v-if="slotProps.data.hasDo" severity=" success" value="AC"></Tag>
@@ -47,7 +47,7 @@
                         </template>
                     </Column>
                     <!-- ID Column -->
-                    <Column field="displayId" header="题目ID" style="width: 8%"></Column>
+                    <Column field="displayId" header="题目ID" style="width: 6%"></Column>
 
                     <!-- Title Column -->
                     <Column field="title" header="题目名称">
@@ -59,62 +59,97 @@
                         </template>
                     </Column>
 
-                    <!-- Difficulty Column -->
-                    <Column field="difficulty" header="难度" style="width: 10%">
+                    <Column field="tags" header="题目标签">
                         <template #body="slotProps">
-                            <Tag :value="!slotProps.data.difficulty ? '简单' : slotProps.data.difficulty == 1 ? '中等' : '困难'"
-                                :severity="getTagSeverity(slotProps.data.difficulty)"
-                                class="text-xs font-bold rounded-lg" />
+                            <div class="flex overflow-x-hidden gap-1 max-w-[300px]">
+                                <template v-for="(tag, index) in slotProps.data.tags" :key="index">
+                                    <span :style="{ backgroundColor: tag.color }" class="text-sm font-bold rounded px-2 py-1 
+                 text-white shadow-sm whitespace-nowrap
+                 transition-colors hover:brightness-110">
+                                        {{ tag.name }}
+                                    </span>
+                                </template>
+                            </div>
                         </template>
                     </Column>
 
-                    <Column field="submissionCount" header="总提交" style="width: 10%">
+                    <Column field="submissionCount" header="总提交">
                         <template #body="slotProps">
                             {{ slotProps.data.submissionCount }}
                         </template>
                     </Column>
-                    <!-- Accuracy Column -->
-                    <Column field="accuracy" header="通过率" style="width: 20%">
+                    <Column field="acCount" header="通过次数">
                         <template #body="slotProps">
-                            <ProgressBar
-                                :value="parseFloat(((slotProps.data.acCount / (slotProps.data.submissionCount || 1)) * 100).toFixed(2))"
-                                :class="getProgressBarColor(parseFloat(((slotProps.data.acCount / slotProps.data.submissionCount) * 100).toFixed(2)))">
-                            </ProgressBar>
+                            {{ slotProps.data.acCount }}
+                        </template>
+                    </Column>
+                    <!-- Accuracy Column -->
+                    <Column field="accuracy" header="通过率">
+                        <template #body="slotProps">
+                            <span v-if="slotProps.data.submissionCount != null && slotProps.data.submissionCount >
+                                0">
+                                {{ parseFloat(((slotProps.data.acCount / (slotProps.data.submissionCount || 1)) *
+                                    100).toFixed(2)) }}%
+                            </span>
                         </template>
                     </Column>
                 </DataTable>
             </div>
         </div>
-        <div class="fixed top-22 right-10 w-[22%] h-auto fixed-card card p-4 bg-white dark:bg-gray-800">
-            <h2 class="text-xl font-bold text-center mb-4">{{ selectedProblem.title }}</h2>
-            <div class="flex flex-col space-y-4">
-                <div class="flex items-center justify-between">
-                    <Tag value="AC" severity="success" class="mr-2 w-12 text-center" />
-                    <ProgressBar :value="selectedProblem.acPercentage" class="w-full progress-80" />
+        <div class="fixed top-22 right-10 w-[22%] flex flex-col max-h-[calc(100vh-5.5rem)] overflow-y-auto">
+            <!-- 原统计卡片保持原有结构 -->
+            <div class="card p-4 mb-4 bg-white dark:bg-gray-800 shadow-md">
+                <!-- 原有所有进度条内容保持不变 -->
+                <h2 class="text-xl font-bold text-center mb-4">{{ selectedProblem.title }}</h2>
+                <div class="flex flex-col space-y-4">
+                    <!-- 所有统计项... -->
+                    <div class="flex items-center justify-between">
+                        <Tag value="AC" severity="success" class="mr-2 w-12 text-center" />
+                        <ProgressBar :value="selectedProblem.acPercentage" class="w-full progress-80" />
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <Tag value="WA" severity="danger" class="mr-2 w-12 text-center" />
+                        <ProgressBar :value="selectedProblem.waPercentage" class="w-full progress-20" />
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <Tag value="TLE" severity="danger" class="mr-2 w-12 text-center" />
+                        <ProgressBar :value="selectedProblem.tlePercentage" class="w-full progress-20" />
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <Tag value="MLE" severity="danger" class="mr-2 w-12 text-center" />
+                        <ProgressBar :value="selectedProblem.mlePercentage" class="w-full progress-20" />
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <Tag value="RE" severity="warn" class="mr-2 w-12 text-center" />
+                        <ProgressBar :value="selectedProblem.rePercentage" class="w-full progress-40" />
+                    </div>
                 </div>
-                <div class="flex items-center justify-between">
-                    <Tag value="WA" severity="danger" class="mr-2 w-12 text-center" />
-                    <ProgressBar :value="selectedProblem.waPercentage" class="w-full progress-20" />
+            </div>
+            <!-- 自适应标签展示区域 -->
+            <div class="card mt-0 mb-4 p-4 bg-white dark:bg-gray-800 shadow-md">
+                <h3 class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-200">当前题目标签</h3>
+                <div class="flex flex-wrap gap-2">
+                    <template v-for="(tag, index) in selectedProblem.tags" :key="index">
+                        <span :style="{ backgroundColor: tag.color }" class="inline-flex items-center text-sm font-bold rounded px-3 py-1
+                           text-white shadow-sm transition-colors hover:brightness-110
+                           max-w-full truncate">
+                            {{ tag.name }}
+                        </span>
+                    </template>
                 </div>
-                <div class="flex items-center justify-between">
-                    <Tag value="TLE" severity="danger" class="mr-2 w-12 text-center" />
-                    <ProgressBar :value="selectedProblem.tlePercentage" class="w-full progress-20" />
-                </div>
-                <div class="flex items-center justify-between">
-                    <Tag value="MLE" severity="danger" class="mr-2 w-12 text-center" />
-                    <ProgressBar :value="selectedProblem.mlePercentage" class="w-full progress-20" />
-                </div>
-                <div class="flex items-center justify-between">
-                    <Tag value="RE" severity="warn" class="mr-2 w-12 text-center" />
-                    <ProgressBar :value="selectedProblem.rePercentage" class="w-full progress-40" />
-                </div>
-                <div class="flex items-center justify-between">
-                    <Tag value="CE" severity="warn" class="mr-2 w-12 text-center" />
-                    <ProgressBar :value="selectedProblem.cePercentage" class="w-full progress-40" />
-                </div>
-                <div class="flex items-center justify-between">
-                    <Tag value="Other" severity="warn" class="mr-2 w-12 text-center" />
-                    <ProgressBar :value="selectedProblem.oePercentage" class="w-full progress-40" />
+            </div>
+
+            <!-- 标签卡片新结构 -->
+            <div class="card mt-0 mb-4 p-4 bg-white dark:bg-gray-800 shadow-md">
+                <h3 class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-200">全部标签</h3>
+                <div class="flex flex-wrap gap-2">
+                    <template v-for="(tag, index) in Tags" :key="index">
+                        <span :style="{ backgroundColor: tag.color }" class="inline-flex items-center text-sm font-bold rounded px-3 py-1
+                           text-white shadow-sm transition-colors hover:brightness-110
+                           max-w-full truncate">
+                            {{ tag.name }}
+                        </span>
+                    </template>
                 </div>
             </div>
         </div>
@@ -123,8 +158,9 @@
 
 <script lang="ts">
 import { ref, onMounted, reactive } from 'vue';
-import { getProblemPage, getProblemCount, type Problem } from '../problemAPI';
+import { getProblemPage, getProblemCount, getAllTags, type Problem } from '../problemAPI';
 import { useRoute, useRouter } from 'vue-router';
+import globalMessage from '@/common/utils/toast';
 export default {
     setup() {
         const route = useRoute();
@@ -135,11 +171,12 @@ export default {
         const problems = ref([]);
         const totalRecords = ref(30);
         const first = ref((parseInt(route.query.currentPage as string || '1') - 1) * 30 || 0);
-
+        // Tags
+        const Tags = ref<Problem.TagVO[]>([]);
         // 统计数据
         const statTitle = ref('请点击或悬停鼠标至问题行查看提交状态');
         // 选中的问题
-        const selectedProblem = reactive({
+        const selectedProblem = reactive<Problem.AsideProblem>({
             title: statTitle.value,
             acPercentage: 0,
             waPercentage: 0,
@@ -148,10 +185,12 @@ export default {
             rePercentage: 0,
             cePercentage: 0,
             oePercentage: 0,
+            tags: [],
         });
         // onMounted钩子，请求API加载数据
         onMounted(() => {
             getCount();
+            getTags();
             getProblems(first.value);
         });
         const onSearch = () => {
@@ -164,6 +203,14 @@ export default {
             const randomId = Math.floor(Math.random() * totalProblems.value) + 1000;
             router.push({ path: '/problem/' + randomId });
 
+        };
+        // 获取所有标签
+        const getTags = async () => {
+            await getAllTags().then((response) => {
+                Tags.value = response.data as Problem.TagVO[];
+            }).catch((error) => {
+                globalMessage.error('获取标签失败', error.message);
+            });
         };
         // 获取题目列表
         const getProblems = async (page: number) => {
@@ -200,6 +247,7 @@ export default {
                     selectedProblem.rePercentage = parseFloat(((problem.reCount / (problem.submissionCount || 1)) * 100).toFixed(2));
                     selectedProblem.cePercentage = parseFloat(((problem.ceCount / (problem.submissionCount || 1)) * 100).toFixed(2));
                     selectedProblem.oePercentage = parseFloat(((problem.otherCount / (problem.submissionCount || 1)) * 100).toFixed(2));
+                    selectedProblem.tags = problem.tags;
                 }
             }
         };
@@ -231,7 +279,7 @@ export default {
                 behavior: 'smooth', // 平滑滚动
             });
         };
-        return { problems, randomProblem, onSearch, searchContent, selectRow, getProgressBarColor, getTagSeverity, totalRecords, first, onPage, statTitle, selectedProblem };
+        return { problems, randomProblem, Tags, onSearch, searchContent, selectRow, getProgressBarColor, getTagSeverity, totalRecords, first, onPage, statTitle, selectedProblem };
     },
 };
 </script>
@@ -264,5 +312,13 @@ export default {
     .fixed-card {
         display: none;
     }
+}
+
+.pe-2::-webkit-scrollbar {
+    @apply w-2;
+}
+
+.pe-2::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
 }
 </style>

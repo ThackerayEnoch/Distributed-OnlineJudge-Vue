@@ -1,6 +1,6 @@
 <template>
     <div class="w-full h-full bg-white dark:bg-gray-800 flex flex-col">
-        <div class="p-4 mt-2 inline-block">
+        <div class="p-4 mt-2 inline-block" @click="navigateToHome">
             <Image class="flex justify-center" width="70%" src="/api/p/problem/upload/ujn.png" />
         </div>
         <ul class="layout-menu m-4 mr-0 p-2 overflow-y-auto text-custom flex-1">
@@ -14,6 +14,8 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import AppMenuItem from './AppMenuItem.vue';
+import { useRouter } from 'vue-router';
+
 export default defineComponent({
     name: 'AdminAside',
     components: {
@@ -21,6 +23,10 @@ export default defineComponent({
     },
     setup() {
         // Add your composition API logic here
+        const router = useRouter();
+        const navigateToHome = () => {
+            router.push('/home'); // 跳转到首页
+        };
         const model = ref([
             {
                 label: '数据统计',
@@ -107,7 +113,7 @@ export default defineComponent({
         ]);
 
         return {
-            model
+            model, navigateToHome
         };
     },
 });

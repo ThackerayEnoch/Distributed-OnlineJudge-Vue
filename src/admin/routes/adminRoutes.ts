@@ -88,6 +88,13 @@ export default [
                 admin:()=> import('@/admin/components/problem/ProblemTestCase.vue')
               },
               props:true
+            },
+            {
+              path: '/admin/problems/tags',
+              name: 'AdminProblemTags',
+              components: {
+                admin: () => import('@/admin/components/problem/TagList.vue')
+              }
             }
           ]
         },

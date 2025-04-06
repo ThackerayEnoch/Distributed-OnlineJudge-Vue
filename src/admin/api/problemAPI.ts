@@ -37,8 +37,13 @@ export namespace ProblemSpace{
         oiJudgeCaseMode?: number;
         removeBlank: boolean;
         judgeCaseStatus: boolean;
+        tags: number[];
     }
-
+    export interface TagVO {
+        id: number;
+        name: string;
+        color: string;
+    }
     export interface AdminCreateProblemSampleDTO {
         id: number;
         input: string;
@@ -90,6 +95,7 @@ export namespace ProblemSpace{
         createdUser: number;
         createTime: Date;
         updateTime: Date;
+        tags: TagVO[];
     }
 }
 export const getAdminProblems = (offset:number,own:boolean,auth:number,content:string) => {

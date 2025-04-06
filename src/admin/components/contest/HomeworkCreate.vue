@@ -176,7 +176,7 @@
                 </template>
                 <template #body="slotProps">
                     <InputNumber v-model="slotProps.data.number" inputId="numIn" showButtons buttonLayout="horizontal"
-                        variant="filled" :step="1" :min="0" :max="100" :allow-empty="false" class="w-full" fluid>
+                        variant="filled" :-min="0" :max="100" :allow-empty="false" class="w-full" fluid>
                         <template #incrementicon>
                             <span class="pi pi-plus" />
                         </template>
@@ -191,7 +191,10 @@
                     <span class="flex-1 text-center font-bold">实际显示题号</span>
                 </template>
                 <template #body="slotProps">
-                    <span class="flex-1 text-center">{{ convertToLetter(slotProps.data.number + 1) }}</span>
+                    <span :class="{ 'text-red-600 font-bold': isDuplicateNumber(slotProps.data.number) }"
+                        class="flex-1 text-center">
+                        {{ convertToLetter(slotProps.data.number + 1) }}
+                    </span>
                 </template>
             </Column>
             <Column field="difficulty">
@@ -325,8 +328,16 @@ export default defineComponent({
             languages: [1, 2, 3, 4, 9, 10],
             users: '',
             selectedClasses: -1,
-            startTime: new Date(),
-            endTime: new Date()
+            startTime: (() => {
+                const now = new Date();
+                now.setMinutes(0, 0, 0); // 设置分钟、秒和毫秒为 0
+                return now;
+            })(),
+            endTime: (() => {
+                const now = new Date();
+                now.setMinutes(0, 0, 0); // 设置分钟、秒和毫秒为 0
+                return now;
+            })(),
         })
         // problem
         const contestProblemsDialog = ref(false);
@@ -356,7 +367,28 @@ export default defineComponent({
             loadAllProblems();
             loadAllProblemCount();
         }
+        // 检查题号是否重复
+        const isDuplicateNumber = (number: number) => {
+            const numbers = contestProblems.value.map(problem => problem.number);
+            return numbers.filter(n => n === number).length > 1;
+        };
+        const problemFinalSaveVaildation = () => {
+            // 检查displayId重复
+            const displayIdSet = new Set<number>();
+            for (const problem of contestProblems.value) {
+                if (displayIdSet.has(problem.number)) {
+                    globalMessage.warn("警告", convertToLetter(problem.number + 1) + "题号重复");
+                    return false;
+                }
+                displayIdSet.add(problem.number);
+            }
+            return true;
+        };
         function problemFinalSaveEvent() {
+            // 检查displayId重复
+            if (!problemFinalSaveVaildation) {
+                return;
+            }
             contestProblemsDialog.value = false;
         }
         function selectedProblemSaveEvent() {
@@ -384,10 +416,16 @@ export default defineComponent({
         }
         async function saveSelectedProblems() {
             let lastNumber = contestProblems.value.length;
-            // 筛选出需要添加的和需要删除的
-            const selectedIds = selectedProblems.value.map(problem => problem.id);
-            const selectedProblemsToAdd = allProblems.value.filter(problem => selectedIds.includes(problem.id) && !contestProblems.value.some(p => p.id === problem.id));
-            const selectedProblemsToDelete = contestProblems.value.filter(problem => !selectedIds.includes(problem.id));
+            // 获取 selectedProblems 的 ID 集合
+            const selectedIds = new Set(selectedProblems.value.map(problem => problem.id));
+            // 需要添加的问题：在 selectedProblems 中但不在 contestProblems 中
+            const selectedProblemsToAdd = selectedProblems.value.filter(
+                problem => !contestProblems.value.some(p => p.id === problem.id)
+            );
+            // 需要删除的问题：在 contestProblems 中但不在 selectedIds 中
+            const selectedProblemsToDelete = contestProblems.value.filter(
+                problem => !selectedIds.has(problem.id)
+            );
             // 删除不需要的题目
             selectedProblemsToDelete.forEach(problem => {
                 contestProblems.value = contestProblems.value.filter(p => p.id !== problem.id);
@@ -473,6 +511,10 @@ export default defineComponent({
         }
         const createHomeworkFun = async () => {
             isSubmiting.value = true;
+            // 检查displayId重复
+            if (!problemFinalSaveVaildation) {
+                return;
+            }
             const problemTmp: ContestSpace.contestProblem[] = contestProblems.value.map(problem => ({
                 problemId: problem.id,
                 displayId: problem.number
@@ -530,6 +572,10 @@ export default defineComponent({
         }
         async function updateHomeworkFun() {
             isSubmiting.value = true;
+            // 检查displayId重复
+            if (!problemFinalSaveVaildation) {
+                return;
+            }
             const problemTmp: ContestSpace.contestProblem[] = contestProblems.value.map(problem => ({
                 problemId: problem.id,
                 displayId: problem.number
@@ -594,7 +640,7 @@ export default defineComponent({
             onOwnClassesChange, parseButtonEvent, createHomeworkFun, onSubmitEvent, contestProblemsDialog, contestProblems, addProblemDialog,
             allProblems, selectedProblems, problemTotalRecords, problemFirst, onProblemPage, onAddPageOpen, onListPageOpen, problemFinalSaveEvent,
             selectedProblemSaveEvent, filterType, problemSearchContent, searchProblemInAllEvent, convertToLetter, deleteContestProblems,
-            onUploadImg, isSubmiting
+            onUploadImg, isSubmiting, isDuplicateNumber
         }
     }
 })

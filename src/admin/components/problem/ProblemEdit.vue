@@ -90,6 +90,24 @@
                     </div>
                 </div>
             </div>
+            <div class="flex flex-col space-y-2 mt-4">
+                <label class="text-gray-500"><span class="text-red-500">*</span> 题目标签:</label>
+                <div class="flex flex-wrap gap-4">
+                    <div class="flex flex-wrap gap-2">
+                        <template v-for="(tag, index) in tags" :key="index">
+                            <span :style="{ backgroundColor: tag.color }" class="inline-flex items-center text-sm font-bold rounded px-3 py-1
+                           text-white shadow-sm transition-colors hover:brightness-110
+                           max-w-full truncate">
+                                {{ tag.name }}
+                            </span>
+                        </template>
+                        <button @click="onTagDialogOpen"
+                            class="flex items-center px-3 py-1 rounded bg-green-100 text-green-700 border border-green-300 hover:bg-green-200 ml-2">
+                            添加标签
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
                 <span v-tooltip="'题目样例：请最好不要超过2个题目样例，题面样例不纳入评测数据。 '">题面样例<i
                         class="ml-1 fa-regular fa-circle-question"></i></span>
@@ -288,14 +306,57 @@
             <Button label="确认添加" icon="pi pi-check" @click="addTag(spjFiles)" class="w-full" />
         </div>
     </Dialog>
+    <Dialog v-model:visible="tagDialogVisible" header="标签管理" :modal="true" class="min-w-[360px]">
+        <!-- 搜索与新建区域 -->
+        <div class="space-y-4 p-4">
+            <div class="flex gap-2">
+                <InputText v-model="searchText" placeholder="搜索标签..." class="flex-1" />
+                <Button icon="pi pi-plus" @click="showCreate = !showCreate"
+                    class="!px-3 !py-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700" />
+            </div>
+
+            <!-- 新建标签表单 -->
+            <div v-if="showCreate" class="space-y-3 border-t pt-4">
+                <InputText v-model="newTagName" placeholder="新标签名称" class="w-full !text-sm" />
+                <div class="flex flex-wrap gap-2">
+                    <div v-for="(color, index) in colorPalette" :key="index" @click="selectedColor = color"
+                        class="w-6 h-6 rounded-full cursor-pointer border-2 transition-all"
+                        :class="[selectedColor === color ? 'scale-110 ring-2 ring-blue-500' : 'hover:scale-105']"
+                        :style="{ backgroundColor: color }" />
+                </div>
+                <Button label="添加新标签" @click="createTagEvent"
+                    class="!text-sm !px-3 !py-1.5 w-full bg-blue-500 hover:bg-blue-600 text-white"
+                    :disabled="!newTagName || !selectedColor" />
+            </div>
+        </div>
+
+        <!-- 标签选择列表 -->
+        <div class="max-h-[50vh] overflow-y-auto border-t">
+            <div v-if="filteredTags.length" class="p-4 grid gap-3">
+                <div v-for="tag in filteredTags" :key="tag.name" @click="toggleTag(tag)"
+                    class="flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors" :class="[isTagSelected(tag)
+                        ? 'bg-blue-50 dark:bg-blue-900/50'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                    ]">
+                    <span class="w-4 h-4 rounded-full shadow-inner" :style="{ backgroundColor: tag.color }" />
+                    <span class="text-sm">{{ tag.name }}</span>
+                    <i v-if="isTagSelected(tag)" class="pi pi-check ml-auto text-blue-500" />
+                </div>
+            </div>
+            <div v-else class="p-6 text-center text-gray-400 text-sm">
+                未找到相关标签
+            </div>
+        </div>
+    </Dialog>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref } from 'vue'
+import { defineComponent, onMounted, ref, computed } from 'vue'
 import { languageOptions } from '@/common/constant/AllConstant'
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 
 import { createProblem, uploadFile, getProblem, updateProblem, getProblemLanguages, type ProblemSpace } from '@/admin/api/problemAPI'
+import { type TagsSpace, getTags, createTag } from '@/admin/api/tagAPI';
 import globalMessage from '@/common/utils/toast';
 import router from '@/common/utils/router';
 
@@ -324,6 +385,78 @@ export default defineComponent({
         const hintDesc = ref("");
         const problemType = ref(0);
         const share = ref(false);
+        // Tag区域--Start
+        const tagDialogVisible = ref(false);
+        const allTags = ref<TagsSpace.TagVO[]>([]);
+        const searchText = ref('')
+        const newTagName = ref('')
+        const selectedColor = ref('#3B82F6')
+        const showCreate = ref(false)
+        const tags = ref<TagsSpace.TagVO[]>([]);
+        const colorPalette = [
+            "#8b5cf6",  // 深紫
+            "#6366f1",  // 靛蓝
+            "#d946ef",  // 紫红
+            "#a855f7",  // 学士服紫
+            "#ef4444",  // 警戒红
+            "#64748b",  // 石板灰
+            "#f472b6",  // 粉红
+            "#14b8a6",  // 蓝绿
+            "#06b6d4",  // 青色
+            "#10b981",  // 翡翠绿
+            "#22c55e",  // 成功绿
+            "#0ea5e9",  // 天空蓝
+            "#f59e0b",  // 琥珀黄
+            "#eab308",  // 黄金黄
+            "#84cc16"   // 酸橙绿
+        ];
+        const onTagDialogOpen = () => {
+            tagDialogVisible.value = true;
+            loadAllTags();
+        };
+        const loadAllTags = async () => {
+            await getTags(searchText.value).then((res) => {
+                allTags.value = res.data as TagsSpace.TagVO[];
+            }).catch((err) => {
+                globalMessage.error('获取标签列表失败', err.message);
+            });
+        };
+        const onSaving = ref(false);
+        const createTagEvent = async () => {
+            if (!newTagName.value) {
+                globalMessage.error('错误', '标签名称不能为空');
+                return;
+            }
+            const newTag = {
+                name: newTagName.value,
+                color: selectedColor.value
+            };
+            await createTag(newTag).then(() => {
+                loadAllTags();
+            }).catch((err) => {
+                globalMessage.error('创建标签失败', err.message);
+            });
+            newTagName.value = '';
+        };
+        // 搜索过滤
+        const filteredTags = computed(() => {
+            if (!searchText.value) {
+                return allTags.value;
+            }
+            return allTags.value.filter(tag =>
+                tag.name.toLowerCase().includes(searchText.value.toLowerCase())
+            )
+        })
+
+        // 标签选择逻辑
+        const isTagSelected = (tag: TagsSpace.TagVO) =>
+            tags.value.some(t => t.name === tag.name)
+
+        const toggleTag = (tag: TagsSpace.TagVO) => {
+            const index = tags.value.findIndex(t => t.name === tag.name)
+            index === -1 ? tags.value.push(tag) : tags.value.splice(index, 1)
+        }
+        // Tag区域--End
         const selectedLanguages = ref<number[]>([1, 2, 3, 4, 5, 6, 9, 10]); // 绑定选中的值
         let sampleId = 0; // 用于生成唯一的样例id
         const samples = ref([
@@ -343,7 +476,7 @@ export default defineComponent({
         const oiJudgeCaseMode = ref(0);
         const removeBlank = ref(true);
         const judgeCaseStatus = ref(true);
-        // 
+        // 语言选项
         const difficulty = [
             { label: '简单', value: 0 },
             { label: '中等', value: 1 },
@@ -415,6 +548,7 @@ export default defineComponent({
                     collapsed: sample.collapsed
                 })
             })
+            let tagIds = tags.value.map(tag => tag.id);
             let problem: ProblemSpace.AdminCreateProblemDTO = {
                 displayId: displayId.value,
                 title: title.value,
@@ -439,7 +573,8 @@ export default defineComponent({
                 selectedLanguages: selectedLanguages.value,
                 userFiles: userFileDTO,
                 spjFiles: spjFileDTO,
-                samples: sampleDTO
+                samples: sampleDTO,
+                tags: tagIds,
             }
             if (props.type === 'edit') {
                 if (!props.id) {
@@ -495,6 +630,7 @@ export default defineComponent({
                 share.value = data.codeShare;
                 selectedDifficulty.value = data.difficulty;
                 selectedAuth.value = data.auth;
+                tags.value = data.tags ? data.tags : [];
                 if (data.userExtraFile !== null && data.userExtraFile !== "") {
                     const userExtraFiles = JSON.parse(data.userExtraFile);
                     userFiles.value = [];
@@ -572,7 +708,8 @@ export default defineComponent({
         return {
             displayId, difficulty, selectedDifficulty, title, timeLimit, memoryLimit, stackLimit, share, problemDesc, inputDesc, outputDesc, hintDesc, problemType, selectedLanguages, languageOptions, samples, addSample, removeSample,
             toggleSample, userJudgeFile, spjJudgeFile, userFiles, spjFiles, newTag, spjDialogVisible, dialogVisible, addTag, removeTag, judgeMode, oiJudgeCaseMode, acmJudgeCaseMode, removeBlank, judgeCaseStatus, saveProblem,
-            authOptions, selectedAuth, newCode, isSaving, onUploadImg
+            authOptions, selectedAuth, newCode, isSaving, onUploadImg, tags, allTags, colorPalette, tagDialogVisible, showCreate, searchText, newTagName, selectedColor, filteredTags, createTag, isTagSelected, toggleTag, createProblem,
+            onSaving, createTagEvent, onTagDialogOpen
         }
     }
 })

@@ -49,6 +49,7 @@ export namespace Problem{
         oiSubmissionCount: number;
         oiAverageScore: number;
         hasDo: boolean;
+        tags: TagVO[];
     }
     export interface ProblemCountJSONObject {
         count: number;
@@ -59,6 +60,22 @@ export namespace Problem{
         solvedCount: number;
         userScore: number;
         isSolved: boolean;
+    }
+    export interface AsideProblem {
+        title: string;
+        acPercentage: number;
+        waPercentage: number;
+        tlePercentage: number;
+        mlePercentage: number;
+        rePercentage: number;
+        cePercentage: number;
+        oePercentage: number;
+        tags: TagVO[];
+    }
+    export interface TagVO {
+        id: number;
+        name: string;
+        color: string;
     }
 }
 export namespace Judge{
@@ -91,6 +108,9 @@ export const submitProblem = (submitJudgeDTO:Judge.SubmitReqData) => {
 export const getProblemStatistics = (problemId:number,contestId?:number) => {
     if(contestId === undefined||contestId==null) return request.get<Problem.ProblemStatistics>(`/api/p/problem/${problemId}/statistics`);
     return request.get<Problem.ProblemStatistics>(`/api/p/problem/${problemId}/statistics`,{contestId});
+}   
+export const getAllTags = () => {
+    return request.get<Problem.TagVO[]>('/api/p/tags')
 }
 export const survive = () =>{
     return request.get<string>('/api/p/survive')

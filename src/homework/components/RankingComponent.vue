@@ -63,7 +63,9 @@
                     <span class="flex-1 text-center font-bold">AC</span>
                 </template>
                 <template #body="slotProps">
-                    <span>{{ slotProps.data.solvedCount }}</span>
+                    <router-link
+                        :to="`/homework/${props.homeworkId}/status?contestId=${props.homeworkId}&userId=${slotProps.data.userId}`">{{
+                            slotProps.data.solvedCount }}</router-link>
                 </template>
             </Column>
 
@@ -97,7 +99,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref, defineProps, shallowRef, markRaw } from 'vue';
+import { ref, defineProps } from 'vue';
 import { onMounted } from 'vue';
 import { getHomeworkRankingById, type RankingSpace } from '../api/homeworkRankingAPI';
 import { exportToExcel, type ExportHeader } from '@/common/utils/excel';
@@ -167,12 +169,18 @@ async function loadRankingData(homeworkId: number) {
         // 名次排序(先solvedCount,再totalPenalty)
         tmpData.users.sort((a, b) => {
             if (a.solvedCount !== b.solvedCount) {
+                // 首先按 solvedCount 从大到小排序
                 return b.solvedCount - a.solvedCount;
             }
+            if (a.solvedCount === 0 && b.solvedCount === 0) {
+                // 当双方 solvedCount 都为 0 时，按 totalTries 从大到小排序
+                if (a.totalTries !== b.totalTries) {
+                    return b.totalTries - a.totalTries;
+                }
+            }
+            // 其他情况下按 totalPenalty 从小到大排序
             return a.totalPenalty - b.totalPenalty;
         });
-        // 总罚时计算
-
         // 用户题目排序
         // 创建一个映射关系：ProblemId -> displayId
         const problemDisplayMap = new Map<number, number>();
