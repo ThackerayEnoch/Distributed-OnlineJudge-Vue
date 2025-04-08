@@ -16,7 +16,7 @@ export interface ResultData<T = any> extends Result {
   data?: T;
 }
 // 请求地址
-const URL: string = 'http://192.168.200.9'
+const URL: string = 'http://192.168.200.9';
 
 
 const config = {

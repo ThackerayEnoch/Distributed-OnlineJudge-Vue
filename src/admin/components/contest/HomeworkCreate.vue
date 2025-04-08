@@ -97,8 +97,8 @@
             </label>
         </div>
         <div v-if="homework.auth !== 0" class="p-0 mt-4 space-y-4">
-            <Select v-model="homework.selectedClasses" :options="filteredClasses" optionLabel="name" optionValue="id"
-                placeholder="选择班级..." class="w-[150px]">
+            <MultiSelect v-model="homework.selectedClasses" :options="filteredClasses" optionLabel="name"
+                optionValue="id" placeholder="选择班级..." class="w-[40%]">
                 <template #header>
                     <div class="flex items-center gap-2 p-2">
                         <InputText v-model="searchContent" placeholder="搜索班级..." class="w-full p-2 border rounded-lg" />
@@ -108,7 +108,7 @@
                         </div>
                     </div>
                 </template>
-            </Select>
+            </MultiSelect>
         </div>
         <div v-if="homework.auth !== 0" class="mt-6">
             <label class="text-gray-500">
@@ -158,7 +158,7 @@
                 </button>
             </div>
         </div>
-        <DataTable :value="contestProblems" class="mt-2" :sortOrder="1" sortField="number" removableSort scrollable
+        <DataTable :value="contestProblems" class="mt-2" lazy :sortOrder="1" sortField="number" removableSort scrollable
             scrollHeight="400px">
             <Column field="id">
                 <template #header>
@@ -176,7 +176,7 @@
                 </template>
                 <template #body="slotProps">
                     <InputNumber v-model="slotProps.data.number" inputId="numIn" showButtons buttonLayout="horizontal"
-                        variant="filled" :-min="0" :max="100" :allow-empty="false" class="w-full" fluid>
+                        variant="filled" :min="0" :max="100" :allow-empty="false" class="w-full" fluid>
                         <template #incrementicon>
                             <span class="pi pi-plus" />
                         </template>
@@ -210,7 +210,6 @@
                         class="bg-red-100 text-red-800 text-sm font-semibold mr-2 px-2.5 py-2 rounded">困难</span>
                 </template>
             </Column>
-            <Column field="createTime" header="添加时间"></Column>
             <Column field="operation" header="操作">
                 <template #body="slotProps">
                     <button
@@ -232,6 +231,11 @@
                     <span class="text-xl font-bold text-surface-700 dark:text-surface-0">题目列表</span>
                     <span class="text-base font-bold text-surface-400 dark:text-surface-0">保存按钮在最底下</span>
                     <div class="flex items-center space-x-2">
+                        <span class="relative">
+                            <MultiSelect v-model:model-value="problemTagIds" :options="problemTagOptions"
+                                option-label="name" option-value="id" filter placeholder="请选择标签" class="w-[50%] md:w-40"
+                                @change="searchProblemInAllEvent" />
+                        </span>
                         <span class="relative">
                             <InputText placeholder="输入关键词" class="p-2 w-64 rounded-md border border-gray-300"
                                 v-model="problemSearchContent" @keyup.enter="searchProblemInAllEvent" />
@@ -258,7 +262,19 @@
                         class="bg-red-100 text-red-800 text-sm font-semibold mr-2 px-2.5 py-2 rounded">困难</span>
                 </template>
             </Column>
-            <Column field="tags" header="标签"></Column>
+            <Column field="tags" header="标签">
+                <template #body="slotProps">
+                    <div class="flex flex-wrap gap-2">
+                        <template v-for="(tag, index) in slotProps.data.tags" :key="index">
+                            <span :style="{ backgroundColor: tag.color }" class="inline-flex items-center text-sm font-bold rounded px-3 py-1
+                           text-white shadow-sm transition-colors hover:brightness-110
+                           max-w-full truncate">
+                                {{ tag.name }}
+                            </span>
+                        </template>
+                    </div>
+                </template>
+            </Column>
             <Column field="total" header="总提交">
                 <template #body="slotProps">
                     <span v-if="slotProps.data.total">{{ slotProps.data.total }}</span>
@@ -282,6 +298,7 @@ import { reactive, ref, defineComponent, onMounted } from 'vue'
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import { parseUsers, getHomeworkGroup, createHomework, uploadFile, getHomeworkDetail, updateHomework, getAdminAllProblems, getAdminProblems, getAdminProblemsCount, type ContestSpace } from '@/admin/api/contestAPI'
+import { type TagsSpace, getTags } from '@/admin/api/tagAPI'
 import globalMessage from '@/common/utils/toast';
 import router from '@/common/utils/router';
 
@@ -327,7 +344,7 @@ export default defineComponent({
             duplicateCheck: false,
             languages: [1, 2, 3, 4, 9, 10],
             users: '',
-            selectedClasses: -1,
+            selectedClasses: [] as number[],
             startTime: (() => {
                 const now = new Date();
                 now.setMinutes(0, 0, 0); // 设置分钟、秒和毫秒为 0
@@ -342,7 +359,9 @@ export default defineComponent({
         // problem
         const contestProblemsDialog = ref(false);
         const addProblemDialog = ref(false);
-
+        const tagContent = ref('');
+        const problemTagIds = ref<number[]>([]);
+        const problemTagOptions = ref<TagsSpace.TagVO[]>([]);
         const contestProblems = ref<ContestSpace.AdminProblemVO[]>([]);
         const selectedProblems = ref<ContestSpace.AdminAllProblemVO[]>([]);
         const allProblems = ref<ContestSpace.AdminAllProblemVO[]>([]);
@@ -350,7 +369,13 @@ export default defineComponent({
         const problemFirst = ref<number>(0);
         const filterType = ref<boolean>(false);
         const problemSearchContent = ref<string>('');
-
+        async function loadTags() {
+            await getTags(tagContent.value).then(res => {
+                problemTagOptions.value = res.data as TagsSpace.TagVO[];
+            }).catch(err => {
+                globalMessage.error("加载标签失败", err.message);
+            });
+        }
         function convertToLetter(num: number) {
             let str = '';
             while (num > 0) {
@@ -386,7 +411,7 @@ export default defineComponent({
         };
         function problemFinalSaveEvent() {
             // 检查displayId重复
-            if (!problemFinalSaveVaildation) {
+            if (!problemFinalSaveVaildation()) {
                 return;
             }
             contestProblemsDialog.value = false;
@@ -396,10 +421,10 @@ export default defineComponent({
             saveSelectedProblems();
         }
         function onAddPageOpen() {
-            selectedProblems.value = [];
             addProblemDialog.value = true;
             loadAllProblems();
             loadAllProblemCount();
+            loadTags();
         }
         function onListPageOpen() {
             if (!props.id === undefined) {
@@ -413,6 +438,13 @@ export default defineComponent({
         }
         async function deleteContestProblems(pid: number) {
             contestProblems.value = contestProblems.value.filter(problem => problem.id !== pid);
+            // 删除题目后，重新计算题号
+            contestProblems.value = contestProblems.value
+                .sort((a, b) => a.number - b.number)
+                .map((problem, index) => ({
+                    ...problem,
+                    number: index
+                }));
         }
         async function saveSelectedProblems() {
             let lastNumber = contestProblems.value.length;
@@ -430,27 +462,26 @@ export default defineComponent({
             selectedProblemsToDelete.forEach(problem => {
                 contestProblems.value = contestProblems.value.filter(p => p.id !== problem.id);
             });
-            selectedProblemsToAdd.forEach(problem => {
-                contestProblems.value.push({
-                    id: problem.id,
-                    title: problem.title,
-                    difficulty: problem.difficulty,
-                    createTime: '',
-                    updateTime: '',
-                    number: lastNumber++
-                });
-            });
-            // 先按照number排序
-            contestProblems.value.sort((a, b) => a.number - b.number);
-            // 平衡lastNumber
-            lastNumber = 0;
-            contestProblems.value.forEach(problem => {
-                problem.number = lastNumber++;
-            });
+            const newProblems = selectedProblemsToAdd.map(problem => ({
+                id: problem.id,
+                title: problem.title,
+                difficulty: problem.difficulty,
+                createTime: '',
+                updateTime: '',
+                number: lastNumber++
+            }));
+            // 合并操作，减少对 contestProblems.value 的多次更新
+            const updatedProblems = [...contestProblems.value, ...newProblems]
+                .sort((a, b) => a.number - b.number)
+                .map((problem, index) => ({
+                    ...problem,
+                    number: index
+                }));
+            contestProblems.value = updatedProblems;
         }
         async function loadAllProblems() {
             const type = filterType.value ? 'own' : 'all';
-            await getAdminAllProblems(problemFirst.value, type, problemSearchContent.value).then(res => {
+            await getAdminAllProblems(problemFirst.value, type, problemSearchContent.value, problemTagIds.value).then(res => {
                 allProblems.value = res.data as ContestSpace.AdminAllProblemVO[];
                 const problemIds: number[] = contestProblems.value.map(problem => problem.id);
                 allProblems.value.forEach(problem => {
@@ -471,7 +502,7 @@ export default defineComponent({
         }
         async function loadAllProblemCount() {
             const type = filterType.value ? 'own' : 'all';
-            await getAdminProblemsCount(type, problemSearchContent.value).then(res => {
+            await getAdminProblemsCount(type, problemSearchContent.value, problemTagIds.value).then(res => {
                 problemTotalRecords.value = res.data as number;
             }).catch(err => {
                 globalMessage.error("加载题目失败", err.message);
@@ -531,7 +562,7 @@ export default defineComponent({
                 languages: homework.languages,
                 problems: problemTmp,
                 users: stu,
-                groupId: homework.selectedClasses,
+                groupIds: homework.selectedClasses,
                 startTime: homework.startTime.getTime(),
                 endTime: homework.endTime.getTime()
             }
@@ -540,6 +571,8 @@ export default defineComponent({
                 globalMessage.success("创建作业", "操作成功");
             }).catch(err => {
                 globalMessage.error("创建失败", err.message);
+            }).finally(() => {
+                isSubmiting.value = false;
             });
         }
         async function loadHomeworkDetail(id: number) {
@@ -552,7 +585,7 @@ export default defineComponent({
                 homework.visible = data.visible;
                 homework.duplicateCheck = data.duplicateCheck;
                 homework.languages = data.languages;
-                homework.selectedClasses = data.groupId;
+                homework.selectedClasses = data.groupIds;
                 homework.startTime = new Date(data.startTime);
                 homework.endTime = new Date(data.endTime);
                 studentInput.value = data.users.join('\n');
@@ -593,7 +626,7 @@ export default defineComponent({
                 languages: homework.languages,
                 problems: problemTmp,
                 users: stu,
-                groupId: homework.selectedClasses,
+                groupIds: homework.selectedClasses,
                 startTime: homework.startTime.getTime(),
                 endTime: homework.endTime.getTime()
             }
@@ -624,7 +657,6 @@ export default defineComponent({
                                 "Content-Type": "multipart/form-data"
                             },
                         }).then((res) => {
-                            let url = res.data as unknown as string[];
                             rev(res)
                         }).catch((err) => {
                             rej(err)
@@ -640,7 +672,7 @@ export default defineComponent({
             onOwnClassesChange, parseButtonEvent, createHomeworkFun, onSubmitEvent, contestProblemsDialog, contestProblems, addProblemDialog,
             allProblems, selectedProblems, problemTotalRecords, problemFirst, onProblemPage, onAddPageOpen, onListPageOpen, problemFinalSaveEvent,
             selectedProblemSaveEvent, filterType, problemSearchContent, searchProblemInAllEvent, convertToLetter, deleteContestProblems,
-            onUploadImg, isSubmiting, isDuplicateNumber
+            onUploadImg, isSubmiting, isDuplicateNumber, tagContent, problemTagOptions, problemTagIds
         }
     }
 })

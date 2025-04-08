@@ -68,6 +68,16 @@
                         <span v-else>{{ slotProps.data.signedUp }}</span>
                     </template>
                 </Column>
+
+                <Column field="expireTime" style="text-align: center">
+                    <template #header>
+                        <span class="flex-1 text-center font-bold">过期时间</span>
+                    </template>
+                    <template #body="slotProps">
+                        <Skeleton v-if="isloading" width="80px"></Skeleton>
+                        <span v-else>{{ slotProps.data.expireTime }}</span>
+                    </template>
+                </Column>
                 <Column field="status" style="text-align: center" class="m-0 p-0">
                     <template #header>
                         <span class="flex-1 text-center font-bold">状态</span>
@@ -95,6 +105,11 @@
                                 class="ml-2 bg-yellow-500 flex items-center justify-center hover:bg-yellow-700 text-white font-bold p-2 w-14 h-9 rounded"
                                 v-tooltip.top="'重设密码'" @click="onEditPassword(slotProps.data)">
                                 <i class="fas fa-key"></i>
+                            </button>
+                            <button
+                                class="ml-2 bg-red-500 flex items-center justify-center text-white p-2 rounded w-14 h-9 hover:bg-red-700"
+                                v-tooltip.top="'编辑过期时间'" @click="onEditExpireDialogOpen(slotProps.data)">
+                                <i class="fas fa-calendar-alt"></i>
                             </button>
                             <button
                                 class="ml-2 bg-green-500 flex items-center justify-center text-white p-2 rounded w-14 h-9 hover:bg-green-700"
@@ -254,6 +269,12 @@
                     <InputText v-model="form.major" class="w-full" placeholder="输入专业全称" />
                 </div>
             </div>
+            <div class="field grid items-center">
+                <label class="col-fixed font-medium text-gray-600" style="width: 90px">过期时间</label>
+                <div class="col">
+                    <DatePicker v-model="expireTime" />
+                </div>
+            </div>
         </div>
 
         <template #footer>
@@ -265,16 +286,47 @@
             </div>
         </template>
     </Dialog>
+    <Dialog id="expiration" v-model:visible="expireTimeDialogVisible" header="编辑过期时间" :modal="true" :closable="false"
+        :draggable="false" :style="{ width: '90vw', maxWidth: '28rem' }" :breakpoints="{ '640px': '95vw' }"
+        headerClass="font-bold text-xl border-b-2 border-primary-100 pb-2" class="rounded-lg shadow-xl">
+        <!-- 主内容区 -->
+        <div class="px-6 py-4">
+            <InputGroup class="group relative">
+                <InputGroupAddon class="!bg-primary-400 !border-primary-100">
+                    <i class="pi pi-calendar text-white"></i>
+                </InputGroupAddon>
+                <DatePicker v-model="expireTimeTmp" placeholder="请选择过期时间"
+                    class="!border-l-0 focus:!ring-primary-100 focus:!border-primary-100 flex-1" dateFormat="yy-mm-dd"
+                    :minDate="new Date()" showIcon iconDisplay="input" fluid />
+            </InputGroup>
+
+            <div class="text-gray-500 text-sm mt-3 ml-1">
+                <i class="pi pi-info-circle mr-1"></i>
+                请选择未来的日期作为过期时间
+            </div>
+        </div>
+
+        <!-- 底部操作 -->
+        <template #footer>
+            <div class="flex justify-between w-full px-4 pb-4">
+                <Button label="取消" icon="pi pi-times" class="p-button-text text-gray-500 hover:bg-gray-100 px-5"
+                    @click="displayDialog = false" />
+                <Button label="保存修改" icon="pi pi-check" class="px-5 bg-primary-500 hover:bg-primary-600 border-none"
+                    :disabled="!expireTimeTmp || loading.edit" :loading="loading.edit" @click="updateExpirationEvent"
+                    @keyup.enter="updateExpirationEvent" />
+            </div>
+        </template>
+    </Dialog>
 </template>
 <script setup lang="ts">
 import { onMounted, reactive, ref, computed } from 'vue';
 import CustomToggleButton from '../contest/CustomToggleButton.vue';
-import { type UserSpace, getAdminUserCount, getAdminUsers, getRoles, assignRole, updateUserInfo, createUser } from '@/admin/api/userAPI';
+import { type UserSpace, updateUserExpireTime, getAdminUserCount, getAdminUsers, getRoles, assignRole, updateUserInfo, createUser } from '@/admin/api/userAPI';
 import globalMessage from '@/common/utils/toast';
 
 const addDialogVisible = ref<boolean>(false);
 const displayDialog = ref<boolean>(false);
-const newPassword = ref<string>('ujn@12345');
+const newPassword = ref<string>('Ujn@12345');
 const passwordDisplayDialog = ref<boolean>(false);
 const roleDisplayDialog = ref<boolean>(false);
 const isloading = ref<boolean>(true);
@@ -283,6 +335,9 @@ const content = ref<string>('');
 const first = ref<number>(0);
 const totalRecords = ref<number>(0);
 const users = ref<UserSpace.UserInfoVO[]>([]);
+const expireTime = ref<Date>(new Date(Date.now() + 4 * 365 * 24 * 60 * 60 * 1000)); // 默认过期时间为四年后
+const expireTimeDialogVisible = ref<boolean>(false);
+const expireTimeTmp = ref<Date>(new Date(Date.now() + 4 * 365 * 24 * 60 * 60 * 1000)); // 默认过期时间为四年后
 const selectedUser = ref<UserSpace.UserInfoVO>({
     id: 0,
     username: '',
@@ -290,13 +345,15 @@ const selectedUser = ref<UserSpace.UserInfoVO>({
     lastLogin: '',
     signedUp: '',
     status: false,
+    expireTime: '',
 });
 const form = reactive({
     username: '',
-    password: 'ujn@12345',
+    password: 'Ujn@12345',
     nickname: '',
     email: '',
     major: '',
+    expireTime: 0,
 });
 const loading = reactive({
     add: false,
@@ -313,6 +370,32 @@ const passwordError = computed(() => form.password.length < 6 || form.password.l
 const nicknameError = computed(() => !form.nickname.trim());
 function onAddUser() {
     addDialogVisible.value = true;
+}
+function onEditExpireDialogOpen(user: UserSpace.UserInfoVO) {
+    expireTimeDialogVisible.value = true;
+    selectedUser.value = user;
+}
+const expireLoading = ref<boolean>(false);
+function updateExpirationEvent() {
+    if (!expireTimeTmp.value) {
+        globalMessage.error('操作失败', '请选择过期时间');
+        return;
+    }
+    expireLoading.value = true;
+    const dto: UserSpace.UpdateUserExpireDTO = {
+        id: selectedUser.value.id,
+        expireTime: expireTimeTmp.value.getTime(),
+    };
+    updateUserExpireTime(dto).then(() => {
+        globalMessage.success('操作成功', '过期时间更新成功');
+        expireTimeDialogVisible.value = false;
+        loading.edit = false;
+    }).catch(() => {
+        globalMessage.error('操作失败', '过期时间更新失败');
+        loading.edit = false;
+    }).finally(() => {
+        expireLoading.value = false;
+    });
 }
 function onEditNickname(user: UserSpace.UserInfoVO) {
     displayDialog.value = true;
@@ -346,6 +429,7 @@ async function addUser() {
         return;
     }
     loading.add = true;
+    form.expireTime = expireTime.value.getTime();
     await createUser(form).then(() => {
         globalMessage.success('操作成功', '用户创建成功');
         addDialogVisible.value = false;
@@ -381,8 +465,8 @@ async function updateUserEvent(type: string) {
         passwordDisplayDialog.value = false;
         loading.edit = false;
         loading.password = false;
-    }).catch(() => {
-        globalMessage.error('操作失败', '用户信息更新失败');
+    }).catch((err) => {
+        globalMessage.error('操作失败', err.message);
         loading.edit = false;
         loading.password = false;
     });

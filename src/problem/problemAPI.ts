@@ -30,6 +30,7 @@ export namespace Problem{
         nickname: string;
         createTime: Date;
         updateTime: Date;
+        tags: TagVO[];
     }
     // 通过token无参请求用户信息
     // 定义后端返回的list<JSONObject>数据类型
@@ -92,11 +93,11 @@ export namespace Judge{
     }
 }
 // GET获取用户数据
-export const getProblemPage = (currentPage:number,content:string) => {
-    return request.get<Problem.ProblemListJSONObject[]>('/api/p/problems',{currentPage,content})
+export const getProblemPage = (currentPage:number,content:string,tagIds:number[]) => {
+    return request.get<Problem.ProblemListJSONObject[]>('/api/p/problems',{currentPage,content,tagIds})
 }
-export const getProblemCount = (content:string) => {
-    return request.get<Problem.ProblemCountJSONObject>('/api/p/problems/count',{content})
+export const getProblemCount = (content:string,tagIds:number[]) => {
+    return request.get<Problem.ProblemCountJSONObject>('/api/p/problems/count',{content,tagIds})
 }
 export const getProblemDetail = (problemId :number,contestId?:number) => {
     if(contestId === undefined||contestId==null) return request.get<Problem.ProblemResData>(`/api/p/problem/${problemId}`);

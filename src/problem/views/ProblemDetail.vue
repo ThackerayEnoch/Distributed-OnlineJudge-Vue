@@ -98,72 +98,88 @@
                 </div>
             </div>
             <!-- ...existing code... -->
-            <div class="fixed top-22 right-10 w-[25%] shadow-lg h-auto p-4 bg-white dark:bg-gray-800 rounded-lg">
-                <!-- 卡片其他内容保持原样 -->
-                <!-- 标题部分 -->
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-gray-600 font-semibold font-medium">题目提供者</span>
-                    <span class="text-gray-800 ml-2">{{ problemDetail.nickname }}</span>
-                </div>
-                <!-- 难度 -->
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-gray-600 font-semibold font-medium">难度等级</span>
-                    <span class="text-orange-500 font-semibold">{{ difficultyMap(problemDetail.difficulty) }}</span>
-                </div>
-                <!-- 统计信息组 -->
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-gray-600 font-semibold font-medium">提交总数</span>
-                    <span class="text-gray-800 font-semibold">{{ totalSubmissions }}</span>
-                </div>
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-gray-600 font-semibold font-medium">正确提交</span>
-                    <span class="text-green-500 font-semibold">{{ passedSubmissions }}</span>
-                </div>
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-gray-600 font-semibold font-medium">通过率</span>
-                    <span class="text-blue-500 font-semibold">
-                        {{ (passedSubmissions / totalSubmissions * 100 || 0).toFixed(1) }}%
-                    </span>
-                </div>
-                <!-- 题目元数据 -->
-                <div v-if="problemDetail.type === 1" class="flex justify-between items-center mb-6">
-                    <span class="text-gray-600 font-semibold font-medium">最高得分</span>
-                    <span class="text-green-500 font-semibold">{{ score }}</span>
-                </div>
-                <div v-if="problemDetail.type === 0" class="flex justify-between items-center mb-6">
-                    <span class="text-gray-600 font-semibold font-medium">是否AC</span>
-                    <span class="text-green-500 font-semibold">{{ isSolved ? 'AC' : '' }}</span>
-                </div>
-                <!-- 按钮组区域 -->
-                <div class="mt-4 space-y-2">
-                    <!-- 主要操作按钮 -->
-                    <Button class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium" @click="visible = true">
-                        提交解答
-                    </Button>
+            <div class="fixed top-22 right-10 w-[25%] h-auto">
+                <div class="p-4 bg-white dark:bg-gray-800 shadow-lg">
+                    <!-- 卡片其他内容保持原样 -->
+                    <!-- 标题部分 -->
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-gray-600 font-semibold font-medium">题目提供者</span>
+                        <span class="text-gray-800 ml-2">{{ problemDetail.nickname }}</span>
+                    </div>
+                    <!-- 难度 -->
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-gray-600 font-semibold font-medium">难度等级</span>
+                        <span class="text-orange-500 font-semibold">{{ difficultyMap(problemDetail.difficulty) }}</span>
+                    </div>
+                    <!-- 统计信息组 -->
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-gray-600 font-semibold font-medium">提交总数</span>
+                        <span class="text-gray-800 font-semibold">{{ totalSubmissions }}</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-gray-600 font-semibold font-medium">正确提交</span>
+                        <span class="text-green-500 font-semibold">{{ passedSubmissions }}</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-gray-600 font-semibold font-medium">通过率</span>
+                        <span class="text-blue-500 font-semibold">
+                            {{ (passedSubmissions / totalSubmissions * 100 || 0).toFixed(1) }}%
+                        </span>
+                    </div>
+                    <!-- 题目元数据 -->
+                    <div v-if="problemDetail.type === 1" class="flex justify-between items-center mb-6">
+                        <span class="text-gray-600 font-semibold font-medium">最高得分</span>
+                        <span class="text-green-500 font-semibold">{{ score }}</span>
+                    </div>
+                    <div v-if="problemDetail.type === 0" class="flex justify-between items-center mb-6">
+                        <span class="text-gray-600 font-semibold font-medium">是否AC</span>
+                        <span class="text-green-500 font-semibold">{{ isSolved ? 'AC' : '' }}</span>
+                    </div>
+                    <!-- 按钮组区域 -->
+                    <div class="mt-4 space-y-2">
+                        <!-- 主要操作按钮 -->
+                        <Button class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium"
+                            @click="visible = true">
+                            提交解答
+                        </Button>
 
-                    <!-- 辅助操作按钮组 -->
+                        <!-- 辅助操作按钮组 -->
+                        <div class="flex flex-wrap gap-2">
+                            <Button v-if="contestId != null" @click="routePush(`/homework/${contestId}/ranking`)"
+                                class="flex-1 text-purple-500 hover:text-purple-700 border border-gray-200 font-medium"
+                                outlined>
+                                排行榜
+                            </Button>
+                            <Button v-if="contestId != null"
+                                @click="routePush(`/homework/${contestId}/submit?problemId=${props.pid}&contestId=${contestId}`)"
+                                class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium"
+                                outlined>
+                                提交记录
+                            </Button>
+                            <Button v-if="contestId == null" @click="routePush(`/statuses?problemId=${props.pid}`)"
+                                class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium"
+                                outlined>
+                                提交记录
+                            </Button>
+                            <Button v-if="contestId != null" @click="routePush(`/homework/${contestId}/problems`)"
+                                class="flex-1 text-green-500 hover:text-green-700 border border-gray-200 font-medium"
+                                outlined>
+                                返回竞赛
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+                <!-- 题目标签区域 -->
+                <div class="card mt-4 mb-4 p-4 bg-white dark:bg-gray-800 shadow-md rounded-none">
+                    <h3 class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-200">当前题目标签</h3>
                     <div class="flex flex-wrap gap-2">
-                        <Button v-if="contestId != null" @click="routePush(`/homework/${contestId}/ranking`)"
-                            class="flex-1 text-purple-500 hover:text-purple-700 border border-gray-200 font-medium"
-                            outlined>
-                            排行榜
-                        </Button>
-                        <Button v-if="contestId != null"
-                            @click="routePush(`/homework/${contestId}/submit?problemId=${props.pid}&contestId=${contestId}`)"
-                            class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium"
-                            outlined>
-                            提交记录
-                        </Button>
-                        <Button v-if="contestId == null" @click="routePush(`/statuses?problemId=${props.pid}`)"
-                            class="flex-1 text-gray-600 hover:text-gray-800 border border-gray-200 font-medium"
-                            outlined>
-                            提交记录
-                        </Button>
-                        <Button v-if="contestId != null" @click="routePush(`/homework/${contestId}/problems`)"
-                            class="flex-1 text-green-500 hover:text-green-700 border border-gray-200 font-medium"
-                            outlined>
-                            返回竞赛
-                        </Button>
+                        <template v-for="(tag, index) in problemDetail.tags" :key="index">
+                            <span :style="{ backgroundColor: tag.color }" class="inline-flex items-center text-sm font-bold rounded px-3 py-1
+                           text-white shadow-sm transition-colors hover:brightness-110
+                           max-w-full truncate">
+                                {{ tag.name }}
+                            </span>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -319,7 +335,8 @@ const problemDetail = ref<Problem.ProblemResData>({
     allowLanguages: [],
     nickname: '',
     createTime: new Date(),
-    updateTime: new Date()
+    updateTime: new Date(),
+    tags: [],
 });
 // 定义props，获取URL中的pid参数
 const props = defineProps({

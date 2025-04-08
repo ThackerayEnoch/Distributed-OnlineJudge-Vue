@@ -6,6 +6,7 @@ export namespace UserSpace{
         nickname: string;
         lastLogin: string;
         signedUp: string;
+        expireTime: string;
         status:boolean;
     }
     export interface Role {
@@ -25,6 +26,7 @@ export namespace UserSpace{
         username: string;
         password: string;
         nickname: string;
+        expireTime: number;
         email?: string;
         major?: string;
     }
@@ -33,11 +35,13 @@ export namespace UserSpace{
         nickname: string;
         password?: string;
         status: boolean;
+        expireTime?: number;
     }
     export interface AdminCreateUserBatchDTO {
         username: string;
         nickname: string;
         password: string;
+        expireTime: number;
     }
     export interface AdminParseUsers{
         studentId:string;
@@ -47,6 +51,13 @@ export namespace UserSpace{
         username: string;
         password: string;
     }
+    export interface UpdateUserExpireDTO {
+        id: number;
+        expireTime: number;
+    }
+}
+export const updateUserExpireTime =(data:UserSpace.UpdateUserExpireDTO) => {
+    return request.put<string>('/api/u/admin/user/expire',data);
 }
 export const getAdminUsers = (offset:number,limit:number,content:string|null) => {
     return request.get<UserSpace.UserInfoVO[]>('/api/u/admin/users',{offset,limit,content});

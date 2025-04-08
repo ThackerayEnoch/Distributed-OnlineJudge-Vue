@@ -14,6 +14,10 @@
                             || selectedFiles.length === 0 && uploadedFiles.length === 0
                             || isUploading"></Button>
                         <div class="flex items-center gap-2">
+                            <span class="text-gray-700">过期时间</span>
+                            <DatePicker v-model="expireTime" dateFormat="yy/mm/dd" />
+                        </div>
+                        <div class="flex items-center gap-2">
                             <span class="text-gray-700">使用随机密码</span>
                             <ToggleSwitch v-model="isRandomPassword" :disabled="isUploading" class="ml-2" />
                         </div>
@@ -132,6 +136,7 @@ import { createUserBatch, type UserSpace } from '@/admin/api/userAPI'
 const displayDialog = ref<boolean>(false);
 const isUploading = ref<boolean>(false);
 const isloading = ref<boolean>(false);
+const expireTime = ref<Date>(new Date(Date.now() + 4 * 365 * 24 * 60 * 60 * 1000)); // 过期时间
 const selectedFiles = ref<File[]>([]);
 const uploadedFiles = ref<File[]>([]); // 存储已上传的文件列表
 // 处理文件选择（只存储文件，不上传）
@@ -181,6 +186,7 @@ async function saveUsers() {
             username: user.username,
             nickname: user.nickname,
             password: user.password as string,
+            expireTime: expireTime.value.getTime(),
         });
     }
     try {

@@ -124,7 +124,7 @@ import globalMessage from '@/common/utils/toast';
 const usernamesRaw = ref('');
 const parsedUsers = ref<UserSpace.AdminParseUsers[]>([]);
 const parsing = ref(false);
-const defaultPassword = ref('ujn@12345');
+const defaultPassword = ref('Ujn@12345');
 const randomPassword = ref('');
 type PasswordMode = 'default' | 'random';
 const passwordMode = ref<PasswordMode>('default');

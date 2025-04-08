@@ -47,7 +47,7 @@
                         </template>
                     </Column>
                     <!-- ID Column -->
-                    <Column field="displayId" header="题目ID" style="width: 6%"></Column>
+                    <Column field="displayId" header="题目ID" style="width: 8%"></Column>
 
                     <!-- Title Column -->
                     <Column field="title" header="题目名称">
@@ -61,7 +61,7 @@
 
                     <Column field="tags" header="题目标签">
                         <template #body="slotProps">
-                            <div class="flex overflow-x-hidden gap-1 max-w-[300px]">
+                            <div class="flex overflow-x-hidden gap-1 max-w-[250px]">
                                 <template v-for="(tag, index) in slotProps.data.tags" :key="index">
                                     <span :style="{ backgroundColor: tag.color }" class="text-sm font-bold rounded px-2 py-1 
                  text-white shadow-sm whitespace-nowrap
@@ -73,18 +73,18 @@
                         </template>
                     </Column>
 
-                    <Column field="submissionCount" header="总提交">
+                    <Column field="submissionCount" header="总提交" style="width: 8%;">
                         <template #body="slotProps">
                             {{ slotProps.data.submissionCount }}
                         </template>
                     </Column>
-                    <Column field="acCount" header="通过次数">
+                    <Column field="acCount" header="通过次数" style="width: 9%;">
                         <template #body="slotProps">
                             {{ slotProps.data.acCount }}
                         </template>
                     </Column>
                     <!-- Accuracy Column -->
-                    <Column field="accuracy" header="通过率">
+                    <Column field="accuracy" header="通过率" style="width: 7%;">
                         <template #body="slotProps">
                             <span v-if="slotProps.data.submissionCount != null && slotProps.data.submissionCount >
                                 0">
@@ -144,7 +144,7 @@
                 <h3 class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-200">全部标签</h3>
                 <div class="flex flex-wrap gap-2">
                     <template v-for="(tag, index) in Tags" :key="index">
-                        <span :style="{ backgroundColor: tag.color }" class="inline-flex items-center text-sm font-bold rounded px-3 py-1
+                        <span @click="tagFilter(index)" :style="{ backgroundColor: tag.color }" class="inline-flex items-center text-sm font-bold rounded px-3 py-1
                            text-white shadow-sm transition-colors hover:brightness-110
                            max-w-full truncate">
                             {{ tag.name }}
@@ -169,6 +169,14 @@ export default {
         const searchContent = ref('');
         const totalProblems = ref(0);
         const problems = ref([]);
+        const selectedTagIds = ref<number[]>(
+            route.query.tagId
+                ? (Array.isArray(route.query.tagId)
+                    ? route.query.tagId
+                    : [route.query.tagId]
+                ).map(id => parseInt(id as string))
+                : []
+        );
         const totalRecords = ref(30);
         const first = ref((parseInt(route.query.currentPage as string || '1') - 1) * 30 || 0);
         // Tags
@@ -212,14 +220,31 @@ export default {
                 globalMessage.error('获取标签失败', error.message);
             });
         };
+        // 题目筛选
+        const tagFilter = (index: number) => {
+            const tag = Tags.value[index];
+            selectedTagIds.value = [tag.id];
+            // 更新 URL 中的 selectedTagIds 参数
+            router.push({
+                query: {
+                    ...route.query,
+                    TagId: selectedTagIds.value,
+                },
+            });
+            // 选中标签后，搜索框显示标签名
+            if (selectedTagIds.value.length > 0) {
+                getCount();
+                getProblems(0);
+            }
+        };
         // 获取题目列表
         const getProblems = async (page: number) => {
-            const response = await getProblemPage(page, searchContent.value);
+            const response = await getProblemPage(page, searchContent.value, selectedTagIds.value);
             problems.value = response.data as any;
         };
         // 获取题目总数
         const getCount = async () => {
-            const response = await getProblemCount(searchContent.value);
+            const response = await getProblemCount(searchContent.value, selectedTagIds.value);
             if (response.data) {
                 totalRecords.value = response.data.count;
                 totalProblems.value = response.data.totalProblems;
@@ -229,7 +254,12 @@ export default {
         const onPage = (event: any) => {
             getProblems(event.first);
             first.value = event.first;
-            router.push({ query: { currentPage: event.page + 1 } });
+            router.push({
+                query: {
+                    ...route.query,
+                    currentPage: event.page + 1,
+                },
+            });
             scrollToTop();
         };
         // 选择行，在右侧显示 统计信息
@@ -279,7 +309,7 @@ export default {
                 behavior: 'smooth', // 平滑滚动
             });
         };
-        return { problems, randomProblem, Tags, onSearch, searchContent, selectRow, getProgressBarColor, getTagSeverity, totalRecords, first, onPage, statTitle, selectedProblem };
+        return { problems, tagFilter, randomProblem, Tags, onSearch, searchContent, selectRow, getProgressBarColor, getTagSeverity, totalRecords, first, onPage, statTitle, selectedProblem };
     },
 };
 </script>

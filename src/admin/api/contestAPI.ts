@@ -35,7 +35,7 @@ export namespace ContestSpace{
         duplicateCheck: boolean;
         languages: number[];
         problems: contestProblem[];
-        groupId: number;
+        groupIds: number[];
         users: string[];
         startTime: number;
         endTime: number;
@@ -49,7 +49,7 @@ export namespace ContestSpace{
         password: string;
         visible: boolean;
         duplicateCheck: boolean;
-        groupId: number;
+        groupIds: number[];
         startTime: number;
         endTime: number;
         languages: number[];
@@ -93,6 +93,7 @@ export namespace ContestSpace{
         title: string;
         submissions: number;
         passRate: number;
+        tags: TagVO[];
     }
 
     export interface StudentsVO {
@@ -122,6 +123,11 @@ export namespace ContestSpace{
         id:number;
         status:boolean;
     }
+    export interface TagVO {
+        id: number;
+        name: string;
+        color: string;
+    }
 }
 export const getHomeworkList = (offset:number,type:string,searchContent:string) => {
     return request.get<ContestSpace.HomeworkListVO[]>('/api/c/admin/homeworks',{offset,type,searchContent});
@@ -144,11 +150,11 @@ export const getHomeworkDetail = (id:number) => {
 export const updateHomework = (data:ContestSpace.CreateHomeworkDTO) => {
     return request.put<string>('/api/c/admin/homework',data);
 }
-export const getAdminAllProblems = (offset:number,type:string,content:string) => {
-    return request.get<ContestSpace.AdminAllProblemVO[]>('/api/c/admin/homework/all-problems',{offset,type,content});
+export const getAdminAllProblems = (offset:number,type:string,content:string,tagIds:number[]) => {
+    return request.get<ContestSpace.AdminAllProblemVO[]>('/api/c/admin/homework/all-problems',{offset,type,content,tagIds});
 }
-export const getAdminProblemsCount = (type:string,content:string) => {
-    return request.get<number>('/api/c/admin/homework/problems/count',{type,content});
+export const getAdminProblemsCount = (type:string,content:string,tagIds:number[]) => {
+    return request.get<number>('/api/c/admin/homework/problems/count',{type,content,tagIds});
 }
 export const getAdminProblems = (id:number) => {
     return request.get<ContestSpace.AdminProblemVO[]>('/api/c/admin/homework/problems',{id});

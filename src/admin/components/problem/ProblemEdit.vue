@@ -95,10 +95,17 @@
                 <div class="flex flex-wrap gap-4">
                     <div class="flex flex-wrap gap-2">
                         <template v-for="(tag, index) in tags" :key="index">
-                            <span :style="{ backgroundColor: tag.color }" class="inline-flex items-center text-sm font-bold rounded px-3 py-1
-                           text-white shadow-sm transition-colors hover:brightness-110
-                           max-w-full truncate">
-                                {{ tag.name }}
+                            <span :style="{ backgroundColor: tag.color }"
+                                class="inline-flex items-center text-sm font-medium rounded px-3 py-1 text-white shadow-sm max-w-full gap-1">
+                                <span class="truncate">{{ tag.name }}</span>
+                                <button @click="removeProblemTag(index)"
+                                    class="flex items-center justify-center w-5 h-5 text-white/80 hover:text-white transition-colors duration-150">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
                             </span>
                         </template>
                         <button @click="onTagDialogOpen"
@@ -421,6 +428,9 @@ export default defineComponent({
                 globalMessage.error('获取标签列表失败', err.message);
             });
         };
+        const removeProblemTag = (index: number) => {
+            tags.value.splice(index, 1);
+        };
         const onSaving = ref(false);
         const createTagEvent = async () => {
             if (!newTagName.value) {
@@ -709,7 +719,7 @@ export default defineComponent({
             displayId, difficulty, selectedDifficulty, title, timeLimit, memoryLimit, stackLimit, share, problemDesc, inputDesc, outputDesc, hintDesc, problemType, selectedLanguages, languageOptions, samples, addSample, removeSample,
             toggleSample, userJudgeFile, spjJudgeFile, userFiles, spjFiles, newTag, spjDialogVisible, dialogVisible, addTag, removeTag, judgeMode, oiJudgeCaseMode, acmJudgeCaseMode, removeBlank, judgeCaseStatus, saveProblem,
             authOptions, selectedAuth, newCode, isSaving, onUploadImg, tags, allTags, colorPalette, tagDialogVisible, showCreate, searchText, newTagName, selectedColor, filteredTags, createTag, isTagSelected, toggleTag, createProblem,
-            onSaving, createTagEvent, onTagDialogOpen
+            onSaving, createTagEvent, onTagDialogOpen, removeProblemTag
         }
     }
 })
