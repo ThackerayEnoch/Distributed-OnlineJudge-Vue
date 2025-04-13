@@ -94,20 +94,6 @@
                                 </ul>
                             </template>
                         </Card>
-
-                        <Card class="shadow-none border">
-                            <template #title>时间跟踪</template>
-                            <template #content>
-                                <Timeline :value="timelineEvents" align="alternate" class="py-2">
-                                    <template #content="{ item }">
-                                        <div class="text-xs p-2">
-                                            {{ item.status }}<br>
-                                            <span class="text-gray-500">{{ formatDate(item.date) }}</span>
-                                        </div>
-                                    </template>
-                                </Timeline>
-                            </template>
-                        </Card>
                     </div>
                 </div>
             </template>
@@ -239,13 +225,6 @@ const statusOptions = [
     { label: '解决中 ', value: 2 },
     { label: '已解决', value: 3 },
     { label: '已关闭', value: 4 }
-]
-// 时间线数据
-const timelineEvents = [
-    { status: '问题创建', date: issue.value.date },
-    { status: '管理员回复', date: new Date(2024, 2, 16) },
-    { status: '问题解决', date: new Date(2024, 2, 18) },
-    { status: '问题关闭', date: new Date(2024, 2, 20) }
 ]
 const isSubmiting = ref(false);
 // 提交评论

@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router'
 import { useLayout } from '@/common/views/layout/layout';
 import { survive } from '@/common/views/noticeAPI';
+import request from '@/common/utils/api';
 // 主题设置
 import AppConfigurator from './AppConfigurator.vue';
 const { toggleDarkMode, isDarkTheme } = useLayout();
@@ -10,6 +11,7 @@ const { toggleDarkMode, isDarkTheme } = useLayout();
 import { Role } from '@/common/constant/Role';
 import { useUserStore } from '@/common/utils/store';
 import type { MenuItem } from 'primevue/menuitem';
+import globalMessage from '@/common/utils/toast';
 const counterStore = useUserStore();
 const router = useRouter();
 const route = useRoute();
@@ -62,6 +64,26 @@ const items = ref<MenuItem[]>([
     },
 ]
 );
+const isLogouting = ref(false);
+const logout = async () => {
+    // axiosPost调用logout 
+    isLogouting.value = true;
+    request.post('/api/a/doLogout').then((res: any) => {
+        if (res.status === 10000) {
+            globalMessage.success("登出成功", "已成功登出");
+            // 清除用户信息
+            counterStore.resetUser();
+            // 清除Cookie
+            router.push('/auth/login');
+        } else {
+            globalMessage.error("登出失败", res.data);
+        }
+    }).catch((error: any) => {
+        globalMessage.error("登出失败", error.message);
+    }).finally(() => {
+        isLogouting.value = false;
+    });
+}
 // 页面跳转函数
 const navigateTo = (menu: string) => {
     activeMenu.value = menu;
@@ -169,12 +191,32 @@ watch(route, (newRoute) => {
                                 <i class="pi pi-inbox"></i>
                                 <span>Messages</span>
                             </button>
-                            <button type="button" class="layout-topbar-action">
-                                <RouterLink :to="`/profile/${counterStore.currentUser.userId}`">
-                                    <i class="pi pi-user"></i>
-                                    <span>Profile</span>
-                                </RouterLink>
-                            </button>
+                        </div>
+                    </div>
+                    <!-- 修改部分：用户菜单按钮 -->
+                    <div class="relative">
+                        <button
+                            v-styleclass="{ selector: '@next', enterFromClass: 'hidden', enterActiveClass: 'animate-scalein', leaveToClass: 'hidden', leaveActiveClass: 'animate-fadeout', hideOnOutsideClick: true }"
+                            type="button" class="layout-topbar-action">
+                            <i class="pi pi-user"></i>
+                        </button>
+                        <div
+                            class="layout-topbar-menu hidden absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-900 border rounded shadow-lg z-10">
+                            <div class="layout-topbar-menu-content flex flex-col p-2">
+                                <button type="button"
+                                    class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                    <RouterLink :to="`/profile/${counterStore.currentUser.userId}`"
+                                        class="flex items-center">
+                                        <i class="pi pi-user mr-2"></i>
+                                        <span>个人主页</span>
+                                    </RouterLink>
+                                </button>
+                                <button type="button" @click="logout" :loading="isLogouting"
+                                    class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                    <i class="pi pi-sign-out mr-2"></i>
+                                    <span>登出</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

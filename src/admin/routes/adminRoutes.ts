@@ -95,6 +95,13 @@ export default [
               components: {
                 admin: () => import('@/admin/components/problem/TagList.vue')
               }
+            },
+            {
+              path:'/admin/problems/categories',
+              name:'AdminProblemCategories',
+              components:{
+                admin:()=>import('@/admin/components/problem/ProblemCategory.vue')
+              }
             }
           ]
         },

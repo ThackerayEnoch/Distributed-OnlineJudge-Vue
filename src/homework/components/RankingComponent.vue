@@ -32,7 +32,7 @@
                     <span>{{ slotProps.data.rank }}</span>
                 </template>
             </Column>
-            <Column field="username" style="text-align: center;min-width: 200px;"
+            <Column field="username" style="text-align: center;min-width: 100px;"
                 headerStyle="background-color: #F8F8F9">
                 <template #header>
                     <span class="flex-1 text-center font-bold">用户名</span>
@@ -41,7 +41,7 @@
                     <span>{{ slotProps.data.username }}</span>
                 </template>
             </Column>
-            <Column field="nickname" style="text-align: center; min-width: 200px"
+            <Column field="nickname" style="text-align: center; min-width: 150px"
                 headerStyle="background-color: #F8F8F9;">
                 <template #header>
                     <span class="flex-1 text-center font-bold">姓名</span>
@@ -63,8 +63,8 @@
                     <span class="flex-1 text-center font-bold">AC</span>
                 </template>
                 <template #body="slotProps">
-                    <router-link
-                        :to="`/homework/${props.homeworkId}/status?contestId=${props.homeworkId}&userId=${slotProps.data.userId}`">{{
+                    <router-link v-if="slotProps.data.solvedCount != 0" class="text-blue-500 hover:text-blue-700"
+                        :to="`/homework/${props.homeworkId}/submit?contestId=${props.homeworkId}&userId=${slotProps.data.userId}`">{{
                             slotProps.data.solvedCount }}</router-link>
                 </template>
             </Column>

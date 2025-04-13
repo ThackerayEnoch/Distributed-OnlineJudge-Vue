@@ -160,7 +160,7 @@ const refreshRandomExample = () => {
 };
 // 生成随机密码示例
 function generateRandomPassword(): string {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjklmnpqrstuvwxyz23456789';
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
     return Array.from({ length: 6 }, () =>
         chars[Math.floor(Math.random() * chars.length)]
     ).join('');

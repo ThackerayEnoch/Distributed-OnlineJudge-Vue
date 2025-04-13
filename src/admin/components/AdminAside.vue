@@ -42,7 +42,8 @@ export default defineComponent({
                         items: [
                             { label: '题目列表', icon: 'pi pi-list', to: '/admin/problems/list' },
                             { label: '创建题目', icon: 'pi pi-plus', to: '/admin/problem/create' },
-                            { label: '题目标签', icon: 'pi pi-tags', to: '/admin/problems/tags' },
+                            { label: '题目分类', icon: 'pi pi-folder', to: '/admin/problems/categories' },
+                            { label: '标签管理', icon: 'pi pi-tags', to: '/admin/problems/tags' },
                             { label: '导入|导出题目', icon: 'pi pi-upload', to: '/admin/problems/import-export' }
                         ]
                     },
@@ -56,15 +57,6 @@ export default defineComponent({
                         ]
                     },
                     {
-                        label: '考试管理',
-                        icon: 'pi pi-calendar',
-                        to: '/admin/exams',
-                        items: [
-                            { label: '考试列表', icon: 'pi pi-list', to: '/admin/exams/list' },
-                            { label: '创建考试', icon: 'pi pi-plus', to: '/admin/exams/create' }
-                        ]
-                    },
-                    {
                         label: '用户管理',
                         icon: 'pi pi-users',
                         to: '/admin/users',
@@ -72,7 +64,6 @@ export default defineComponent({
                             { label: '用户列表', icon: 'pi pi-user', to: '/admin/users/list' },
                             { label: '导入用户', icon: 'pi pi-upload', to: '/admin/users/import' },
                             { label: '账号生成', icon: 'pi pi-plus', to: '/admin/users/generate' },
-                            { label: '启用用户', icon: 'pi pi-user-plus', to: '/admin/users/enable' },
                         ]
                     },
                     {
@@ -117,6 +108,17 @@ export default defineComponent({
         };
     },
 });
+/**
+ *                     {
+                        label: '考试管理',
+                        icon: 'pi pi-calendar',
+                        to: '/admin/exams',
+                        items: [
+                            { label: '考试列表', icon: 'pi pi-list', to: '/admin/exams/list' },
+                            { label: '创建考试', icon: 'pi pi-plus', to: '/admin/exams/create' }
+                        ]
+                    },
+ */
 </script>
 <style scoped>
 .text-custom {

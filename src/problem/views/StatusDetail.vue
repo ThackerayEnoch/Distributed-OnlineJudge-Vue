@@ -164,7 +164,6 @@
 </template>
 <script setup lang="ts">
 import { type Status, getStatDetail } from '../StatusAPI';
-import { languageOptions } from '@/common/constant/AllConstant';
 import Column from 'primevue/column';
 import { ref, defineProps, onMounted, onUpdated } from 'vue'
 import AccessDenied from '@/common/components/AccessDenied.vue';

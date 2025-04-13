@@ -5,7 +5,8 @@ export enum Role {
     STUDENT = 5
 }
 export const RoleMap = {
-    2: 'Sysadmin',
-    3: 'Admin',
+    1: 'Sysadmin',
+    2: 'Admin',
+    3: 'ProblemEditor',
     4: 'Teacher',
 }

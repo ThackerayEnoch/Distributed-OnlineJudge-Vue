@@ -47,6 +47,16 @@
                                         </router-link>
                                         <Tag v-for="label in issue.labels" :key="label" :value="label" severity="info"
                                             class="text-xs" />
+                                        <!-- 反馈状态标签 -->
+                                        <Tag v-if="statusTagMap.has(issue.status)"
+                                            :value="statusTagMap.get(issue.status)?.label"
+                                            :severity="statusTagMap.get(issue.status)?.severity" class="text-xs" />
+                                        <!-- 反馈优先级标签 -->
+                                        <Tag v-if="issue.priority !== -1"
+                                            :value="issue.priority == 0 ? '低' : issue.priority == 1 ? '中' : '高'"
+                                            :severity="issue.priority === 0 ? 'info' : issue.priority === 1 ? 'warning' : 'danger'"
+                                            class="text-xs" />
+
                                     </div>
 
                                     <div class="mt-1 text-sm text-gray-600">
@@ -128,6 +138,13 @@ onMounted(() => {
     loadAllIssues();
     loadIssuesCount();
 })
+const statusTagMap = new Map<number, { label: string; severity: string }>([
+    [0, { label: '已提交', severity: 'info' }],
+    [1, { label: '待解决', severity: 'warn' }],
+    [2, { label: '解决中', severity: 'secondary' }],
+    [3, { label: '已解决', severity: 'success' }],
+    [4, { label: '已关闭', severity: 'danger' }]
+]);
 const filterClick1 = (filter: number) => {
     selectedStatus.value = [filter]
     loadAllIssues()

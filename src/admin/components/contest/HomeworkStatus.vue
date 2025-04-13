@@ -27,7 +27,7 @@
             <Column field="title" header="题目">
                 <template #body="slotProps">
                     <router-link :to="'/problem/' + slotProps.data.id">{{ slotProps.data.title
-                        }}</router-link>
+                    }}</router-link>
                 </template>
             </Column>
 
@@ -60,7 +60,16 @@
             </template>
             <Column field="id" header="#" />
             <Column field="nickname" header="姓名" />
-            <Column field="solved" header="通过题数" sortable />
+            <Column field="solved" sortable style="text-align: center;">
+                <template #header>
+                    <span class="flex-1 text-center font-bold">AC</span>
+                </template>
+                <template #body="slotProps">
+                    <router-link class="text-blue-500 hover:text-blue-700"
+                        :to="`/statuses?contestId=${props.id}&userId=${slotProps.data.id}`">{{
+                            slotProps.data.solved }}</router-link>
+                </template>
+            </Column>
             <Column field="passRate" header="完成率" sortable>
                 <template #body="slotProps">
                     <span
@@ -253,8 +262,8 @@ async function loadData() {
         // 提交次数折线图数据
         lineChartData.datasets[0].data = data.submitDataSetVO;
         isloading.value = false;
-    }).catch(() => {
-        globalMessage.error('加载数据失败', '请刷新重试');
+    }).catch((err) => {
+        globalMessage.error('加载数据失败', err.message);
     });
 }
 function convertToLetter(num: number) {

@@ -177,7 +177,7 @@ const passwordModeChange = () => {
     }
 };
 const generatePassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
     return Array(8)
         .fill(null)
         .map(() => chars[Math.floor(Math.random() * chars.length)])

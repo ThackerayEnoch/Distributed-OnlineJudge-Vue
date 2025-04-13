@@ -192,7 +192,8 @@ async function saveUsers() {
     try {
         await createUserBatch(userDTO);
         globalMessage.success('用户导入', '用户导入成功');
-
+        users.value = []; // 清空用户列表
+        uploadedFiles.value = []; // 清空已上传的文件列表
     } catch (error: any) {
         globalMessage.error('用户导入', error.message);
     }
@@ -230,7 +231,7 @@ const onCellEditComplete = (event: any) => {
     }
 };
 const generateRandomPassword = (length: number): string => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
     let password = '';
     for (let i = 0; i < length; i++) {
         const randomIndex = Math.floor(Math.random() * chars.length);

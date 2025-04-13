@@ -11,6 +11,7 @@ export namespace ContestSpace{
         creator: string;
     }
     export interface AdminParseUsers{
+        id?:number;
         studentId:string;
         nickname:string;
     }
@@ -37,6 +38,7 @@ export namespace ContestSpace{
         problems: contestProblem[];
         groupIds: number[];
         users: string[];
+        collaborators: number[];
         startTime: number;
         endTime: number;
     }
@@ -55,6 +57,8 @@ export namespace ContestSpace{
         languages: number[];
         problems: contestProblem[];
         users: string[];
+        collaboratorIds: number[];
+        collaborators: AdminParseUsers[];
         createTime: string;
         updateTime: string;
     }
@@ -170,4 +174,7 @@ export const updateHomeworkStatus = (data:ContestSpace.ContestUpdateStatusDTO) =
 }
 export const uploadFile = (files:FormData,headers:object) => {
     return request.post<string>(`/api/c/admin/homework/upload`,files, headers);
+}
+export const getCollaborators = (content:string) => {
+    return request.get<ContestSpace.AdminParseUsers[]>('/api/c/admin/homework/collaborators',{content});
 }

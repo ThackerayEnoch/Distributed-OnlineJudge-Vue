@@ -37,7 +37,7 @@
                 </div>
                 <div class="mb-4">
                     <h2 class="text-xl font-semibold mb-2 text-blue-500">题目描述</h2>
-                    <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css"
+                    <div v-if="problemDetail.id <= 2501" class="ml-4 contain-math-html-css"
                         v-html="problemDetail.description"></div>
                     <div v-else>
                         <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'"
@@ -46,7 +46,7 @@
                 </div>
                 <div class="mb-4">
                     <h2 class="text-xl font-semibold mb-2 text-blue-500">输入格式</h2>
-                    <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css"
+                    <div v-if="problemDetail.id <= 2501" class="ml-4 contain-math-html-css"
                         v-html="problemDetail.input">
                     </div>
                     <div v-else>
@@ -56,7 +56,7 @@
                 </div>
                 <div class="mb-4">
                     <h2 class="text-xl font-semibold mb-2 text-blue-500">输出格式</h2>
-                    <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css"
+                    <div v-if="problemDetail.id <= 2501" class="ml-4 contain-math-html-css"
                         v-html="problemDetail.output">
                     </div>
                     <div v-else>
@@ -91,7 +91,7 @@
                 </div>
                 <div v-if="problemDetail.hint" class="mb-4">
                     <h2 class="text-xl font-semibold mb-2 text-blue-500">提示</h2>
-                    <div v-if="problemDetail.id <= 2493" class="ml-4 contain-math-html-css" v-html="problemDetail.hint">
+                    <div v-if="problemDetail.id <= 2501" class="ml-4 contain-math-html-css" v-html="problemDetail.hint">
                     </div>
                     <MdPreview v-else :theme="layoutConfig.darkTheme ? 'dark' : 'light'"
                         :modelValue="problemDetail.hint" />
@@ -284,10 +284,10 @@ async function handleSubmit() {
     }
     await submitProblem(dto).then(() => {
         if (contestId != null) {
-            router.push('/statuses?problemId=' + props.pid + '&contestId=' + contestId + '&userId=' + userStore.currentUser.userId);
+            router.push('/statuses?problemId=' + props.pid + '&contestId=' + contestId + '&type=own');
         }
         else {
-            router.push('/statuses?problemId=' + props.pid + '&userId=' + userStore.currentUser.userId);
+            router.push('/statuses?problemId=' + props.pid + '&type=own');
         }
         globalMessage.success('提交成功', '您的代码已提交成功');
     }).catch((err) => {
@@ -349,7 +349,7 @@ onMounted(() => {
 });
 // 当异步请求得到数据后，渲染数学公式
 watch(problemDetail, () => {
-    if (problemDetail.value.id <= 2493 && problemDetail.value && problemDetail.value.description) {
+    if (problemDetail.value.id <= 2501 && problemDetail.value && problemDetail.value.description) {
         problemDetail.value.description = renderMath(problemDetail.value.description);
         problemDetail.value.input = renderMath(problemDetail.value.input);
         problemDetail.value.output = renderMath(problemDetail.value.output);
@@ -407,11 +407,48 @@ const getProblemDetailData = async () => {
     });
 
 }
+// 解码HTML实体字符，同时保留HTML标签（如 <img>）
+const decodeHtmlEntities = (str: string): string => {
+    if (!str) return '';
+
+    // 使用 DOMParser 保留 HTML 结构
+    const parser = new DOMParser();
+    const dom = parser.parseFromString(`<!DOCTYPE html><body>${str}`, 'text/html');
+
+    // 递归解码节点中的文本内容
+    const decodeNode = (node: Node): void => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = node.textContent || '';
+            node.textContent = tempDiv.textContent || '';
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            // 保留 <img> 和其他标签的属性
+            const element = node as Element;
+            Array.from(element.attributes).forEach(attr => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = attr.value;
+                attr.value = tempDiv.textContent || attr.value;
+            });
+            // 递归处理子节点
+            node.childNodes.forEach(decodeNode);
+        }
+    };
+
+    decodeNode(dom.body);
+    // 返回 body 的 innerHTML，保留所有标签
+    return dom.body.innerHTML;
+};
+
 // 渲染数学公式
-const renderMath = (content: string) => {
-    content = decodeHtmlEntities(content);
+const renderMath = (content: string): string => {
     if (!content) return '';
-    const regex = /(?:\$\$(.*?)\$\$|\\\[(.*?)\\\])|(?:\$(.*?)\$|\\\((.*?)\\\))/g;
+
+    // 先解码 HTML 实体，保留标签
+    content = decodeHtmlEntities(content);
+
+    // 匹配 LaTeX 公式：块级 ($$...$$ 或 \[...\]) 和行内 ($...$ 或 \(...\))
+    const regex = /(?:\$\$(.*?)\$\$|\\\[(.*?)\\\])|(?:\$(.*?)\$|\\\((.*?)\\\))/gs;
+
     return content.replace(regex, (match, blockLatex, blockLatex2, inlineLatex, inlineLatex2) => {
         // 匹配块级公式
         if (blockLatex || blockLatex2) {
@@ -420,7 +457,7 @@ const renderMath = (content: string) => {
                 return `<div class="math-block">${katex.renderToString(latex, { displayMode: true })}</div>`;
             } catch (error) {
                 console.error('KaTeX rendering error:', error);
-                return match;
+                return match; // 保留原始公式
             }
         }
         // 匹配行内公式
@@ -430,20 +467,11 @@ const renderMath = (content: string) => {
                 return `<span class="math-inline">${katex.renderToString(latex)}</span>`;
             } catch (error) {
                 console.error('KaTeX rendering error:', error);
-                return match;
+                return match; // 保留原始公式
             }
         }
         return match;
     });
-};
-// 解码HTML实体字符
-const decodeHtmlEntities = (str: string) => {
-    const element = document.createElement('div');
-    if (str) {
-        element.innerHTML = str;
-        return element.textContent || element.innerText || '';
-    }
-    return str;
 };
 // 复制到剪贴板
 const copyToClipboard = (content: string) => {

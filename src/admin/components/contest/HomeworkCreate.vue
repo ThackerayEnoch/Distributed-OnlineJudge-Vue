@@ -57,7 +57,7 @@
                     <label class="text-gray-500">
                         <span class="text-red-500">*</span> 作业权限
                         <i class="ml-1 fa-regular fa-circle-question text-blue-500 cursor-pointer"
-                            v-tooltip.top="'公开模式: 任何人都可参与\n私有模式: 允许设定参与者\n保护模式: 允许设定参与者, 其他参与者需要密码'"></i>
+                            v-tooltip.top="'公开模式：任何人均可参与。\n私有模式：仅允许预先设定的参与者，此作业对非参与者不可见。\n保护模式：允许预先设定参与者，其他参与者需通过密码加入。'"></i>
                     </label>
                     <Select v-model="homework.auth" :options="authOptions" optionLabel="label" optionValue="value"
                         class="mt-2 w-full" />
@@ -91,9 +91,35 @@
             </label>
             <ToggleSwitch class="mt-2" disible v-tooltip.top="'正在开发中'" v-model="homework.duplicateCheck" />
         </div>
-        <div v-if="homework.auth !== 0" class="mt-6">
+        <!-- 是否开启查重 -->
+        <div class="flex flex-col mt-6">
             <label class="text-gray-500">
-                <span class="text-red-500">*</span> 参与班级
+                协助用户
+                <i class="ml-1 fa-regular fa-circle-question text-blue-500 cursor-pointer"
+                    v-tooltip.top="'与其他用户共同管理作业'"></i>
+            </label>
+            <MultiSelect v-model="collaborators" :options="collaboratorOptions" optionLabel="nickname" optionValue="id"
+                placeholder="选择班级..." lazy class="w-[30%] mt-2">
+                <template #header>
+                    <div class="flex items-center gap-2 p-2">
+                        <InputGroup>
+                            <InputText v-model="collaboratorContent" placeholder="搜索用户(昵称或用户名)..."
+                                @keyup.enter="searchCollaborators" class="w-full p-2 border rounded-lg" />
+                            <Button icon="pi pi-search" class="!px-3" @click="searchCollaborators" v-tooltip="'搜索'" />
+                        </InputGroup>
+                    </div>
+                </template>
+                <template #option="slotProps">
+                    <div class="flex items-center">
+                        <span class="font-medium">{{ slotProps.option.nickname }}</span>
+                        <span class="ml-2 text-gray-500 text-sm">#{{ slotProps.option.studentId }}</span>
+                    </div>
+                </template>
+            </MultiSelect>
+        </div>
+        <div v-if="homework.auth !== 0" class="mt-4">
+            <label class="text-gray-500">
+                参与班级
             </label>
         </div>
         <div v-if="homework.auth !== 0" class="p-0 mt-4 space-y-4">
@@ -110,34 +136,50 @@
                 </template>
             </MultiSelect>
         </div>
-        <div v-if="homework.auth !== 0" class="mt-6">
-            <label class="text-gray-500">
-                <span class="text-red-500">*</span> 参与用户
-            </label>
-        </div>
-        <div v-if="homework.auth !== 0" class="flex gap-4 p-4 items-center">
-            <!-- 左侧输入框 -->
-            <textarea v-model="studentInput" class="w-1/4 h-96 p-2 border border-gray-300 rounded-md resize-none"
-                placeholder="粘贴学号，每行一个"></textarea>
+        <div v-if="homework.auth !== 0" class="flex gap-4 p-0 mt-3 items-center">
+            <!-- 学生名单模块 -->
+            <div class="space-y-2 w-full">
+                <label class="block font-medium text-gray-700">
+                    学生名单
+                    <span class="text-sm text-gray-500">（每行输入一个学生信息，格式：学号/用户名）</span>
+                </label>
+                <div class="flex gap-4 h-64">
+                    <!-- 输入区 -->
+                    <div class="flex-1">
+                        <Textarea v-model="studentInput" class="w-full h-full font-mono" placeholder="示例：
+202231222024
+202231222062
+202231222107" />
+                    </div>
 
-            <!-- 中间解析按钮和箭头 -->
-            <div class="flex flex-col items-center">
-                <button class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
-                    @click="parseButtonEvent">
-                    解析
-                </button>
-                <span class="text-2xl mt-2">→</span>
+                    <!-- 操作按钮列 -->
+                    <div class="flex flex-col justify-center gap-2">
+                        <Button icon="pi pi-arrow-right" severity="secondary" @click="parseButtonEvent" class="!px-3"
+                            v-tooltip="'解析名单'" :loading="parsing" />
+                        <Button icon="pi pi-replay" severity="secondary" @click="clearStudents" class="!px-3"
+                            v-tooltip="'重置名单'" />
+                    </div>
+
+                    <!-- 解析结果区 -->
+                    <div class="flex-1 bg-gray-50 rounded-lg p-4 overflow-y-auto">
+                        <div v-if="students.length === 0" class="text-gray-400 h-full flex items-center justify-center">
+                            <i class="pi pi-info-circle mr-2"></i>
+                            <span>等待解析结果...</span>
+                        </div>
+                        <div v-else class="space-y-2">
+                            <div v-for="(student, index) in students" :key="index"
+                                class="flex items-center p-3 bg-white rounded shadow-sm hover:shadow transition">
+                                <Avatar icon="pi pi-user" class="!bg-primary-100 !text-primary-600 mr-3" />
+                                <div>
+                                    <div class="font-medium">{{ student.studentId }}</div>
+                                    <div class="text-sm text-gray-500">{{ student.nickname || '未设置昵称' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <!-- 右侧 DataTable -->
-            <div class="w-1/4 border border-gray-300 rounded-md min-h-96 overflow-auto">
-                <DataTable :value="students" class="w-full" scrollable scrollHeight="400px">
-                    <Column field="studentId" header="学号"></Column>
-                    <Column field="nickname" header="昵称"></Column>
-                </DataTable>
-            </div>
         </div>
-
         <div>
             <Button label="保存" @click="onSubmitEvent" :loading="isSubmiting" icon="pi pi-check" class="w-full mt-4" />
         </div>
@@ -158,8 +200,7 @@
                 </button>
             </div>
         </div>
-        <DataTable :value="contestProblems" class="mt-2" lazy :sortOrder="1" sortField="number" removableSort scrollable
-            scrollHeight="400px">
+        <DataTable :value="contestProblems" class="mt-2" removableSort scrollable scrollHeight="400px">
             <Column field="id">
                 <template #header>
                     <span class="flex-1 text-center font-bold">ID</span>
@@ -297,7 +338,7 @@ import CustomToggleButton from './CustomToggleButton.vue';
 import { reactive, ref, defineComponent, onMounted } from 'vue'
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { parseUsers, getHomeworkGroup, createHomework, uploadFile, getHomeworkDetail, updateHomework, getAdminAllProblems, getAdminProblems, getAdminProblemsCount, type ContestSpace } from '@/admin/api/contestAPI'
+import { parseUsers, getHomeworkGroup, getCollaborators, createHomework, uploadFile, getHomeworkDetail, updateHomework, getAdminAllProblems, getAdminProblems, getAdminProblemsCount, type ContestSpace } from '@/admin/api/contestAPI'
 import { type TagsSpace, getTags } from '@/admin/api/tagAPI'
 import globalMessage from '@/common/utils/toast';
 import router from '@/common/utils/router';
@@ -335,6 +376,20 @@ export default defineComponent({
         ]);
         const studentInput = ref('');
         const students = ref<ContestSpace.AdminParseUsers[]>([]);
+        const collaborators = ref<number[]>([]);
+        const collaboratorContent = ref('');
+        const collaboratorOptions = ref<ContestSpace.AdminParseUsers[]>([]);
+        const searchCollaborators = async () => {
+            if (collaboratorContent.value.length < 2) {
+                globalMessage.warn("提示", "请输入至少两个字符进行搜索");
+                return;
+            }
+            await getCollaborators(collaboratorContent.value).then(res => {
+                collaboratorOptions.value.push(...(res.data as ContestSpace.AdminParseUsers[]));
+            }).catch(err => {
+                globalMessage.error("搜索用户失败", err.message);
+            });
+        }
         const homework = reactive({
             title: '',
             description: '',
@@ -517,19 +572,27 @@ export default defineComponent({
                 loadHomeworkDetail(Number(props.copyId));
             }
         })
+        const parsing = ref(false);
         const parseButtonEvent = () => {
             parseUsersFun();
+        }
+        const clearStudents = () => {
+            studentInput.value = '';
+            students.value = [];
         }
         const onOwnClassesChange = () => {
             loadClasses();
         }
         const parseUsersFun = async () => {
             // 解析学生
+            parsing.value = true;
             const stu: string[] = studentInput.value.split('\n');
             await parseUsers(stu).then(res => {
                 students.value = res.data as ContestSpace.AdminParseUsers[];
             }).catch(err => {
                 globalMessage.error("解析失败", err.message);
+            }).finally(() => {
+                parsing.value = false;
             });
         }
         const loadClasses = async () => {
@@ -562,6 +625,7 @@ export default defineComponent({
                 languages: homework.languages,
                 problems: problemTmp,
                 users: stu,
+                collaborators: collaborators.value,
                 groupIds: homework.selectedClasses,
                 startTime: homework.startTime.getTime(),
                 endTime: homework.endTime.getTime()
@@ -589,7 +653,8 @@ export default defineComponent({
                 homework.startTime = new Date(data.startTime);
                 homework.endTime = new Date(data.endTime);
                 studentInput.value = data.users.join('\n');
-
+                collaborators.value = data.collaboratorIds;
+                collaboratorOptions.value = data.collaborators as ContestSpace.AdminParseUsers[];
                 contestProblems.value = data.problems.map(problem => ({
                     id: problem.problemId,
                     title: problem.title as string,
@@ -626,6 +691,7 @@ export default defineComponent({
                 languages: homework.languages,
                 problems: problemTmp,
                 users: stu,
+                collaborators: collaborators.value,
                 groupIds: homework.selectedClasses,
                 startTime: homework.startTime.getTime(),
                 endTime: homework.endTime.getTime()
@@ -672,7 +738,8 @@ export default defineComponent({
             onOwnClassesChange, parseButtonEvent, createHomeworkFun, onSubmitEvent, contestProblemsDialog, contestProblems, addProblemDialog,
             allProblems, selectedProblems, problemTotalRecords, problemFirst, onProblemPage, onAddPageOpen, onListPageOpen, problemFinalSaveEvent,
             selectedProblemSaveEvent, filterType, problemSearchContent, searchProblemInAllEvent, convertToLetter, deleteContestProblems,
-            onUploadImg, isSubmiting, isDuplicateNumber, tagContent, problemTagOptions, problemTagIds
+            onUploadImg, isSubmiting, isDuplicateNumber, tagContent, problemTagOptions, problemTagIds, collaborators, clearStudents, parsing,
+            collaboratorContent, collaboratorOptions, searchCollaborators
         }
     }
 })

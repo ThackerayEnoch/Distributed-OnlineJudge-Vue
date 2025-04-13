@@ -481,8 +481,8 @@ async function assignRoleEvent() {
         globalMessage.success('操作成功', '用户组分配成功');
         roleDisplayDialog.value = false;
         loading.role = false;
-    }).catch(() => {
-        globalMessage.error('操作失败', '用户组分配失败');
+    }).catch((err) => {
+        globalMessage.error('操作失败', err.message);
         loading.role = false;
     });
 }

@@ -97,6 +97,21 @@ export namespace ProblemSpace{
         updateTime: Date;
         tags: TagVO[];
     }
+    export interface ProblemAndTagVO{
+        id:number,
+        title:string,
+        tags:TagVO[]
+    }
+    export interface UpdateProblemTagsDTO{
+        id:number,
+        tagIds:number[]
+    }
+}
+export const UpdateProblemTags = (dto:ProblemSpace.UpdateProblemTagsDTO) => {
+    return request.put('/api/p/problems/tags',dto)
+}
+export const getAdminProblemAndTagVO = (offset:number,own:boolean,auth:number,content:string) =>{
+   return request.get<ProblemSpace.ProblemAndTagVO[]>('/api/p/admin/problems/tags',{offset,own,auth,content})
 }
 export const getAdminProblems = (offset:number,own:boolean,auth:number,content:string) => {
     return request.get<ProblemSpace.ProblemVO[]>('/api/p/admin/problems',{offset,own,auth,content})

@@ -46,6 +46,7 @@ export default defineComponent({
                             { label: "题目列表", icon: "pi pi-list", to: "/admin/problems/list" },
                             { label: '测试点管理', icon: 'pi pi-list', to: '/admin/problem/testcases' },
                             { label: '题目编辑', icon: 'pi pi-edit', to: '/admin/problem/edit' },
+                            { label: '题目分类', icon: 'pi pi-folder', to: '/admin/problems/categories' },
                             { label: "创建题目", icon: "pi pi-plus", to: "/admin/problem/create" },
                             { label: "题目标签", icon: "pi pi-tags", to: "/admin/problems/tags" },
                             { label: "导入|导出题目", icon: "pi pi-upload", to: "/admin/problems/import-export" },

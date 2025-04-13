@@ -135,7 +135,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { getStatPage, getStatBySubmitid, getStatMaxCount, type Status } from '../StatusAPI'
-import { statusMap, statusClassMap, statusOptions } from '@/common/constant/AllConstant';
+import { statusMap, statusClassMap } from '@/common/constant/AllConstant';
 import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/common/utils/store';
 const counterStore = useUserStore();
@@ -155,7 +155,7 @@ const userId = ref(route.query.userId ? parseInt(route.query.userId as string) :
 const type = ref(route.query.type as string || 'all');
 const statusProp = ref(route.query.status ? parseInt(route.query.status as string) : null);
 // 是否只显示自己
-const isMe = ref(false);
+const isMe = ref(type.value === 'own' ? true : false);
 function onIsMeChange() {
     if (isMe.value) {
         type.value = "own";
