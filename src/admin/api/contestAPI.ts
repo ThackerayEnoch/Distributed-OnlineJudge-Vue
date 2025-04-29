@@ -52,6 +52,7 @@ export namespace ContestSpace{
         visible: boolean;
         duplicateCheck: boolean;
         groupIds: number[];
+        groups: AdminHomeworkGroupVO[];
         startTime: number;
         endTime: number;
         languages: number[];

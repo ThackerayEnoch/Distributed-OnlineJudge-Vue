@@ -32,6 +32,13 @@ export namespace Auth {
 }
 // 用户登录
 // 用户登录
+export const hustojLogin = ()=>{
+    return request.post<Auth.LoginResData>('/api/a/doLogin', {}, {
+        headers: {
+            'loginType':'hustojLogin'
+        }
+    });
+}
 export const login = (params: Auth.LoginReqParams) => {
     const urlEncodedParams = new URLSearchParams();
     Object.keys(params).forEach(key => {
@@ -44,6 +51,9 @@ export const login = (params: Auth.LoginReqParams) => {
             'loginType':'memberLogin'
         }
     });
+}
+export const survive = () =>{
+    return request.get<boolean>('/api/a/survive')
 }
 export const firstChangePassword = (params: Auth.FirstChangePasswordDTO) => {
     return request.put('/api/u/user/password/first', params)

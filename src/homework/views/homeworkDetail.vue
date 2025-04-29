@@ -91,8 +91,8 @@
                     <div class="flex justify-between items-center m-2">
                         <span>作业权限</span>
                         <span v-if="homework.auth == 0">公开赛</span>
-                        <span v-else-if="homework.auth == 1">私有赛</span>
-                        <span v-else-if="homework.auth == 2">保护赛</span>
+                        <span v-else-if="homework.auth == 2">私有赛</span>
+                        <span v-else-if="homework.auth == 1">保护赛</span>
                     </div>
                     <div class="flex justify-between items-center m-2">
                         <span>完成题数</span>

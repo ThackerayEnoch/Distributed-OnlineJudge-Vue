@@ -22,11 +22,11 @@ export interface ResultData<T = any> extends Result {
   data?: T;
 }
 // 请求地址
-const URL: string = "http://192.168.200.9";
+const URL: string = "http://192.168.1.128:8000";
 
 const config = {
   // 默认地址
-  // baseURL: URL as string,
+  baseURL: URL as string,
   // 设置超时时间
   timeout: 1000000,
   // 跨域时候允许携带凭证
@@ -87,7 +87,7 @@ class RequestHttp {
         const { data, config } = response; // 解构
         // 全局错误信息拦截（防止下载文件得时候返回数据流，没有code，直接报错）
         if (!data.status || response.status >= 400) {
-          globalMessage.error("错误", data); // 此处也可以使用组件提示报错信息
+          globalMessage.error("错误", data.message || "发生未知错误"); // 此处也可以使用组件提示报错信息
           return Promise.reject(data);
         }
         return data;
@@ -99,13 +99,13 @@ class RequestHttp {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { data, config } = response; // 解构
           // 使用类型断言明确 data 的类型
-          const responseData = data as { status: number; data: string };
+          const responseData = data as { status: number;message:string; data: string };
           if (response.status === HttpStatusCode.Unauthorized) {
             // 登录信息失效，应跳转到登录页面，并清空本地的token
             localStorage.setItem("token", "");
             router.push("/auth/login");
           }
-          const apiError = new APIError(responseData.status, responseData.data);
+          const apiError = new APIError(responseData.status, responseData.data,responseData.message);
           return Promise.reject(apiError);
         }
         if (!window.navigator.onLine) {

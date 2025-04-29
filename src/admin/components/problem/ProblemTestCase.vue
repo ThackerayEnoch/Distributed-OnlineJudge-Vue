@@ -11,6 +11,9 @@
                         class="p-button-sm p-button-secondary" />
                     <Button label="上传压缩包" @click="uploadZip" icon="pi pi-file-zip"
                         class="p-button-sm p-button-secondary" />
+                    <!--添加Tiptool-->
+                    <span class="text-red-500" v-tooltip.top="'测试点命名请以数字开头，如1.in 1.out'"><i
+                            class="ml-1 fa-regular fa-circle-question"></i></span>
                 </div>
             </div>
 
@@ -289,6 +292,7 @@ const handleFileUpload = async () => {
         uploadedFiles.value.push(...selectedFiles.value);
         // **清空 selectedFiles，但不影响 FileUpload 组件**
         selectedFiles.value = [];
+        loadTestcases();
         isUploading.value = false;
     }).catch(error => {
         selectedFiles.value = [];

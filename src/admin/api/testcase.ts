@@ -53,5 +53,5 @@ export const deleteTestcase = (ids:string) => {
     return request.delete(`/api/p/admin/testcase/${ids}`,{});
 }
 export const renameTestcase = (data:TestCaseSpace.RenameTestcaseDTO) => {
-    return request.put(`/api/p/admin/testcase/rename`,{data});
+    return request.put(`/api/p/admin/testcase/rename`,data);
 }

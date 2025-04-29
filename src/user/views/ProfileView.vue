@@ -11,6 +11,7 @@
                             <Tag v-if="user.tag === 'SysAdmin'" value="SysAdmin" severity="danger" />
                             <Tag v-else-if="user.tag === 'Admin'" value="Admin" severity="warn" />
                             <Tag v-else-if="user.tag === 'Teacher'" value="Teacher" severity="info" />
+                            <Tag v-else-if="user.tag === 'ProblemEditor'" value="ProblemEditor" severity="success" />
                         </div>
                         <span class="text-gray-500">济南大学</span>
                     </div>

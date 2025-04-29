@@ -24,7 +24,8 @@
                             <div class="flex items-center gap-2 text-sm">
                                 <i class="pi pi-check text-green-500"></i>
                                 <span class="text-gray-600">判题机在线</span>
-                                <span class="font-medium">{{ judgeTask.onlineJudgerCount }}/{{ judgeTask.judgerTotalCount
+                                <span class="font-medium">{{ judgeTask.onlineJudgerCount }}/{{
+                                    judgeTask.judgerTotalCount
                                     }}</span>
                             </div>
                         </div>
@@ -447,43 +448,8 @@ const importantLogs = ref([
         time: '2024-03-20 09:15',
         type: 'ADMIN',
         icon: 'pi pi-server',
-        user: 'sysadmin@ujn.edu.cn',
-        action: '重启核心数据库集群'
-    },
-    {
-        time: '2024-03-20 10:30',
-        type: 'SUCCESS',
-        icon: 'pi pi-check-circle',
-        user: 'teacher01@ujn.edu.cn',
-        action: '批量导入127名学生实验数据'
-    },
-    {
-        time: '2024-03-20 11:45',
-        type: 'ADMIN',
-        icon: 'pi pi-shield',
-        user: 'secadmin@ujn.edu.cn',
-        action: '更新系统安全策略'
-    },
-    {
-        time: '2024-03-20 14:20',
-        type: 'INFO',
-        icon: 'pi pi-cloud-upload',
-        user: 'lab02@ujn.edu.cn',
-        action: '上传新版机器学习实验环境镜像'
-    },
-    {
-        time: '2024-03-20 16:05',
-        type: 'SUCCESS',
-        icon: 'pi pi-database',
-        user: 'dba@ujn.edu.cn',
-        action: '完成每日数据库全量备份'
-    },
-    {
-        time: '2024-03-20 17:30',
-        type: 'INFO',
-        icon: 'pi pi-tags',
-        user: 'student001@ujn.edu.cn',
-        action: '提交国家级大创项目申请'
+        user: 'sysadmin',
+        action: '测试'
     }
 ]);
 // 其他数据保持不变...

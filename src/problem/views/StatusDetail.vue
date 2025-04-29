@@ -4,7 +4,7 @@
             aria-label="Custom ProgressSpinner" />
         <span class="mt-2 text-gray-500">加载数据中...</span>
     </div>
-    <AccessDenied v-else-if="isAccessDenied" :message="message" btnLabel="返回题库" btnTo="/problems"
+    <AccessDenied v-else-if="isAccessDenied" :message="message" btnLabel="返回提交列表" btnTo="/statuses"
         btnIcon="pi pi-book" />
     <div v-else class="w-full min-h-screen p-6 flex flex-col mt-[-2.5rem]">
         <!-- Header -->
@@ -299,6 +299,11 @@ async function getJudgeDetail(submitId: number) {
             isAccessDenied.value = true;
             message.value = '您没有权限查看此记录';
             globalMessage.warn('提示', '您没有权限查看此记录');
+            return;
+        } else if (error.code === ProblemStatus.CONTEST_PROBLEM_USED) {
+            isAccessDenied.value = true;
+            message.value = '该题目已被使用，无法查看';
+            globalMessage.warn('提示', '该题目已被使用，无法查看');
             return;
         }
     });

@@ -581,6 +581,7 @@ export default defineComponent({
             students.value = [];
         }
         const onOwnClassesChange = () => {
+            filteredClasses.value = [];
             loadClasses();
         }
         const parseUsersFun = async () => {
@@ -598,7 +599,7 @@ export default defineComponent({
         const loadClasses = async () => {
             const type = onlyMyClasses.value ? 'own' : 'all';
             await getHomeworkGroup(type).then(res => {
-                filteredClasses.value = res.data as ContestSpace.AdminHomeworkGroupVO[];
+                filteredClasses.value.push(...(res.data as ContestSpace.AdminHomeworkGroupVO[]));
             }).catch(err => {
                 globalMessage.error("加载班级失败", err.message);
             });
@@ -663,6 +664,7 @@ export default defineComponent({
                     updateTime: '',
                     number: problem.displayId
                 }));
+                filteredClasses.value.push(...(data.groups as ContestSpace.AdminHomeworkGroupVO[]));
             }).catch(err => {
                 globalMessage.error("加载数据失败", err.message);
             });
