@@ -34,14 +34,14 @@ export namespace HomeworkSpace{
     }
 }
 export const getHomeworkPage = (currentPage:number,type:string,content:string) => {
-    return request.get<HomeworkSpace.HomeworkJSON[]>('/api/c/homeworks',{currentPage,type,content})
+    return request.get<HomeworkSpace.HomeworkJSON[]>('/api/c/contests',{currentPage,type,content})
 }
 export const getHomeworkCount = (type:string,content:string) => {
-    return request.get<number>('/api/c/homeworks/count',{type,content})
+    return request.get<number>('/api/c/contests/count',{type,content})
 }
 export const getHomeworkSummary = (id:number) => {
-    return request.get<HomeworkSpace.HomeworkSummaryVO>(`/api/c/homework/${id}`, {})
+    return request.get<HomeworkSpace.HomeworkSummaryVO>(`/api/c/contest/${id}`, {})
 }
 export const getHomeworkProblems = (id:number) => {
-    return request.get<HomeworkSpace.HomeworkProblemsVO[]>(`/api/c/homework/${id}/problems`, {})
+    return request.get<HomeworkSpace.HomeworkProblemsVO[]>(`/api/c/contest/${id}/problems`, {})
 }

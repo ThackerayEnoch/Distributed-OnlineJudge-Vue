@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AutoComplete: typeof import('primevue/autocomplete')['default']
     Avatar: typeof import('primevue/avatar')['default']
     Badge: typeof import('primevue/badge')['default']
     Breadcrumb: typeof import('primevue/breadcrumb')['default']
@@ -15,6 +16,7 @@ declare module 'vue' {
     Card: typeof import('primevue/card')['default']
     Chart: typeof import('primevue/chart')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
+    Chips: typeof import('primevue/chips')['default']
     Column: typeof import('primevue/column')['default']
     ConfirmDialog: typeof import('primevue/confirmdialog')['default']
     ConfirmPopup: typeof import('primevue/confirmpopup')['default']

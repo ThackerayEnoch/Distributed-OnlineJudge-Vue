@@ -181,6 +181,13 @@ export default [
               components:{
                 admin:()=>import('@/admin/components/user/EnableUser.vue')
               }
+            },
+            {
+              path:'/admin/users/whitelist',
+              name:'AdminUserWhitelist',
+              components:{
+                admin:()=>import('@/admin/components/user/UserIPWhitelist.vue')
+              }
             }
           ]
         },

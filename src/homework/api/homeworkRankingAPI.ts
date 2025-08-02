@@ -30,5 +30,5 @@ export namespace RankingSpace {
     }
 }
 export const getHomeworkRankingById = (homeworkId: number) => {
-    return request.get<RankingSpace.RankVO>(`/api/c/homework/${homeworkId}/rank`);
+    return request.get<RankingSpace.RankVO>(`/api/c/contest/${homeworkId}/rank`);
 }

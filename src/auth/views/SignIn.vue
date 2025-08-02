@@ -70,9 +70,9 @@ onMounted(() => {
 const isLoggedIn = async () => {
     await survive().then((res) => {
         if (res) {
-            router.push('/auth/password');
-        } else {
             router.push('/home')
+        } else {
+            router.push('/auth/password');
         }
         globalMessage.info('提示', '您已登录。如需重新登录，请先在导航栏右上角登出。');
     }).catch(() => {
