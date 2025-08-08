@@ -56,6 +56,15 @@ export interface UserWhitelistDTO {
     remark?: string;
     expireTime?: number;
 }
+export interface WhitelistImportParseVO {
+    userId: number;
+    username: string;
+    nickname: string;
+}
+
+export interface WhitelistImportParseDTO {
+    usernames: string[];
+}
 
 // API 调用函数
 /**
@@ -116,5 +125,21 @@ export const deleteUserWhitelist = (userId: number) => {
  */
 export const searchUserWhitelist = (searchContent: string) => {
     return request.get<SearchUsersVO[]>('/api/u/admin/user/whitelist/parse', {searchContent} );
+}
+/**
+ * 解析用户（用于批量导入白名单）
+ * @param usernames 用户名列表
+ */
+export const parseWhitelistImport = (usernames: string[]) => {
+    const dto: WhitelistImportParseDTO = { usernames };
+    return request.post<WhitelistImportParseVO[]>('/api/u/admin/whitelist/import/parse', dto);
+}
+
+/**
+ * 批量导入白名单
+ * @param whitelistData 白名单数据列表
+ */
+export const importWhitelist = (whitelistData: UserWhitelistDTO[]) => {
+    return request.post<string>('/api/u/admin/whitelist/import', whitelistData);
 }
 }

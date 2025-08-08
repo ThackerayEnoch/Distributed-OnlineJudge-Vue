@@ -188,6 +188,13 @@ export default [
               components:{
                 admin:()=>import('@/admin/components/user/UserIPWhitelist.vue')
               }
+            },
+            {
+              path:'/admin/users/ip-import',
+              name:'AdminUserWhitelistBatch',
+              components:{
+                admin:()=>import('@/admin/components/user/UserIPImportBatch.vue')
+              }
             }
           ]
         },

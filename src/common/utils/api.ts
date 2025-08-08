@@ -26,7 +26,7 @@ const URL: string = "http://192.168.1.128:8000";
 
 const config = {
   // 默认地址
-  //baseURL: URL as string,
+  baseURL: URL as string,
   // 设置超时时间
   timeout: 1000000,
   // 跨域时候允许携带凭证
