@@ -97,6 +97,13 @@ export default [
               }
             },
             {
+              path: '/admin/problems/import',
+              name: 'AdminProblemImport',
+              components: {
+                admin: () => import('@/admin/components/problem/ProblemImport.vue')
+              }
+            },
+            {
               path:'/admin/problems/categories',
               name:'AdminProblemCategories',
               components:{

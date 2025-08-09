@@ -7,13 +7,6 @@
                 </div>
             </template>
             <Divider />
-            <div class="w-full">
-                <label class="text-gray-500">
-                    <span class="text-red-500" v-tooltip.top="'不需要自定义留空即可，默认P题目id'"><i
-                            class="ml-1 fa-regular fa-circle-question"></i></span> 展示ID
-                </label>
-                <InputText v-model="displayId" class="mt-2 w-full" placeholder="展示ID" />
-            </div>
             <div class="w-full mt-2">
                 <label class="text-gray-500">
                     <span class="text-red-500">*</span> 题目标题
