@@ -30,6 +30,7 @@ export namespace Problem{
         nickname: string;
         createTime: Date;
         updateTime: Date;
+        isRemote:boolean;
         tags: TagVO[];
     }
     // 通过token无参请求用户信息

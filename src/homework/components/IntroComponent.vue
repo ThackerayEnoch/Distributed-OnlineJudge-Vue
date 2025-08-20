@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1 class="text-gray-600 text-2xl dark:text-white">作业简介</h1>
+        <h1 class="text-gray-600 text-2xl dark:text-white">比赛简介</h1>
         <MdPreview :theme="layoutConfig.darkTheme ? 'dark' : 'light'" :modelValue="props.description" />
     </div>
 </template>

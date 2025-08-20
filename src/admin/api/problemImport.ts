@@ -7,6 +7,12 @@ export namespace importSpace {
         result: boolean;
         message: string;
     }
+
+    // 远程题目导入DTO
+    export interface ImportRemoteProblemDTO {
+        ojName: string;     // OJ名称
+        problemId: string;  // 题目ID
+    }
 }
 
 // FPS格式题目导入接口
@@ -43,4 +49,9 @@ export const importHydroProblem = (file: File) => {
             'Content-Type': 'multipart/form-data'
         }
     });
+}
+
+// 远程题目导入接口
+export const importRemoteProblem = (data: importSpace.ImportRemoteProblemDTO[]) => {
+    return request.post<importSpace.ProblemImportResultVO[]>('/api/p/admin/problem/import-remote', data);
 }

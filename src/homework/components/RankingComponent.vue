@@ -9,7 +9,17 @@
             :rowsPerPageOptions="[10, 20, 50]">
             <template #header>
                 <div class="flex flex-wrap items-center justify-between gap-4">
-                    <span class="text-xl font-bold text-gray-700">排行榜</span>
+                    <div class="flex items-center gap-4">
+                        <span class="text-xl font-bold text-gray-700">排行榜</span>
+                        <div v-if="countdown > 0" class="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                            数据更新倒计时: {{ countdown }}秒
+                        </div>
+                        <div v-else class="flex items-center gap-2">
+                            <span class="text-sm text-green-600 bg-green-100 px-3 py-1 rounded-full">可获取最新数据</span>
+                            <Button label="刷新" icon="pi pi-refresh" size="small" @click="refreshRanking"
+                                :disabled="isloading" class="p-button-sm" severity="secondary" />
+                        </div>
+                    </div>
                     <div class="flex gap-3">
                         <Button label="导出已做名单" icon="pi pi-file-excel" severity="success" @click="exportExcel('solved')"
                             class="p-button-sm bg-green-500 hover:bg-green-600 border-green-500"
@@ -99,8 +109,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref, defineProps } from 'vue';
-import { onMounted } from 'vue';
+import { ref, defineProps, onMounted, onUnmounted } from 'vue';
 import { getHomeworkRankingById, type RankingSpace } from '../api/homeworkRankingAPI';
 import { exportToExcel, type ExportHeader } from '@/common/utils/excel';
 import { ProblemStatus } from '../status/homeworkStatus';
@@ -112,11 +121,55 @@ const props = defineProps<{
 }>();
 const isloading = ref(true);
 const router = useRouter();
+// 倒计时相关
+const countdown = ref(0);
+let countdownTimer: number | null = null;
+let isLoadingData = false; // 防止重复请求的标志
+
+// 启动倒计时
+const startCountdown = (cacheStartTime: number) => {
+    // 清除之前的定时器
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+    }
+
+    const cacheExpireTime = cacheStartTime + 5000; // 缓存5秒后过期
+
+    const updateCountdown = () => {
+        const now = Date.now();
+        const remaining = Math.max(0, Math.ceil((cacheExpireTime - now) / 1000));
+        countdown.value = remaining;
+
+        if (remaining === 0) {
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+            }
+        }
+    };
+
+    updateCountdown(); // 立即更新一次
+    countdownTimer = setInterval(updateCountdown, 1000);
+};
+
+// 刷新排行榜
+const refreshRanking = () => {
+    loadRankingData(Number(props.homeworkId));
+};
+
+// 停止倒计时
+const stopCountdown = () => {
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+    }
+};
 // 排行榜数据
 const rankData = ref<RankingSpace.RankVO>(
     {
         problems: [],
         users: [],
+        cacheStartTime: 0,
     },
 );
 // AC颜色
@@ -163,10 +216,24 @@ const getBackgroundClass = (isSolved: boolean, tries: number) => {
 
 // 加载排行榜数据
 async function loadRankingData(homeworkId: number) {
+    // 防止重复请求
+    if (isLoadingData) {
+        console.log('Already loading data, skipping duplicate request');
+        return;
+    }
+
+    isLoadingData = true;
     isloading.value = true;
 
-    getHomeworkRankingById(homeworkId).then((res: any) => {
+    try {
+        const res = await getHomeworkRankingById(homeworkId);
         let tmpData = res.data as RankingSpace.RankVO;
+
+        // 获取cacheStartTime来启动倒计时
+        if (tmpData.cacheStartTime) {
+            startCountdown(tmpData.cacheStartTime);
+        }
+
         // 题目排序
         tmpData.problems.sort((a, b) => a.displayId - b.displayId);
         // 名次排序(先solvedCount,再totalPenalty)
@@ -206,7 +273,7 @@ async function loadRankingData(homeworkId: number) {
         });
         rankData.value = tmpData // 解除深层响应式
         isloading.value = false;
-    }).catch((error: any) => {
+    } catch (error: any) {
         isloading.value = false;
         if (error.code === ProblemStatus.ACCESS_DENIED || error.code === ProblemStatus.CONTEST_NOT_START) {
             // 导航回到作业详情页面，让父组件处理错误状态
@@ -216,7 +283,9 @@ async function loadRankingData(homeworkId: number) {
         } else {
             console.error('加载排行榜失败:', error.message);
         }
-    });
+    } finally {
+        isLoadingData = false; // 重置加载标志
+    }
 }
 function convertToLetter(num: number) {
     let str = '';
@@ -320,5 +389,9 @@ async function exportExcel(type: string) {
 }
 onMounted(async () => {
     loadRankingData(Number(props.homeworkId));
+});
+
+onUnmounted(() => {
+    stopCountdown();
 });
 </script>

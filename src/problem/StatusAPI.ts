@@ -50,19 +50,21 @@ export namespace Status{
         nickname: string;
         language: string;
         code: string;
+        openCase: boolean;
+        isRemote: boolean;
         errorMessage: string;
         testcase: TestCase[];
     }
 }
 export const getStatPage = (currentPage:number,problemId?:number,contestId?:number,userId?:number,type?:string,status?:number) => {
-    return request.get<Status.StatJSONObject[]>('/api/p/statuses',{currentPage,problemId,contestId,userId,type,status})
+    return request.get<Status.StatJSONObject[]>('/api/j/statuses',{currentPage,problemId,contestId,userId,type,status})
 }
 export const getStatMaxCount = (problemId?:number,contestId?:number,userId?:number,type?:string,status?:number) => {
-    return request.get<Status.StatusmMaxCountJSONObject>('/api/p/status/count',{problemId,contestId,userId,type,status})
+    return request.get<Status.StatusmMaxCountJSONObject>('/api/j/status/count',{problemId,contestId,userId,type,status})
 }
 export const getStatBySubmitid = (submitId:number) => {
     return request.get<Status.StatusItem>(`/api/j/judge/status/${submitId}`)
 }
 export const getStatDetail = (submitId:number) => {
-    return request.get<Status.StatusDetail>(`/api/p/status/${submitId}`)
+    return request.get<Status.StatusDetail>(`/api/j/status/${submitId}`)
 }

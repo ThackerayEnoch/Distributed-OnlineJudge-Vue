@@ -34,6 +34,9 @@
                     <Tag class="mr-2" severity="info">
                         判题模式: {{ judgeModeMap(problemDetail?.judgeMode as string) }}
                     </Tag>
+                    <Tag v-if="problemDetail?.isRemote" class="mr-2" severity="danger">
+                        远程判题
+                    </Tag>
                 </div>
                 <div class="mb-4">
                     <h2 class="text-xl font-semibold mb-2 text-blue-500">题目描述</h2>
@@ -281,7 +284,7 @@ async function handleSubmit() {
         cid: contestId as number ?? 0,
         tid: 0,
         gid: 0,
-        isRemote: false
+        isRemote: problemDetail.value.isRemote
     }
     await submitProblem(dto).then(() => {
         if (contestId != null) {
@@ -353,6 +356,7 @@ const problemDetail = ref<Problem.ProblemResData>({
     nickname: '',
     createTime: new Date(),
     updateTime: new Date(),
+    isRemote: false,
     tags: [],
 });
 // 定义props，获取URL中的pid参数

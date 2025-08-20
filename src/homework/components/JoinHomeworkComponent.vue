@@ -17,7 +17,7 @@
                 <div class="space-y-4">
                     <!-- 公开竞赛 -->
                     <div v-if="props.auth === 0" class="text-center">
-                        <p class="text-gray-600 mb-4">该作业对所有人开放</p>
+                        <p class="text-gray-600 mb-4">该比赛对所有人开放</p>
                         <Button label="立即加入" :loading="isloading" icon="pi pi-arrow-right"
                             class="w-full bg-primary-500 hover:bg-primary-600" @click="handleJoin" />
                     </div>
@@ -25,7 +25,7 @@
                     <!-- 保护竞赛 -->
                     <div v-else class="space-y-4">
                         <Message severity="warn" :closable="false">
-                            该作业受保护，需要验证密码
+                            该比赛受保护，需要验证密码
                         </Message>
 
                         <div class="space-y-4">
@@ -81,7 +81,7 @@ const handleJoin = async () => {
     };
     await joinHomework(dto).then(() => {
         props.onSuccess();
-        globalMessage.success('提示', '加入作业成功');
+        globalMessage.success('提示', '加入比赛成功');
     }).catch((err) => {
         globalMessage.error('错误', err.message);
     }).finally(() => {

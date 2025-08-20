@@ -27,6 +27,7 @@ export namespace RankingSpace {
     export interface RankVO {
         problems: RankProblem[];
         users: UserProblemData[];
+        cacheStartTime:number;
     }
 }
 export const getHomeworkRankingById = (homeworkId: number) => {

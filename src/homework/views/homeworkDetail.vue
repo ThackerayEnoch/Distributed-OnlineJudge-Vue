@@ -49,7 +49,7 @@
                                 <path
                                     d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z" />
                             </svg>
-                            作业简介
+                            比赛简介
                         </RouterLink>
                         <RouterLink v-if="!isContestNotStarted" :to="`/homework/${homeworkId}/problems`"
                             :class="{ 'text-blue-500 border-b-2 border-blue-500': selectedTab === 'problems' }"
@@ -114,11 +114,11 @@
                     <div v-if="selectedTab == 'intro' || selectedTab == 'problems'"
                         class="w-[25%] p-6 my-3 flex bg-white shadow-lg felx flex-col dark:bg-gray-800  mr-3">
                         <div class="flex justify-between items-center m-2">
-                            <span>作业编号</span>
+                            <span>比赛编号</span>
                             <span>{{ homework.id }}</span>
                         </div>
                         <div class="flex justify-between items-center m-2">
-                            <span>作业权限</span>
+                            <span>比赛权限</span>
                             <span v-if="homework.auth == 0">公开赛</span>
                             <span v-else-if="homework.auth == 2">私有赛</span>
                             <span v-else-if="homework.auth == 1">保护赛</span>
@@ -261,10 +261,33 @@ function calculateRemainingTime(timeDiff: number) {
 // 每秒获取当前时间
 setInterval(() => {
     if (isEnd) return;
+
+    const previousIsContestNotStarted = isContestNotStarted.value;
     currentTime.value = new Date().getTime();
     calculateTimeProgress();
     const timeDiff = endTimeDate.value - currentTime.value;
     calculateRemainingTime(timeDiff);
+
+    // 检查比赛是否刚刚开始（从未开始变为已开始）
+    const startTime = new Date(homework.value.startTime.replace(/-/g, '/')).getTime();
+    const isNowStarted = currentTime.value >= startTime;
+
+    if (previousIsContestNotStarted && isNowStarted) {
+        // 比赛刚刚开始，解锁功能
+        isContestNotStarted.value = false;
+        isAccessDenied.value = false;
+
+        console.log('比赛已开始，功能已解锁');
+        globalMessage.success('比赛开始', '比赛已开始，现在可以查看所有内容了！');
+
+        // 如果当前在简介页面，可以选择自动加载题目数据
+        if (selectedTab.value === 'intro' && problems.value.length === 0) {
+            // 延迟一点时间再加载，让用户看到提示
+            setTimeout(() => {
+                localHomeworkProblems(homeworkId);
+            }, 1000);
+        }
+    }
 }, 1000);
 function getProgressBarColor(accuracy: number) {
     if (accuracy < 40) return 'progress-80';
@@ -322,13 +345,19 @@ async function localHomeworkDetail(homeworkId: number) {
 }
 async function localHomeworkProblems(homeworkId: number) {
     // 检查访问权限
-    if (isAccessDenied.value) {
+    if (isAccessDenied.value && isContestNotStarted.value) {
+        // 只有在比赛未开始且被拒绝的情况下才直接返回
         return;
     }
 
     getHomeworkProblems(homeworkId).then(res => {
         problems.value = res.data as HomeworkSpace.HomeworkProblemsVO[];
         homework.value.solved = problems.value.filter(problem => problem.isSolved).length;
+
+        // 成功加载后，确保错误状态被清除
+        if (isAccessDenied.value) {
+            isAccessDenied.value = false;
+        }
     }).catch(error => {
         if (error.code === ProblemStatus.ACCESS_DENIED || error.code === ProblemStatus.CONTEST_NOT_START) {
             isAccessDenied.value = true;

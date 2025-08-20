@@ -133,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
 import { getStatPage, getStatBySubmitid, getStatMaxCount, type Status } from '../StatusAPI'
 import { statusMap, statusClassMap } from '@/common/constant/AllConstant';
 import { useRoute, useRouter } from 'vue-router';
@@ -190,11 +190,19 @@ function onPage(event: any) {
     first.value = event.first;
     const query = { ...route.query, currentPage: event.page + 1 };
     router.push({ query });
-    getStatusData(first.value);
+
+    // 先清除轮询队列和定时器
     pollingQueue.value = [];
+    stopPolling();
+
+    // 重新获取数据并初始化轮询队列
+    getStatusData(first.value);
 }
 // 获取判题状态数据
 async function getStatusData(currentPage: number) {
+    // 先清除之前的轮询，防止重复启动
+    stopPolling();
+
     try {
         const res = await getStatPage(currentPage, problemId.value ?? undefined, contestId.value ?? undefined, userId.value ?? undefined, type.value, statusProp.value ?? undefined);
         problems.value = res.data ?? [];
@@ -276,6 +284,8 @@ const initializePollingQueue = () => {
             pollingQueue.value.push({ submitId: problem.submitId });
         }
     });
+    // 按submitId从小到大排序
+    pollingQueue.value.sort((a, b) => a.submitId - b.submitId);
 };
 // 获取状态更新
 const fetchStatusUpdate = async (submitId: number): Promise<Status.StatusItem> => {
@@ -299,21 +309,46 @@ const updateProblems = (statusItem: Status.StatusItem) => {
     }
 };
 let intervalId: number;
-// 开始轮询，1s轮询一次
+// 清除轮询
+const stopPolling = () => {
+    if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = 0;
+    }
+};
+// 开始轮询，1.5s轮询一次
 const startPolling = () => {
+    // 先清除之前的定时器，防止重复启动
+    stopPolling();
+
     if (pollingQueue.value.length === 0) {
         return;
     }
+
     intervalId = setInterval(async () => {
         if (pollingQueue.value.length > 0) {
-            const lastItem = pollingQueue.value[pollingQueue.value.length - 1]; // 获取队列中的最后一个元素
-            const statusItem = await fetchStatusUpdate(lastItem.submitId);
-            updateProblems(statusItem);
+            // 获取队列中submitId最小的元素（第一个元素）
+            const firstItem = pollingQueue.value[0];
+            try {
+                const statusItem = await fetchStatusUpdate(firstItem.submitId);
+                updateProblems(statusItem);
+            } catch (error) {
+                console.error('轮询查询失败:', error);
+            }
+        } else {
+            // 队列为空时停止轮询
+            stopPolling();
         }
     }, 1500);
 };
+onBeforeUnmount(() => {
+    // 页面离开前清除轮询，确保定时器被及时销毁
+    stopPolling();
+    pollingQueue.value = [];
+});
 onUnmounted(() => {
-    clearInterval(intervalId); // 清除轮询
+    // 组件卸载时清除轮询
+    stopPolling();
 });
 </script>
 

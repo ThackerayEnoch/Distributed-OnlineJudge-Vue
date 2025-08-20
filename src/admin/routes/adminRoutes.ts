@@ -104,6 +104,13 @@ export default [
               }
             },
             {
+              path:'/admin/problems/remote-account',
+              name:'AdminProblemRemoteAccount',
+              components:{
+                admin:()=>import('@/admin/components/remoteAccount/remoteAccountList.vue')
+              }
+            },
+            {
               path:'/admin/problems/categories',
               name:'AdminProblemCategories',
               components:{

@@ -8,6 +8,7 @@ export namespace ProblemSpace{
         createTime: Date;
         modifier: string;
         updateTime: Date;
+        isRemote: boolean;
         status: number;
     }
     export interface AdminCreateProblemDTO {
@@ -92,6 +93,7 @@ export namespace ProblemSpace{
         isFileIo: boolean;
         ioReadFileName: string;
         ioWriteFileName: string;
+        isRemote: boolean;
         createdUser: number;
         createTime: Date;
         updateTime: Date;

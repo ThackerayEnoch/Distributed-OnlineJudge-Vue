@@ -3,28 +3,35 @@
         <Panel>
             <template #header>
                 <div class="flex justify-between items-center text-2xl font-bold text-blue-500">
-                    <span>创建题目</span>
+                    <span v-if="props.type === 'edit'">
+                        编辑题目
+                        <span v-if="isRemote" class="text-red-500">远程题目</span>
+                    </span>
+                    <span v-else>创建题目</span>
                 </div>
             </template>
             <Divider />
-            <div class="w-full mt-2">
+            <div class=" w-full mt-2">
                 <label class="text-gray-500">
                     <span class="text-red-500">*</span> 题目标题
                 </label>
-                <InputText v-model="title" class="mt-2 w-full" placeholder="题目标题" />
+                <InputText :disabled="isRemote" v-model="title" class="mt-2 w-full" placeholder="题目标题" />
             </div>
             <div class="w-full mt-2 flex space-x-4">
                 <div class="flex-1">
                     <label class="text-gray-500"><span class="text-red-500">*</span> 时间限制(ms)</label>
-                    <InputNumber v-model="timeLimit" suffix="ms" class="mt-2 w-full" placeholder="时间限制" />
+                    <InputNumber :disabled="isRemote" v-model="timeLimit" suffix="ms" class="mt-2 w-full"
+                        placeholder="时间限制" />
                 </div>
                 <div class="flex-1">
                     <label class="text-gray-500"><span class="text-red-500">*</span> 内存限制(MiB)</label>
-                    <InputNumber v-model="memoryLimit" suffix="MiB" class="mt-2 w-full" placeholder="内存限制" />
+                    <InputNumber :disabled="isRemote" v-model="memoryLimit" suffix="MiB" class="mt-2 w-full"
+                        placeholder="内存限制" />
                 </div>
                 <div class="flex-1">
                     <label class="text-gray-500"><span class="text-red-500">*</span> 栈限制(MiB)</label>
-                    <InputNumber v-model="stackLimit" suffix="MiB" class="mt-2 w-full" placeholder="栈限制" />
+                    <InputNumber :disabled="isRemote" v-model="stackLimit" suffix="MiB" class="mt-2 w-full"
+                        placeholder="栈限制" />
                 </div>
                 <div class="flex-1">
                     <label class="text-gray-500"><span class="text-red-500">*</span> 难度</label>
@@ -57,7 +64,7 @@
                     <Select suffix="ms" v-model="selectedAuth" :options="authOptions" optionLabel="label"
                         optionValue="value" class="mt-2 w-full" />
                 </div>
-                <div class="flex-1 min-w-[200px]">
+                <div v-if="!isRemote" class="flex-1 min-w-[200px]">
                     <label class="text-gray-500"> 类型</label>
                     <div class="flex flex-row flex-wrap gap-4 mt-4">
                         <div class="flex items-center gap-2">
@@ -75,12 +82,13 @@
                     <ToggleSwitch inputId="share" v-model="share" class="mt-4" />
                 </div>
             </div>
-            <div class="flex flex-col space-y-2 mt-4">
+            <div v-if="!isRemote" class="flex flex-col space-y-2 mt-4">
                 <label class="text-gray-500"><span class="text-red-500">*</span> 允许提交语言:</label>
                 <div class="flex flex-wrap gap-4">
                     <div v-for="option in languageOptions" :key="option.id" class="flex items-center mr-2 gap-2">
                         <Checkbox v-model="selectedLanguages" :inputId="option.id.toString()" :value="option.id" />
-                        <label v-tooltip.top="option.description" :for="option.id.toString()">{{ option.name }}</label>
+                        <label v-tooltip.top="option.description" :for="option.id.toString()">{{ option.name
+                        }}</label>
                     </div>
                 </div>
             </div>
@@ -119,7 +127,7 @@
                     <div class="flex justify-between items-center border-b border-gray-300 bg-gray-100 pb-4">
                         <span class="p-4 pb-2 font-bold text-lg">样例 {{ index + 1 }}</span>
                         <div class="flex items-center gap-2">
-                            <Button @click="removeSample(sample.id)" severity="danger"
+                            <Button :disabled="isRemote" @click="removeSample(sample.id)" severity="danger"
                                 class="p-4 pb-2 pl-6 pr-6">删除</Button>
                         </div>
                     </div>
@@ -131,7 +139,8 @@
                                 <label for="input" class="block text-sm font-semibold"><span
                                         class="text-red-500">*</span>
                                     样例输入</label>
-                                <Textarea v-model="sample.input" class="w-full p-2 border rounded" rows="5" />
+                                <Textarea :disabled="isRemote" v-model="sample.input" class="w-full p-2 border rounded"
+                                    rows="5" />
                             </FloatLabel>
                         </div>
                         <div class="w-1/2">
@@ -139,7 +148,8 @@
                                 <label for="output" class="block text-sm font-semibold"><span
                                         class="text-red-500">*</span>
                                     样例输出</label>
-                                <Textarea v-model="sample.output" class="w-full p-2 border rounded" rows="5" />
+                                <Textarea :disabled="isRemote" v-model="sample.output" class="w-full p-2 border rounded"
+                                    rows="5" />
                             </FloatLabel>
                         </div>
                     </div>
@@ -147,13 +157,13 @@
                         {{ sample.collapsed ? '展开' : '折叠' }}
                     </Button>
                 </div>
-                <Button @click="addSample" class="w-full mb-4">添加样例</Button>
+                <Button :disabled="isRemote" @click="addSample" class="w-full mb-4">添加样例</Button>
             </div>
-            <div class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
+            <div v-if="!isRemote" class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
                 <span v-tooltip="'1. 选手程序：给选手程序提供额外的库文件\n2. 特殊或交互程序：给特殊或交互程序提供额外的库文件'">评测额外文件 <i
                         class="ml-1 fa-regular fa-circle-question"></i></span>
             </div>
-            <div class="p-4">
+            <div v-if="!isRemote" class="p-4">
                 <div class="flex flex-wrap gap-4">
                     <div class="flex items-center mr-2 gap-2 w-1/2">
                         <Checkbox v-model="userJudgeFile" binary disabled />
@@ -165,7 +175,7 @@
                     </div>
                 </div>
             </div>
-            <div v-if="userJudgeFile" class="p-4 w-1/2">
+            <div v-if="userJudgeFile && !isRemote" class="p-4 w-1/2">
                 <!-- Tag 列表 -->
                 <div class="flex flex-wrap gap-2 border border-gray-300 mt-4 p-2 rounded">
                     <div v-for="(tag, index) in userFiles" :key="index"
@@ -183,7 +193,7 @@
                     </button>
                 </div>
             </div>
-            <div v-if="spjJudgeFile" class="p-4 w-1/2">
+            <div v-if="spjJudgeFile && !isRemote" class="p-4 w-1/2">
                 <!-- Tag 列表 -->
                 <div class="flex flex-wrap gap-2 border border-gray-300 mt-4 p-2 rounded">
                     <div v-for="(tag, index) in spjFiles" :key="index"
@@ -201,12 +211,12 @@
                     </button>
                 </div>
             </div>
-            <div class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
+            <div v-if="!isRemote" class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
                 <span
                     v-tooltip="'1. 普通判题：选手程序读取题目标准输入文件，执行代码逻辑得到选手输出，对比题目标准输出文件内容得到判题结果\n2. 特殊判题：题目要求的输出结果可能不唯一，允许不同结果存在，所以需要一个特殊程序读取标准输出、选手输出和标准输入，进行对比得出最终判题结果\n3. 交互判题：交互程序的标准输出通过交互通道写到选手程序标准输入，选手程序的标准输出通过交互通道写到交互程序的标准输入，两者需要刷新输出缓冲区'">判题模式
                     <i class="ml-1 fa-regular fa-circle-question"></i></span>
             </div>
-            <div class="p-4">
+            <div v-if="!isRemote" class="p-4">
                 <div class="flex items-center gap-4 mt-4">
                     <div class="flex items-center gap-2">
                         <RadioButton v-model="judgeMode" inputId="judgeMode1" name="judgeMode" :value="0" />
@@ -223,10 +233,10 @@
                     </div>
                 </div>
             </div>
-            <div class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
+            <div v-if="!isRemote" class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
                 <span v-tooltip="'测试点评测模式。'">评测数据 <i class="ml-1 fa-regular fa-circle-question"></i></span>
             </div>
-            <div v-if="problemType === 0" class="p-4 mt-4">
+            <div v-if="problemType === 0 && !isRemote" class="p-4 mt-4">
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2">
                         <RadioButton v-model="acmJudgeCaseMode" inputId="judgeCaseMode1" name="judgeCaseMode"
@@ -240,7 +250,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else>
+            <div v-else-if="!isRemote">
                 <div class="flex items-center gap-4 mt-4">
                     <div class="flex items-center gap-2">
                         <RadioButton v-model="oiJudgeCaseMode" inputId="oiJudgeCaseMode1" name="oiJudgeCaseMode"
@@ -375,6 +385,7 @@ export default defineComponent({
         }
     },
     setup(props) {
+        const isRemote = ref(false);
         const displayId = ref("");
         const title = ref("");
         const timeLimit = ref(1000);
@@ -629,6 +640,7 @@ export default defineComponent({
                 problemDesc.value = data.description;
                 inputDesc.value = data.input;
                 outputDesc.value = data.output;
+                isRemote.value = data.isRemote;
                 hintDesc.value = data.hint;
                 problemType.value = data.type;
                 share.value = data.codeShare;
@@ -713,7 +725,7 @@ export default defineComponent({
             displayId, difficulty, selectedDifficulty, title, timeLimit, memoryLimit, stackLimit, share, problemDesc, inputDesc, outputDesc, hintDesc, problemType, selectedLanguages, languageOptions, samples, addSample, removeSample,
             toggleSample, userJudgeFile, spjJudgeFile, userFiles, spjFiles, newTag, spjDialogVisible, dialogVisible, addTag, removeTag, judgeMode, oiJudgeCaseMode, acmJudgeCaseMode, removeBlank, judgeCaseStatus, saveProblem,
             authOptions, selectedAuth, newCode, isSaving, onUploadImg, tags, allTags, colorPalette, tagDialogVisible, showCreate, searchText, newTagName, selectedColor, filteredTags, createTag, isTagSelected, toggleTag, createProblem,
-            onSaving, createTagEvent, onTagDialogOpen, removeProblemTag
+            onSaving, createTagEvent, onTagDialogOpen, removeProblemTag, isRemote, props
         }
     }
 })

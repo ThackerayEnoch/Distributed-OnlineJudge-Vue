@@ -44,7 +44,8 @@ export default defineComponent({
                             { label: '创建题目', icon: 'pi pi-plus', to: '/admin/problem/create' },
                             { label: '题目分类', icon: 'pi pi-folder', to: '/admin/problems/categories' },
                             { label: '标签管理', icon: 'pi pi-tags', to: '/admin/problems/tags' },
-                            { label: '导入题目', icon: 'pi pi-upload', to: '/admin/problems/import' }
+                            { label: '导入题目', icon: 'pi pi-upload', to: '/admin/problems/import' },
+                            { label: '远程题目账号', icon: 'pi pi-server', to: '/admin/problems/remote-account' }
                         ]
                     },
                     {
