@@ -248,14 +248,14 @@ const resetForm = () => {
                             <label class="block text-sm font-medium text-gray-700 mb-3">
                                 上传XML文件 *
                             </label>
-                            <FileUpload accept=".xml" :maxFileSize="10000000" :auto="false" :multiple="false"
+                            <FileUpload accept=".xml" :maxFileSize="104857600" :auto="false" :multiple="false"
                                 chooseLabel="选择文件" mode="basic" @select="onFileSelect" @remove="onFileRemove"
                                 class="w-full">
                                 <template #empty>
                                     <div class="flex flex-col items-center justify-center py-8">
                                         <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-4"></i>
                                         <p class="text-gray-500 mb-2">点击选择XML文件或拖拽文件到此处</p>
-                                        <p class="text-sm text-gray-400">支持最大10MB的XML文件</p>
+                                        <p class="text-sm text-gray-400">支持最大100MB的XML文件</p>
                                     </div>
                                 </template>
                             </FileUpload>
@@ -316,7 +316,7 @@ const resetForm = () => {
                                 <h4 class="font-semibold text-gray-900 mb-2">文件要求</h4>
                                 <ul class="space-y-1 text-gray-600">
                                     <li>• 文件格式：XML</li>
-                                    <li>• 文件大小：最大10MB</li>
+                                    <li>• 文件大小：最大100MB</li>
                                     <li>• 编码格式：UTF-8</li>
                                 </ul>
                             </div>

@@ -103,12 +103,15 @@ import { ref, defineProps } from 'vue';
 import { onMounted } from 'vue';
 import { getHomeworkRankingById, type RankingSpace } from '../api/homeworkRankingAPI';
 import { exportToExcel, type ExportHeader } from '@/common/utils/excel';
+import { ProblemStatus } from '../status/homeworkStatus';
+import { useRouter } from 'vue-router';
 
 const props = defineProps<{
     homeworkId: string;
     title: string;
 }>();
 const isloading = ref(true);
+const router = useRouter();
 // 排行榜数据
 const rankData = ref<RankingSpace.RankVO>(
     {
@@ -203,6 +206,16 @@ async function loadRankingData(homeworkId: number) {
         });
         rankData.value = tmpData // 解除深层响应式
         isloading.value = false;
+    }).catch((error: any) => {
+        isloading.value = false;
+        if (error.code === ProblemStatus.ACCESS_DENIED || error.code === ProblemStatus.CONTEST_NOT_START) {
+            // 导航回到作业详情页面，让父组件处理错误状态
+            router.push(`/homework/${props.homeworkId}/intro`);
+            // 可以选择显示全局错误消息
+            console.error('排行榜访问被拒绝:', error.message);
+        } else {
+            console.error('加载排行榜失败:', error.message);
+        }
     });
 }
 function convertToLetter(num: number) {

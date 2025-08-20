@@ -28,7 +28,7 @@
             <div class="mt-2 mb-2">
                 <h1 class="text-2xl text-white font-bold mb-2">{{ statusMap[status.status as unknown as keyof typeof
                     statusMap]
-                }}</h1>
+                    }}</h1>
                 <p class="text-m" v-if="status.status !== -2 && isJudgingComplete(status)">
                     运行时间: <span class="font-medium">{{ status.time }} ms </span> 运行内存: <span class="font-medium">{{
                         formatMemory(status.memory) }} </span>
@@ -164,6 +164,7 @@
 </template>
 <script setup lang="ts">
 import { type Status, getStatDetail } from '../StatusAPI';
+import { type LanguageSpace, getAllLanguages } from '@/common/api/languageAPI';
 import Column from 'primevue/column';
 import { ref, defineProps, onMounted, onUpdated } from 'vue'
 import AccessDenied from '@/common/components/AccessDenied.vue';

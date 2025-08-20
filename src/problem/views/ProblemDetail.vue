@@ -225,6 +225,7 @@ import CodeMirror from 'vue-codemirror6';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { cpp } from '@codemirror/lang-cpp';
 
+import { type LanguageSpace, getAllLanguages } from '@/common/api/languageAPI';
 import { getProblemDetail, submitProblem, getProblemStatistics, type Problem, type Judge } from '../problemAPI';
 import { layoutConfig } from '@/common/views/layout/layout';
 import { languageOptions } from '@/common/constant/AllConstant';
@@ -298,14 +299,30 @@ async function handleSubmit() {
     })
 }
 // 语言选择
+async function getAllLanguagesList() {
+    try {
+        const res = await getAllLanguages();
+        if (res.data) {
+            LanguageList.value = res.data;
+        }
+    } catch (error) {
+        globalMessage.error('获取语言列表失败', (error as Error).message);
+    }
+}
+const LanguageList = ref<LanguageSpace.LanguageVO[]>([]);
 const selectedLanguage = ref<string>('C');
 const allowLanguagesList = ref<string[]>([]);
-function languageOptionsHandle(languageIds: number[]) {
-    if (languageIds != null && languageIds.length > 0) {
-        allowLanguagesList.value = languageOptions.filter((item) => languageIds.includes(item.id)).map((item) => item.name);
-    } else {
-        allowLanguagesList.value = languageOptions.map((item) => item.name);
+async function languageOptionsHandle(languageIds: number[]) {
+    while (LanguageList.value.length === 0) {
+        //等待语言列表加载完成
+        await new Promise(resolve => setTimeout(resolve, 500));
     }
+    if (languageIds != null && languageIds.length > 0) {
+        allowLanguagesList.value = LanguageList.value.filter((item) => languageIds.includes(item.id)).map((item) => item.name);
+    } else {
+        allowLanguagesList.value = LanguageList.value.map((item) => item.name);
+    }
+    selectedLanguage.value = allowLanguagesList.value[0] || '';
 }
 // 题目详情数据
 const problemDetail = ref<Problem.ProblemResData>({
@@ -345,6 +362,7 @@ const props = defineProps({
 // 获取题目详情数据
 onMounted(() => {
     getProblemDetailData();
+    getAllLanguagesList()
     loadProblemStatistics();
 });
 // 当异步请求得到数据后，渲染数学公式

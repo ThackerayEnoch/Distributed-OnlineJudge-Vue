@@ -11,6 +11,8 @@ export namespace HomeworkSpace{
         visible: boolean;
         startTime: string;
         endTime: string;
+        remainingTimeClass?: string;
+        remainingTimeText?: string;
     }
     export interface HomeworkSummaryVO {
         id: number;

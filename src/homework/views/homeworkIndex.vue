@@ -79,7 +79,7 @@
                     <template #body="slotProps">
                         <span :class="getStatusClass(slotProps.data.startTime, slotProps.data.endTime)"
                             class="p-2 text-sm inline-block rounded">{{
-                                getStatusText(slotProps.data.startTime, slotProps.data.endTime) }}</span>
+                                getRealTimeStatusText(slotProps.data.startTime, slotProps.data.endTime) }}</span>
                     </template>
                 </Column>
                 <Column style="text-align: center;">
@@ -103,7 +103,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { getHomeworkPage, getHomeworkCount, type HomeworkSpace } from '../api/homeworkAPI'
 import { useRouter, useRoute } from 'vue-router';
 import globalMessage from '@/common/utils/toast';
@@ -119,6 +119,8 @@ const homeworks = ref<HomeworkSpace.HomeworkJSON[]>([]);
 const homeworkName = ref('');
 const selectedHomeworkType = ref('own');
 const HomeworkTypeOptions = ref(['all', 'own']);
+const currentTime = ref(Date.now());
+let timeUpdateInterval: number;
 function filterHomeworks() {
     first.value = 0;
     loadData();
@@ -149,50 +151,41 @@ function computeStatus(startTime: string, endTime: string) {
     if (end - now < oneDay) return 3; // 小于1天
     return 0; // 进行中
 }
-function getStatusText(startTime: string, endTime: string) {
-    const status = computeStatus(startTime, endTime);
-    let result: string;
-    switch (status) {
-        case 0:
-            result = '进行中';
-            break;
-        case 1:
-            result = '已结束';
-            break;
-        case 2:
-            result = '未开始';
-            break;
-        case 3:
-            result = '剩余' + getStatusStartText(endTime);
-            break;
-        case 4:
-            result = getStatusStartText(startTime) + '后开始';
-            break;
-        default:
-            result = '未知';
-            break;
-    }
-    return result;
-}
-function getStatusStartText(startTime: string) {
-    const now = new Date().getTime();
+function getRealTimeStatusText(startTime: string, endTime: string) {
+    const now = currentTime.value;
     const start = new Date(startTime).getTime();
-    let result: string;
+    const end = new Date(endTime).getTime();
+    const oneDay = 24 * 60 * 60 * 1000;
 
-    const diff = start - now;
-
-    if (diff > 3600000) { // 大于一小时
-        const hours = Math.floor(diff / 3600000);
-        result = ` ${hours} 小时`;
-    } else if (diff > 60000) { // 大于一分钟
-        const minutes = Math.floor(diff / 60000);
-        result = ` ${minutes} 分钟`;
-    } else { // 小于一分钟
-        const seconds = Math.floor(diff / 1000);
-        result = ` ${seconds} 秒`;
+    if (now > end) return '已结束';
+    if (now < start) {
+        const diff = start - now;
+        if (diff < oneDay) {
+            return getRealTimeText(diff) + '后开始';
+        }
+        return '未开始';
     }
 
-    return result;
+    const remaining = end - now;
+    if (remaining < oneDay) {
+        return '剩余' + getRealTimeText(remaining);
+    }
+    return '进行中';
+}
+function getRealTimeText(timeDiff: number): string {
+    if (timeDiff <= 0) return '';
+
+    const hours = Math.floor(timeDiff / 3600000);
+    const minutes = Math.floor((timeDiff % 3600000) / 60000);
+    const seconds = Math.floor((timeDiff % 60000) / 1000);
+
+    if (hours > 0) {
+        return ` ${hours} 小时 ${minutes} 分钟`;
+    } else if (minutes > 0) {
+        return ` ${minutes} 分钟 ${seconds} 秒`;
+    } else {
+        return ` ${seconds} 秒`;
+    }
 }
 function getStatusClass(startTime: string, endTime: string) {
     const status = computeStatus(startTime, endTime);
@@ -233,6 +226,18 @@ function getProgressBarColor(accuracy: number) {
 onMounted(() => {
     loadData();
     loadCount();
+
+    // 启动每秒更新时间的定时器
+    timeUpdateInterval = setInterval(() => {
+        currentTime.value = Date.now();
+    }, 1000);
+});
+
+onUnmounted(() => {
+    // 清理定时器
+    if (timeUpdateInterval) {
+        clearInterval(timeUpdateInterval);
+    }
 });
 async function loadData() {
     getHomeworkPage(first.value, selectedHomeworkType.value, homeworkName.value).then(result => {

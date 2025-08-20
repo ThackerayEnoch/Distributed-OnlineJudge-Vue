@@ -140,6 +140,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/common/utils/store';
 const counterStore = useUserStore();
 import { FilterMatchMode } from '@primevue/core/api';
+import { ProblemStatus } from '@/homework/status/homeworkStatus';
 //
 const route = useRoute();
 const router = useRouter();
@@ -194,15 +195,35 @@ function onPage(event: any) {
 }
 // 获取判题状态数据
 async function getStatusData(currentPage: number) {
-    const res = await getStatPage(currentPage, problemId.value ?? undefined, contestId.value ?? undefined, userId.value ?? undefined, type.value, statusProp.value ?? undefined);
-    problems.value = res.data ?? [];
-    initializePollingQueue();
-    startPolling();
+    try {
+        const res = await getStatPage(currentPage, problemId.value ?? undefined, contestId.value ?? undefined, userId.value ?? undefined, type.value, statusProp.value ?? undefined);
+        problems.value = res.data ?? [];
+        initializePollingQueue();
+        startPolling();
+    } catch (error: any) {
+        if (contestId.value && (error.code === ProblemStatus.ACCESS_DENIED || error.code === ProblemStatus.CONTEST_NOT_START)) {
+            // 如果是在作业中且遇到权限或比赛未开始错误，导航回作业简介
+            router.push(`/homework/${contestId.value}/intro`);
+            console.error('提交记录访问被拒绝:', error.message);
+        } else {
+            console.error('加载提交记录失败:', error.message);
+        }
+    }
 }
 // 获取判题状态总记录数
 async function getStatusCount() {
-    const res = await getStatMaxCount(problemId.value ?? undefined, contestId.value ?? undefined, userId.value ?? undefined, type.value, statusProp.value ?? undefined);
-    totalRecords.value = res.data as unknown as number;
+    try {
+        const res = await getStatMaxCount(problemId.value ?? undefined, contestId.value ?? undefined, userId.value ?? undefined, type.value, statusProp.value ?? undefined);
+        totalRecords.value = res.data as unknown as number;
+    } catch (error: any) {
+        if (contestId.value && (error.code === ProblemStatus.ACCESS_DENIED || error.code === ProblemStatus.CONTEST_NOT_START)) {
+            // 如果是在作业中且遇到权限或比赛未开始错误，导航回作业简介
+            router.push(`/homework/${contestId.value}/intro`);
+            console.error('提交记录统计访问被拒绝:', error.message);
+        } else {
+            console.error('加载提交记录统计失败:', error.message);
+        }
+    }
 }
 // 格式化内存
 function formatMemory(memory: number) {

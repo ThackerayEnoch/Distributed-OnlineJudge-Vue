@@ -30,95 +30,124 @@
                 </div>
                 <div class="w-full p-4 flex items-center justify-between">
                     <div>开始时间: {{ homework.startTime }}</div>
-                    <div>剩余时间: {{ remainingTime }}</div>
-                    <div>结束时间: {{ homework.endTime }}</div>
+                    <div
+                        :class="{ 'text-red-500 font-bold': currentTime < new Date(homework.startTime.replace(/-/g, '/')).getTime() }">
+                        {{ currentTime < new Date(homework.startTime.replace(/-/g, '/')).getTime() ? '距离开始: '
+                            : '剩余时间: ' }}{{ remainingTime }} </div>
+                            <div>结束时间: {{ homework.endTime }}</div>
+                    </div>
+                </div><!--作业信息-->
+                <div class="w-full bg-white p-3 shadow-lg dark:bg-gray-800">
+                    <div class="w-full p-2 flex items-center justify-start space-x-10">
+                        <RouterLink :to="`/homework/${homeworkId}/intro`"
+                            :class="{ 'text-blue-500 border-b-2 border-blue-500': selectedTab === 'intro' }"
+                            class="hover:border-b-2 hover:border-blue-500 hover:text-blue-500">
+                            <svg class="w-4 h-4 inline-block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path
+                                    d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z" />
+                                <path
+                                    d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z" />
+                            </svg>
+                            作业简介
+                        </RouterLink>
+                        <RouterLink v-if="!isContestNotStarted" :to="`/homework/${homeworkId}/problems`"
+                            :class="{ 'text-blue-500 border-b-2 border-blue-500': selectedTab === 'problems' }"
+                            class="hover:border-b-2 hover:border-blue-500 hover:text-blue-500">
+                            <svg class="w-5 h-5 inline-block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M2.625 6.75a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0A.75.75 0 0 1 8.25 6h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75ZM2.625 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0ZM7.5 12a.75.75 0 0 1 .75-.75h12a.75.75 0 0 1 0 1.5h-12A.75.75 0 0 1 7.5 12Zm-4.875 5.25a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0a.75.75 0 0 1 .75-.75h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75Z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            题目列表
+                        </RouterLink>
+                        <span v-else class="text-gray-400 cursor-not-allowed">
+                            <svg class="w-5 h-5 inline-block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M2.625 6.75a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0A.75.75 0 0 1 8.25 6h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75ZM2.625 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0ZM7.5 12a.75.75 0 0 1 .75-.75h12a.75.75 0 0 1 0 1.5h-12A.75.75 0 0 1 7.5 12Zm-4.875 5.25a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0a.75.75 0 0 1 .75-.75h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75Z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            题目列表
+                        </span>
+                        <RouterLink v-if="!isContestNotStarted" :to="`/homework/${homeworkId}/ranking`"
+                            :class="{ 'text-blue-500 border-b-2 border-blue-500': selectedTab === 'ranking' }"
+                            class="hover:border-b-2 hover:border-blue-500 hover:text-blue-500">
+                            <svg class="w-4 h-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0" />
+                            </svg>
+                            排行榜
+                        </RouterLink>
+                        <span v-else class="text-gray-400 cursor-not-allowed">
+                            <svg class="w-4 h-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0" />
+                            </svg>
+                            排行榜
+                        </span>
+                        <RouterLink v-if="!isContestNotStarted"
+                            :to="`/homework/${homeworkId}/submit?contestId=${homeworkId}`"
+                            :class="{ 'text-blue-500 border-b-2 border-blue-500': selectedTab === 'submissions' }"
+                            class="hover:border-b-2 hover:border-blue-500 hover:text-blue-500">
+                            <svg class="w-5 h-5 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                    d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
+                            </svg>
+                            提交记录
+                        </RouterLink>
+                        <span v-else class="text-gray-400 cursor-not-allowed">
+                            <svg class="w-5 h-5 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                    d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
+                            </svg>
+                            提交记录
+                        </span>
+                    </div>
+                </div><!--导航栏-->
+                <div class="flex" style="align-items: flex-start;">
+                    <div v-if="selectedTab == 'intro' || selectedTab == 'problems'"
+                        class="w-[25%] p-6 my-3 flex bg-white shadow-lg felx flex-col dark:bg-gray-800  mr-3">
+                        <div class="flex justify-between items-center m-2">
+                            <span>作业编号</span>
+                            <span>{{ homework.id }}</span>
+                        </div>
+                        <div class="flex justify-between items-center m-2">
+                            <span>作业权限</span>
+                            <span v-if="homework.auth == 0">公开赛</span>
+                            <span v-else-if="homework.auth == 2">私有赛</span>
+                            <span v-else-if="homework.auth == 1">保护赛</span>
+                        </div>
+                        <div class="flex justify-between items-center m-2">
+                            <span>完成题数</span>
+                            <span>{{ homework.solved }}</span>
+                        </div>
+                        <div class="flex justify-between items-center m-2">
+                            <span>总题目数</span>
+                            <span>{{ homework.total }}</span>
+                        </div>
+                        <div class="flex justify-between items-center m-2">
+                            <span>作者</span>
+                            <span>{{ homework.nickname }}</span>
+                        </div>
+                        <div class="flex justify-between items-center m-2">
+                            <span>最近更新</span>
+                            <span>{{ homework.updateTime }}</span>
+                        </div>
+                    </div><!--作业信息小窗-->
+                    <div
+                        class="w-full p-6 ml-0 my-3 flex bg-white shadow-lg flex flex-col dark:bg-gray-800 overflow-x-auto">
+                        <router-view name="homeworkTab" :title="homework.title" :description="homework.description"
+                            :problems="problems" />
+                    </div><!--显示不同导航栏内容-->
                 </div>
-            </div><!--作业信息-->
-            <div class="w-full bg-white p-3 shadow-lg dark:bg-gray-800">
-                <div class="w-full p-2 flex items-center justify-start space-x-10">
-                    <RouterLink :to="`/homework/${homeworkId}/intro`"
-                        :class="{ 'text-blue-500 border-b-2 border-blue-500': selectedTab === 'intro' }"
-                        class="hover:border-b-2 hover:border-blue-500 hover:text-blue-500">
-                        <svg class="w-4 h-4 inline-block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                            fill="currentColor">
-                            <path
-                                d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z" />
-                            <path
-                                d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z" />
-                        </svg>
-                        作业简介
-                    </RouterLink>
-                    <RouterLink :to="`/homework/${homeworkId}/problems`"
-                        :class="{ 'text-blue-500 border-b-2 border-blue-500': selectedTab === 'problems' }"
-                        class="hover:border-b-2 hover:border-blue-500 hover:text-blue-500">
-                        <svg class="w-5 h-5 inline-block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                            fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M2.625 6.75a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0A.75.75 0 0 1 8.25 6h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75ZM2.625 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0ZM7.5 12a.75.75 0 0 1 .75-.75h12a.75.75 0 0 1 0 1.5h-12A.75.75 0 0 1 7.5 12Zm-4.875 5.25a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0a.75.75 0 0 1 .75-.75h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75Z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        题目列表
-                    </RouterLink>
-                    <RouterLink :to="`/homework/${homeworkId}/ranking`"
-                        :class="{ 'text-blue-500 border-b-2 border-blue-500': selectedTab === 'ranking' }"
-                        class="hover:border-b-2 hover:border-blue-500 hover:text-blue-500">
-                        <svg class="w-4 h-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0" />
-                        </svg>
-                        排行榜
-                    </RouterLink>
-                    <RouterLink :to="`/homework/${homeworkId}/submit?contestId=${homeworkId}`"
-                        :class="{ 'text-blue-500 border-b-2 border-blue-500': selectedTab === 'submissions' }"
-                        class="hover:border-b-2 hover:border-blue-500 hover:text-blue-500">
-                        <svg class="w-5 h-5 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round"
-                                d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
-                        </svg>
-                        提交记录
-                    </RouterLink>
-                </div>
-            </div><!--导航栏-->
-            <div class="flex" style="align-items: flex-start;">
-                <div v-if="selectedTab == 'intro' || selectedTab == 'problems'"
-                    class="w-[25%] p-6 my-3 flex bg-white shadow-lg felx flex-col dark:bg-gray-800  mr-3">
-                    <div class="flex justify-between items-center m-2">
-                        <span>作业编号</span>
-                        <span>{{ homework.id }}</span>
-                    </div>
-                    <div class="flex justify-between items-center m-2">
-                        <span>作业权限</span>
-                        <span v-if="homework.auth == 0">公开赛</span>
-                        <span v-else-if="homework.auth == 2">私有赛</span>
-                        <span v-else-if="homework.auth == 1">保护赛</span>
-                    </div>
-                    <div class="flex justify-between items-center m-2">
-                        <span>完成题数</span>
-                        <span>{{ homework.solved }}</span>
-                    </div>
-                    <div class="flex justify-between items-center m-2">
-                        <span>总题目数</span>
-                        <span>{{ homework.total }}</span>
-                    </div>
-                    <div class="flex justify-between items-center m-2">
-                        <span>作者</span>
-                        <span>{{ homework.nickname }}</span>
-                    </div>
-                    <div class="flex justify-between items-center m-2">
-                        <span>最近更新</span>
-                        <span>{{ homework.updateTime }}</span>
-                    </div>
-                </div><!--作业信息小窗-->
-                <div
-                    class="w-full p-6 ml-0 my-3 flex bg-white shadow-lg flex flex-col dark:bg-gray-800 overflow-x-auto">
-                    <router-view name="homeworkTab" :title="homework.title" :description="homework.description"
-                        :problems="problems" />
-                </div><!--显示不同导航栏内容-->
             </div>
         </div>
-    </div>
 </template>
 <script lang="ts" setup>
 import { onMounted, defineProps, ref, watch } from 'vue';
@@ -156,9 +185,9 @@ watch(route, (newRoute) => {
 function onSuccess() {
     isAccessDenied.value = false;
     isBlockAPILoading.value = false;
+    isContestNotStarted.value = false;
     joinAuth.value = 2;
     localHomeworkDetail(homeworkId);
-    localHomeworkProblems(homeworkId);
     tabSelect(route);
 }
 function tabSelect(router: any) {
@@ -167,10 +196,16 @@ function tabSelect(router: any) {
         selectedTab.value = 'intro';
     } else if (path.includes('/problems')) {
         selectedTab.value = 'problems';
+        // 点击题目列表时才加载题目数据
+        if (problems.value.length === 0) {
+            localHomeworkProblems(homeworkId);
+        }
     } else if (path.includes('/ranking')) {
         selectedTab.value = 'ranking';
+        // 排行榜的权限检查由对应的 API 调用处理
     } else if (path.includes('/submit')) {
         selectedTab.value = 'submissions';
+        // 提交记录的权限检查由对应的 API 调用处理
     }
 }
 const selectedTab = ref('intro');
@@ -193,15 +228,25 @@ function calculateTimeProgress() {
     }
 }
 function calculateRemainingTime(timeDiff: number) {
-    if (timeDiff <= 0) {
-        remainingTime.value = '00:00:00';
+    // 判断是否未开始
+    const startTime = new Date(homework.value.startTime.replace(/-/g, '/')).getTime();
+    const isNotStarted = currentTime.value < startTime;
+
+    let actualTimeDiff = timeDiff;
+    if (isNotStarted) {
+        // 如果未开始，计算距离开始的时间
+        actualTimeDiff = startTime - currentTime.value;
+    }
+
+    if (actualTimeDiff <= 0) {
+        remainingTime.value = isNotStarted ? '即将开始' : '00:00:00';
         return;
     }
 
-    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+    const days = Math.floor(actualTimeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((actualTimeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((actualTimeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((actualTimeDiff % (1000 * 60)) / 1000);
 
     if (days > 0) {
         remainingTime.value = `${days}天 ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
@@ -243,22 +288,29 @@ async function loadBlockContest(id: number) {
     });
 }
 const loading = ref(false);
+const isContestNotStarted = ref(false);
 async function localHomeworkDetail(homeworkId: number) {
     loading.value = true;
     getHomeworkSummary(homeworkId).then(res => {
         homework.value = res.data as any;
         calculateTimeProgress();
         endTimeDate.value = new Date(homework.value.endTime.replace(/-/g, '/')).getTime();
+
+        // 根据开始时间判断比赛是否已经开始
+        const startTime = new Date(homework.value.startTime.replace(/-/g, '/')).getTime();
+        const now = new Date().getTime();
+        if (now < startTime) {
+            // 比赛未开始，允许访问简介但标记状态
+            isContestNotStarted.value = true;
+            globalMessage.warn('提示', '比赛未开始，只能查看作业简介');
+        } else {
+            isContestNotStarted.value = false;
+        }
     }).catch(error => {
         if (error.code === ProblemStatus.ACCESS_DENIED) {
             loadBlockContest(homeworkId);
             isAccessDenied.value = true;
             message.value = '您没有权限查看此作业';
-            return;
-        } else if (error.code === ProblemStatus.CONTEST_NOT_START) {
-            isAccessDenied.value = true;
-            message.value = '比赛未开始';
-            globalMessage.warn('提示', '比赛未开始');
             return;
         } else {
             globalMessage.error('错误', error.message);
@@ -269,17 +321,29 @@ async function localHomeworkDetail(homeworkId: number) {
 
 }
 async function localHomeworkProblems(homeworkId: number) {
+    // 检查访问权限
+    if (isAccessDenied.value) {
+        return;
+    }
+
     getHomeworkProblems(homeworkId).then(res => {
         problems.value = res.data as HomeworkSpace.HomeworkProblemsVO[];
         homework.value.solved = problems.value.filter(problem => problem.isSolved).length;
     }).catch(error => {
+        if (error.code === ProblemStatus.ACCESS_DENIED || error.code === ProblemStatus.CONTEST_NOT_START) {
+            isAccessDenied.value = true;
+            if (error.code === ProblemStatus.CONTEST_NOT_START) {
+                message.value = '比赛未开始，无法查看题目列表';
+            } else {
+                message.value = '您没有权限查看题目列表';
+            }
+            return;
+        }
         console.error(error.message);
     });
-
 }
 onMounted(() => {
     localHomeworkDetail(homeworkId);
-    localHomeworkProblems(homeworkId);
     tabSelect(route);
 })
 </script>
