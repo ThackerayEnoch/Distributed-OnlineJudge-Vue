@@ -18,10 +18,10 @@ export default [
           }
         },
         {
-          path:'/auth/register',
-          name:'Register',
+          path:'/auth/password',
+          name:'ChangePassword',
           components: {
-            auth: () => import('@/auth/views/SignUp.vue')
+            auth: () => import('@/auth/views/ChangePassword.vue')
           }
         }
       ]

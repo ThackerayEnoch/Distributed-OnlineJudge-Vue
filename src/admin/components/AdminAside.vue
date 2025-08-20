@@ -1,7 +1,7 @@
 <template>
     <div class="w-full h-full bg-white dark:bg-gray-800 flex flex-col">
-        <div class="p-4 mt-2 inline-block">
-            <Image class="flex justify-center" width="70%" src="https://r2.wcfs.dokidokiujn.ninja/WCFS/ujn.png" />
+        <div class="p-4 mt-2 inline-block" @click="navigateToHome">
+            <Image class="flex justify-center" width="70%" src="/api/p/problem/upload/ujn.png" />
         </div>
         <ul class="layout-menu m-4 mr-0 p-2 overflow-y-auto text-custom flex-1">
             <template v-for="(item, i) in model" :key="item">
@@ -14,6 +14,8 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import AppMenuItem from './AppMenuItem.vue';
+import { useRouter } from 'vue-router';
+
 export default defineComponent({
     name: 'AdminAside',
     components: {
@@ -21,6 +23,10 @@ export default defineComponent({
     },
     setup() {
         // Add your composition API logic here
+        const router = useRouter();
+        const navigateToHome = () => {
+            router.push('/home'); // 跳转到首页
+        };
         const model = ref([
             {
                 label: '数据统计',
@@ -36,8 +42,10 @@ export default defineComponent({
                         items: [
                             { label: '题目列表', icon: 'pi pi-list', to: '/admin/problems/list' },
                             { label: '创建题目', icon: 'pi pi-plus', to: '/admin/problem/create' },
-                            { label: '题目标签', icon: 'pi pi-tags', to: '/admin/problems/tags' },
-                            { label: '导入|导出题目', icon: 'pi pi-upload', to: '/admin/problems/import-export' }
+                            { label: '题目分类', icon: 'pi pi-folder', to: '/admin/problems/categories' },
+                            { label: '标签管理', icon: 'pi pi-tags', to: '/admin/problems/tags' },
+                            { label: '导入题目', icon: 'pi pi-upload', to: '/admin/problems/import' },
+                            { label: '远程题目账号', icon: 'pi pi-server', to: '/admin/problems/remote-account' }
                         ]
                     },
                     {
@@ -50,22 +58,15 @@ export default defineComponent({
                         ]
                     },
                     {
-                        label: '考试管理',
-                        icon: 'pi pi-calendar',
-                        to: '/admin/exams',
-                        items: [
-                            { label: '考试列表', icon: 'pi pi-list', to: '/admin/exams/list' },
-                            { label: '创建考试', icon: 'pi pi-plus', to: '/admin/exams/create' }
-                        ]
-                    },
-                    {
                         label: '用户管理',
                         icon: 'pi pi-users',
                         to: '/admin/users',
                         items: [
                             { label: '用户列表', icon: 'pi pi-user', to: '/admin/users/list' },
                             { label: '导入用户', icon: 'pi pi-upload', to: '/admin/users/import' },
-                            { label: '账号生成', icon: 'pi pi-plus', to: '/admin/users/generate' }
+                            { label: '账号生成', icon: 'pi pi-plus', to: '/admin/users/generate' },
+                            { label: '登录IP限制', icon: 'pi pi-shield', to: '/admin/users/whitelist' },
+                            { label: '批量导入IP', icon: 'pi pi-file', to: '/admin/users/ip-import' }
                         ]
                     },
                     {
@@ -73,9 +74,14 @@ export default defineComponent({
                         icon: 'pi pi-sitemap',
                         to: '/admin/classes',
                         items: [
-                            { label: '班级列表', icon: 'pi pi-list', to: '/admin/classes/list' },
-                            { label: '创建班级', icon: 'pi pi-plus', to: '/admin/classes/create' }
+                            { label: '班级列表', icon: 'pi pi-list', to: '/admin/groups/list' },
+                            { label: '创建班级', icon: 'pi pi-plus', to: '/admin/group/create' }
                         ]
+                    },
+                    {
+                        label: '代码重判',
+                        icon: 'pi pi-refresh',
+                        to: '/admin/rejudge',
                     }
                 ]
             },
@@ -84,8 +90,7 @@ export default defineComponent({
                 icon: 'pi pi-cog',
                 to: '/admin/settings',
                 items: [
-                    { label: '公告管理', icon: 'pi pi-megaphone', to: '/admin/announcements' },
-                    { label: '通知管理', icon: 'pi pi-bell', to: '/admin/notifications' },
+                    { label: '公告管理', icon: 'pi pi-megaphone', to: '/admin/notices' },
                     {
                         label: '权限管理',
                         icon: 'pi pi-lock',
@@ -102,10 +107,21 @@ export default defineComponent({
         ]);
 
         return {
-            model
+            model, navigateToHome
         };
     },
 });
+/**
+ *                     {
+                        label: '考试管理',
+                        icon: 'pi pi-calendar',
+                        to: '/admin/exams',
+                        items: [
+                            { label: '考试列表', icon: 'pi pi-list', to: '/admin/exams/list' },
+                            { label: '创建考试', icon: 'pi pi-plus', to: '/admin/exams/create' }
+                        ]
+                    },
+ */
 </script>
 <style scoped>
 .text-custom {

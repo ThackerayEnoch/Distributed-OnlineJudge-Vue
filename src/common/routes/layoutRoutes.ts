@@ -1,8 +1,8 @@
 import homeRoute from '@/common/views/homeRoutes';
-import demoRoutes from '@/demo/routes/demoRoutes';
 import profileRoutes from '@/user/routes/profileRoutes';
 import problemRoutes from '@/problem/routes/problemRoutes';
 import homeworkRoutes from '@/homework/routes/homework';
+import IssueRoute from '@/issue/routes/IssueRoute';
 export default [
   {
     path: '/',
@@ -14,9 +14,9 @@ export default [
     children: [
       ...homeRoute,
       ...profileRoutes,
-      ...demoRoutes,
       ...problemRoutes,
       ...homeworkRoutes,
+      ...IssueRoute
     ]
   }
 ];

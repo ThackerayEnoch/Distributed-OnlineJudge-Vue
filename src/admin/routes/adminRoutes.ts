@@ -88,6 +88,34 @@ export default [
                 admin:()=> import('@/admin/components/problem/ProblemTestCase.vue')
               },
               props:true
+            },
+            {
+              path: '/admin/problems/tags',
+              name: 'AdminProblemTags',
+              components: {
+                admin: () => import('@/admin/components/problem/TagList.vue')
+              }
+            },
+            {
+              path: '/admin/problems/import',
+              name: 'AdminProblemImport',
+              components: {
+                admin: () => import('@/admin/components/problem/ProblemImport.vue')
+              }
+            },
+            {
+              path:'/admin/problems/remote-account',
+              name:'AdminProblemRemoteAccount',
+              components:{
+                admin:()=>import('@/admin/components/remoteAccount/remoteAccountList.vue')
+              }
+            },
+            {
+              path:'/admin/problems/categories',
+              name:'AdminProblemCategories',
+              components:{
+                admin:()=>import('@/admin/components/problem/ProblemCategory.vue')
+              }
             }
           ]
         },
@@ -160,8 +188,86 @@ export default [
               components:{
                 admin:()=>import('@/admin/components/user/UserGenerate.vue')
               }
+            },
+            {
+              path:'/admin/users/enable',
+              name:'AdminUserEnable',
+              components:{
+                admin:()=>import('@/admin/components/user/EnableUser.vue')
+              }
+            },
+            {
+              path:'/admin/users/whitelist',
+              name:'AdminUserWhitelist',
+              components:{
+                admin:()=>import('@/admin/components/user/UserIPWhitelist.vue')
+              }
+            },
+            {
+              path:'/admin/users/ip-import',
+              name:'AdminUserWhitelistBatch',
+              components:{
+                admin:()=>import('@/admin/components/user/UserIPImportBatch.vue')
+              }
             }
           ]
+        },
+        {
+          path:'/admin/groups',
+          name:'GroupAdmin',
+          children:[
+            {
+              path:'/admin/groups',
+              redirect: '/admin/groups/list'
+            },
+            {
+              path:'/admin/groups/list',
+              name:'AdminGroupList',
+              components:{
+                admin:()=>import('@/group/GroupManage.vue')
+              }
+            },
+            {
+              path:'/admin/group/create',
+              name:'AdminGroupCreate',
+              components:{
+                admin:()=>import('@/group/GroupCreate.vue')
+              }
+            },
+            {
+              path:'/admin/group/edit/:id',
+              name:'AdminGroupEdit',
+              components:{
+                admin:()=>import('@/group/GroupEdit.vue')
+              },
+              props:true
+            }
+          ]
+        },
+        {
+          path:'/admin/rejudge',
+          name:'AdminRejudge',
+          components:{
+            admin:()=>import('@/admin/components/judge/RejudgeView.vue')
+          }
+        },
+        {
+          path:'/admin/notices',
+          name:'AdminNotices',
+          children:[
+            {
+              path:'/admin/notices',
+              redirect: '/admin/notices/list'
+            },
+            {
+              path:'/admin/notices/list',
+              name:'AdminNoticeList',
+              components:{
+                admin:()=>import('@/admin/components/notice/NoticeList.vue')
+              },
+              props:true
+            }
+          ],
         }
       ]
     }

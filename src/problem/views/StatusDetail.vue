@@ -1,7 +1,11 @@
 <template>
-    <div v-if="isLoading" class="w-full min-h-screen p-6 flex flex-col mt-[-2.5rem]">
-        <!-- 渲染内容 -->
+    <div v-if="isLoading" class="flex flex-col items-center justify-center h-screen">
+        <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="8" fill="transparent" animationDuration=".5s"
+            aria-label="Custom ProgressSpinner" />
+        <span class="mt-2 text-gray-500">加载数据中...</span>
     </div>
+    <AccessDenied v-else-if="isAccessDenied" :message="message" btnLabel="返回提交列表" btnTo="/statuses"
+        btnIcon="pi pi-book" />
     <div v-else class="w-full min-h-screen p-6 flex flex-col mt-[-2.5rem]">
         <!-- Header -->
         <div class="text-white p-4 rounded-md shadow flex items-center"
@@ -24,7 +28,7 @@
             <div class="mt-2 mb-2">
                 <h1 class="text-2xl text-white font-bold mb-2">{{ statusMap[status.status as unknown as keyof typeof
                     statusMap]
-                    }}</h1>
+                }}</h1>
                 <p class="text-m" v-if="status.status !== -2 && isJudgingComplete(status)">
                     运行时间: <span class="font-medium">{{ status.time }} ms </span> 运行内存: <span class="font-medium">{{
                         formatMemory(status.memory) }} </span>
@@ -58,7 +62,8 @@
                     <span class="flex-1 text-center font-bold">标题</span>
                 </template>
                 <template #body="slotProps">
-                    <router-link :to="`/problem/${slotProps.data.pid}`"
+                    <router-link
+                        :to="contestId != null ? `/problem/${slotProps.data.pid}?contestId=${contestId}` : `/problem/${slotProps.data.pid}`"
                         class="text-blue-400 hover:text-blue-600 truncate">
                         {{ slotProps.data.title }}
                     </router-link>
@@ -123,7 +128,8 @@
                 <pre><code>{{ status.errorMessage }}</code></pre>
             </div>
         </div>
-        <div v-if="status.status !== -2 && isJudgingComplete(status) && !isAbnormalStatus(status)"
+        <div v-if="status.status !== -2 && isJudgingComplete(status) && !isAbnormalStatus(status) &&
+            status.openCase && status.testcase.length > 0 && !status.isRemote"
             class="bg-white dark:bg-gray-800 mt-6 p-4 rounded-md shadow">
             <h2 class="text-custom font-semibold mb-4">测试点详情</h2>
             <hr class="border-gray-300 my-2 mb-4">
@@ -149,27 +155,53 @@
             </div>
         </div>
         <!-- 新增的代码显示区域 -->
-        <div class="bg-white dark:bg-gray-800 mt-6 p-4 rounded-md shadow">
+        <div v-if="status.code != null && status.code.trim() !== ''"
+            class="bg-white dark:bg-gray-800 mt-6 p-4 rounded-md shadow">
             <h2 class="text-custom font-semibold mb-4">代码</h2>
             <hr class="border-gray-300 my-2 mb-4">
-            <pre><code :class="`language-cpp`" class="line-numbers">{{ status.code
+            <pre><code :class="`language-${getLanguageClass(status.language)}`" class="line-numbers">{{ status.code
             }}</code></pre>
         </div>
     </div>
 </template>
 <script setup lang="ts">
 import { type Status, getStatDetail } from '../StatusAPI';
-import { languageOptions } from '@/common/constant/AllConstant';
 import Column from 'primevue/column';
 import { ref, defineProps, onMounted, onUpdated } from 'vue'
+import AccessDenied from '@/common/components/AccessDenied.vue';
+import globalMessage from '@/common/utils/toast';
+import { ProblemStatus } from '../status/problemStatus';
 import Prism from "prismjs";
+// 导入常用的语言包
+import 'prismjs/components/prism-c';
+import 'prismjs/components/prism-cpp';
+import 'prismjs/components/prism-java';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-csharp';
+import 'prismjs/components/prism-go';
+import 'prismjs/components/prism-php';
+import 'prismjs/components/prism-pascal';
+import 'prismjs/components/prism-rust';
+import 'prismjs/components/prism-ruby';
+import 'prismjs/components/prism-scala';
+import 'prismjs/components/prism-kotlin';
+import 'prismjs/components/prism-haskell';
+import 'prismjs/components/prism-ocaml';
+import 'prismjs/components/prism-perl';
+import 'prismjs/components/prism-d';
+import 'prismjs/components/prism-fortran';
 import { number } from 'yup';
+import { useRoute } from 'vue-router';
+const route = useRoute();
 // 定义props，获取URL中的pid参数
 const props = defineProps({
     submitId: number
 });
+// 从URL中获取contestId
+const contestId = route.query.contestId ? Number(route.query.contestId) : null;
 // 定义是否加载中变量
-const isLoading = ref(true);
+const isLoading = ref(false);
 // 题目数据
 const status = ref<Status.StatusDetail>(
     {
@@ -185,6 +217,8 @@ const status = ref<Status.StatusDetail>(
         nickname: '',
         language: '',
         code: '',
+        openCase: false,
+        isRemote: false,
         errorMessage: '',
         testcase: []
     }
@@ -265,6 +299,75 @@ function isAbnormalStatus(status: Status.StatusDetail): boolean {
     return status.status !== -3 && status.status !== -2 && status.status !== -1 && status.status !== 0 && status.status !== 1 && status.status !== 2 && status.status !== 3
 }
 // 语言映射，用于Prism高亮代码
+const getLanguageClass = (language: string): string => {
+    const languageMap: { [key: string]: string } = {
+        // C/C++ 相关
+        'C': 'c',
+        'C With O2': 'c',
+        'C++': 'cpp',
+        'C++ With O2': 'cpp',
+        'C++ 17': 'cpp',
+        'C++ 17 With O2': 'cpp',
+        'C++ 20': 'cpp',
+        'C++ 20 With O2': 'cpp',
+        'GCC': 'c',
+        'G++': 'cpp',
+        'GNU GCC C11 5.1.0': 'c',
+        'Clang++17 Diagnostics': 'cpp',
+        'GNU G++14 6.4.0': 'cpp',
+        'GNU G++17 7.3.0': 'cpp',
+        'GNU G++20 11.2.0 (64 bit, winlibs)': 'cpp',
+        'Microsoft Visual C++ 2017': 'cpp',
+
+        // Java 相关
+        'Java': 'java',
+        'Java 1.8.0_241': 'java',
+        'Java 11.0.6': 'java',
+        'Kotlin 1.4.0': 'kotlin',
+        'Scala 2.12.8': 'scala',
+
+        // Python 相关
+        'Python3': 'python',
+        'Python2': 'python',
+        'Python': 'python',
+        'Python 2.7.18': 'python',
+        'Python 3.9.1': 'python',
+        'PyPy2': 'python',
+        'PyPy3': 'python',
+        'PyPy 2.7 (7.3.0)': 'python',
+        'PyPy 3.7 (7.3.0)': 'python',
+
+        // JavaScript 相关
+        'JavaScript Node': 'javascript',
+        'JavaScript V8': 'javascript',
+        'JavaScript V8 4.8.0': 'javascript',
+        'Node.js 12.6.3': 'javascript',
+
+        // C# 相关
+        'C#': 'csharp',
+        'C# Mono 6.8': 'csharp',
+        'C# 8, .NET Core 3.1': 'csharp',
+
+        // 其他语言
+        'Golang': 'go',
+        'Go 1.15.6': 'go',
+        'PHP': 'php',
+        'PHP 7.2.13': 'php',
+        'Pascal': 'pascal',
+        'Free Pascal 3.0.2': 'pascal',
+        'PascalABC.NET 3.4.2': 'pascal',
+        'Delphi 7': 'pascal',
+        'D DMD32 v2.091.0': 'd',
+        'Haskell GHC 8.10.1': 'haskell',
+        'OCaml 4.02.1': 'ocaml',
+        'Perl 5.20.1': 'perl',
+        'Ruby 3.0.0': 'ruby',
+        'Rust 1.49.0': 'rust',
+        'Fortran': 'fortran'
+    };
+
+    return languageMap[language] || 'clike'; // 默认使用 clike
+};
 
 // 加载数据
 onMounted(() => {
@@ -275,11 +378,27 @@ onMounted(() => {
 onUpdated(() => {
     Prism.highlightAll();
 });
+const message = ref<string>('您没有权限查看此记录');
+const isAccessDenied = ref<boolean>(false);
 // 通过API获取判题详情
 async function getJudgeDetail(submitId: number) {
     // 获取提交详情
-    const result = await getStatDetail(submitId);
-    status.value = result.data as unknown as Status.StatusDetail;
+    isLoading.value = true;
+    await getStatDetail(submitId).then((result) => {
+        status.value = result.data as unknown as Status.StatusDetail;
+    }).catch((error) => {
+        if (error.code === ProblemStatus.ACCESS_DENIED) {
+            isAccessDenied.value = true;
+            message.value = '您没有权限查看此记录';
+            globalMessage.warn('提示', '您没有权限查看此记录');
+            return;
+        } else if (error.code === ProblemStatus.CONTEST_PROBLEM_USED) {
+            isAccessDenied.value = true;
+            message.value = '该题目已被使用，无法查看';
+            globalMessage.warn('提示', '该题目已被使用，无法查看');
+            return;
+        }
+    });
     isLoading.value = false;
 }
 // 获取状态文本

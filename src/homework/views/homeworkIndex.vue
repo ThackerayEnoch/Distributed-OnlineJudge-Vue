@@ -2,11 +2,13 @@
     <div class="w-full h-full">
         <div class="w-full h-[25%] p-4 shadow-lg bg-white dark:bg-gray-800 mb-4">
             <div class="flex items-center space-x-2">
-                <Select class="w-25" v-model="selectedHomeworkType" :options="HomeworkTypeOptions" placeholder="筛选..."  />
+                <Select class="w-25" v-model="selectedHomeworkType" :options="HomeworkTypeOptions" placeholder="筛选..."
+                    @change="filterHomeworks" />
                 <InputGroup style="max-width: 50%;">
-                    <InputText  v-model="homeworkName" placeholder="请输入作业名" @keyup.enter="filterHomeworks"/>
+                    <InputText v-model="homeworkName" placeholder="请输入作业名" @keyup.enter="filterHomeworks" />
                     <InputGroupAddon style="margin: 0;padding: 0;border-radius: 0;">
-                        <Button icon="pi pi-search" @click="filterHomeworks" severity="secondary" style="border-radius: 0;" variant="text" />
+                        <Button icon="pi pi-search" @click="filterHomeworks" severity="secondary"
+                            style="border-radius: 0;" variant="text" />
                     </InputGroupAddon>
                 </InputGroup>
             </div>
@@ -24,9 +26,10 @@
                         <span class="flex-1 font-bold">标题</span>
                     </template>
                     <template #body="slotProps">
-                        <a  @click="handleClick(slotProps.data.id, $event)" class="text-blue-400 hover:text-blue-600 truncate">
+                        <RouterLink :to="`/homework/${slotProps.data.id}/intro`"
+                            class="text-blue-400 hover:text-blue-600 truncate">
                             {{ slotProps.data.title }}
-                        </a>
+                        </RouterLink>
                     </template>
                 </Column>
                 <Column field="total" style="text-align: center;">
@@ -54,7 +57,7 @@
                             year: 'numeric', month:
                                 '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
                         })
-                            }}</span>
+                        }}</span>
                     </template>
                 </Column>
                 <Column field="endTime" style="text-align: center;">
@@ -66,7 +69,7 @@
                             year: 'numeric', month:
                                 '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
                         })
-                            }}</span>
+                        }}</span>
                     </template>
                 </Column>
                 <Column field="status" style="text-align: center;">
@@ -76,7 +79,7 @@
                     <template #body="slotProps">
                         <span :class="getStatusClass(slotProps.data.startTime, slotProps.data.endTime)"
                             class="p-2 text-sm inline-block rounded">{{
-                                getStatusText(slotProps.data.startTime, slotProps.data.endTime) }}</span>
+                                getRealTimeStatusText(slotProps.data.startTime, slotProps.data.endTime) }}</span>
                     </template>
                 </Column>
                 <Column style="text-align: center;">
@@ -100,48 +103,39 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, } from 'vue';
-import { getHomeworkPage, getHomeworkCount, type Homework, searchHomeworks, searchHomeworksCount, getHomeworkAuth } from '../api/homeworkAPI'
+import { ref, onMounted, onUnmounted } from 'vue';
+import { getHomeworkPage, getHomeworkCount, type HomeworkSpace } from '../api/homeworkAPI'
 import { useRouter, useRoute } from 'vue-router';
 import globalMessage from '@/common/utils/toast';
+
 const router = useRouter();
 const route = useRoute();
+
 const totalRecords = ref(0);
 const first = ref((parseInt(route.query.currentPage as string || '1') - 1) * 30 || 0);
 
-const homeworks = ref<Homework.HomeworkJSON[]>([]);
+const homeworks = ref<HomeworkSpace.HomeworkJSON[]>([]);
 
 const homeworkName = ref('');
-const selectedHomeworkType = ref('');
-const HomeworkTypeOptions = ref(['All','Own']);
-const authPermission = ref(true);
-// 获取用户写作业的权限
-async function getAuthPermission(homeworkId:number) {
-    const res = await getHomeworkAuth(homeworkId);
-    authPermission.value = res.data ?? true;
-}
-async function handleClick(homeworkId:number, event:Event) {
-    await getAuthPermission(homeworkId);
-    if(authPermission.value){
-        router.push({ name: 'HomeworkDetail', params: { hid: homeworkId } });
-    } else{
-        globalMessage.warn('提示', '您没有权限查看该作业');
-    }
-    event.preventDefault();
-}
-// 查询作业 用api查询作业
+const selectedHomeworkType = ref('own');
+const HomeworkTypeOptions = ref(['all', 'own']);
+const currentTime = ref(Date.now());
+let timeUpdateInterval: number;
 function filterHomeworks() {
-    loadSearchedData();
-    loadSearchedCount();
+    first.value = 0;
+    loadData();
+    loadCount();
 }
 function getPremText(permission: number) {
     if (permission === 0) return '公开';
-    if (permission === 1) return '私有';
+    if (permission === 1) return '保护';
+    if (permission === 2) return '私有';
     return '未知';
 }
 function getPremClass(permission: number) {
-    if (permission === 0) return 'text-blue-400';
-    if (permission === 1) return 'text-red-800';
+    if (permission === 0) return 'text-blue-500';
+    if (permission === 1) return 'text-yellow-500';
+    if (permission === 2) return 'text-red-500';
     return 'text-gray-800';
 }
 function computeStatus(startTime: string, endTime: string) {
@@ -157,50 +151,41 @@ function computeStatus(startTime: string, endTime: string) {
     if (end - now < oneDay) return 3; // 小于1天
     return 0; // 进行中
 }
-function getStatusText(startTime: string, endTime: string) {
-    const status = computeStatus(startTime, endTime);
-    let result: string;
-    switch (status) {
-        case 0:
-            result = '进行中';
-            break;
-        case 1:
-            result = '已结束';
-            break;
-        case 2:
-            result = '未开始';
-            break;
-        case 3:
-            result = '剩余' + getStatusStartText(endTime);
-            break;
-        case 4:
-            result = getStatusStartText(startTime) + '后开始';
-            break;
-        default:
-            result = '未知';
-            break;
-    }
-    return result;
-}
-function getStatusStartText(startTime: string) {
-    const now = new Date().getTime();
+function getRealTimeStatusText(startTime: string, endTime: string) {
+    const now = currentTime.value;
     const start = new Date(startTime).getTime();
-    let result: string;
+    const end = new Date(endTime).getTime();
+    const oneDay = 24 * 60 * 60 * 1000;
 
-    const diff = start - now;
-
-    if (diff > 3600000) { // 大于一小时
-        const hours = Math.floor(diff / 3600000);
-        result = ` ${hours} 小时`;
-    } else if (diff > 60000) { // 大于一分钟
-        const minutes = Math.floor(diff / 60000);
-        result = ` ${minutes} 分钟`;
-    } else { // 小于一分钟
-        const seconds = Math.floor(diff / 1000);
-        result = ` ${seconds} 秒`;
+    if (now > end) return '已结束';
+    if (now < start) {
+        const diff = start - now;
+        if (diff < oneDay) {
+            return getRealTimeText(diff) + '后开始';
+        }
+        return '未开始';
     }
 
-    return result;
+    const remaining = end - now;
+    if (remaining < oneDay) {
+        return '剩余' + getRealTimeText(remaining);
+    }
+    return '进行中';
+}
+function getRealTimeText(timeDiff: number): string {
+    if (timeDiff <= 0) return '';
+
+    const hours = Math.floor(timeDiff / 3600000);
+    const minutes = Math.floor((timeDiff % 3600000) / 60000);
+    const seconds = Math.floor((timeDiff % 60000) / 1000);
+
+    if (hours > 0) {
+        return ` ${hours} 小时 ${minutes} 分钟`;
+    } else if (minutes > 0) {
+        return ` ${minutes} 分钟 ${seconds} 秒`;
+    } else {
+        return ` ${seconds} 秒`;
+    }
 }
 function getStatusClass(startTime: string, endTime: string) {
     const status = computeStatus(startTime, endTime);
@@ -229,13 +214,7 @@ function getStatusClass(startTime: string, endTime: string) {
 }
 function onPage(event: any) {
     first.value = event.first;
-    console.log(first.value)
-    // 检测逻辑 根据当前搜索内容插对应页码
-    if(homeworkName.value || selectedHomeworkType.value){
-        loadSearchedData();
-    } else {
-        loadData();
-    }
+    loadData();
 }
 // 获取进度条的颜色
 function getProgressBarColor(accuracy: number) {
@@ -245,42 +224,32 @@ function getProgressBarColor(accuracy: number) {
     return 'progress-80';
 };
 onMounted(() => {
-    if (homeworkName.value || selectedHomeworkType.value) {
-        loadSearchedData();
-        loadSearchedCount();
-    } else {
-        loadData();
-        loadCount();
+    loadData();
+    loadCount();
+
+    // 启动每秒更新时间的定时器
+    timeUpdateInterval = setInterval(() => {
+        currentTime.value = Date.now();
+    }, 1000);
+});
+
+onUnmounted(() => {
+    // 清理定时器
+    if (timeUpdateInterval) {
+        clearInterval(timeUpdateInterval);
     }
 });
 async function loadData() {
-    const result = await getHomeworkPage(first.value);
-    homeworks.value = result.data as unknown as Homework.HomeworkJSON[];
-    router.push({ query: { currentPage: (first.value / 30 + 1).toString() } });
+    getHomeworkPage(first.value, selectedHomeworkType.value, homeworkName.value).then(result => {
+        homeworks.value = result.data as unknown as HomeworkSpace.HomeworkJSON[];
+        router.push({ query: { currentPage: (first.value / 30 + 1).toString() } });
+    }).catch(err => {
+        globalMessage.error("加载错误", err.message);
+    });
+
 }
 async function loadCount() {
-    const result = await getHomeworkCount();
-    totalRecords.value = result.data as number;
-}
-async function loadSearchedData() {
-    const result = await searchHomeworks(first.value, selectedHomeworkType.value ,homeworkName.value);
-    homeworks.value = result.data as unknown as Homework.HomeworkJSON[];
-    const currentQuery:any = {currentPage: (first.value / 30 + 1).toString()};
-    // 更新查询参数
-    if (selectedHomeworkType.value) {
-    currentQuery['type'] = selectedHomeworkType.value;
-    } else {
-        delete currentQuery['type'];
-    }
-    if (homeworkName.value) {
-        currentQuery['name'] = homeworkName.value;
-    } else {
-        delete currentQuery['name'];
-    }
-    router.push({ query: currentQuery });
-}
-async function loadSearchedCount() {
-    const result = await searchHomeworksCount(selectedHomeworkType.value ,homeworkName.value);
+    const result = await getHomeworkCount(selectedHomeworkType.value, homeworkName.value);
     totalRecords.value = result.data as number;
 }
 </script>
@@ -301,5 +270,4 @@ async function loadSearchedCount() {
 .progress-80 ::v-deep(.p-progressbar-value) {
     background-color: #10B981 !important;
 }
-
 </style>

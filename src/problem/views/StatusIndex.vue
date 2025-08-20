@@ -1,10 +1,9 @@
 <template>
     <div class="w-full h-full">
-
         <div class="w-full h-[75%] p-4 shadow-lg bg-white dark:bg-gray-800">
             <DataTable :value="problems" v-model:filters="filters" filterDisplay="menu" stripedRows paginator :rows="30"
                 tableStyle="min-width: 60%" responsiveLayout="scroll" class="custom-font-size" size="small"
-                :totalRecords="totalRecords" lazy :first="first" @page="onPage">
+                :totalRecords="totalRecords" lazy :first="first" @page="onPage" headerClass="h-4">
                 <template #header>
                     <div class="flex flex-row space-x-4 items-center">
                         <h1 class="text-2xl font-bold">评测状态</h1>
@@ -27,7 +26,8 @@
                         <span class="flex-1 text-center font-bold">题目</span>
                     </template>
                     <template #body="slotProps">
-                        <router-link :to="`/problem/${slotProps.data.pid}`"
+                        <router-link
+                            :to="contestId != null ? `/problem/${slotProps.data.pid}?contestId=${contestId}` : `/problem/${slotProps.data.pid}`"
                             class="text-blue-400 hover:text-blue-600 truncate">
                             P{{ slotProps.data.pid }} {{ slotProps.data.title }}
                         </router-link>
@@ -42,10 +42,6 @@
                             class="p-2 px-4 text-base inline-block rounded">
                             {{ getStatusText(slotProps.data.status) }}
                         </span>
-                    </template>
-                    <template #filter>
-                        <Select v-model="selectedStatus" :options="statusOptions" optionLabel="name" placeholder="全部"
-                            option-value="code" multiple />
                     </template>
                 </Column>
                 <Column field="oiRankScore" style="text-align: center;">
@@ -91,10 +87,16 @@
                         <span class="flex-1 text-center font-bold">语言</span>
                     </template>
                     <template #body="slotProps">
-                        <router-link :to="`/status/${slotProps.data.submitId}`"
+                        <router-link
+                            v-if="slotProps.data.share || counterStore.currentUser.userId === slotProps.data.uid"
+                            :to="contestId != null ? `/status/${slotProps.data.submitId}?contestId=${contestId}` : `/status/${slotProps.data.submitId}`"
                             class="text-blue-400 hover:text-blue-600 truncate">
                             {{ slotProps.data.language }}
                         </router-link>
+                        <span v-else>{{
+                            slotProps.data.language }}
+                        </span>
+
                     </template>
                 </Column>
                 <Column field="judger" style="text-align: center;">
@@ -107,7 +109,7 @@
                         <span class="flex-1 text-center font-bold">用户</span>
                     </template>
                     <template #body="slotProps">
-                        <router-link :to="`/user/${slotProps.data.uid}`"
+                        <router-link :to="`/profile/${slotProps.data.uid}`"
                             class="text-blue-400 hover:text-blue-600 truncate">
                             {{ slotProps.data.nickname }}
                         </router-link>
@@ -131,18 +133,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
 import { getStatPage, getStatBySubmitid, getStatMaxCount, type Status } from '../StatusAPI'
-import { statusMap, statusClassMap, statusOptions } from '@/common/constant/AllConstant';
+import { statusMap, statusClassMap } from '@/common/constant/AllConstant';
 import { useRoute, useRouter } from 'vue-router';
+import { useUserStore } from '@/common/utils/store';
+const counterStore = useUserStore();
 import { FilterMatchMode } from '@primevue/core/api';
-
+import { ProblemStatus } from '@/homework/status/homeworkStatus';
+//
 const route = useRoute();
 const router = useRouter();
 // 评测状态数据
 const problems = ref<Status.StatJSONObject[]>([]);
 // 总记录数
-const totalRecords = ref(150);
+const totalRecords = ref(0);
 // Url参数
 const first = ref((parseInt(route.query.currentPage as string || '1') - 1) * 30 || 0);
 const problemId = ref(route.query.problemId ? parseInt(route.query.problemId as string) : null);
@@ -150,9 +155,8 @@ const contestId = ref(route.query.contestId ? parseInt(route.query.contestId as 
 const userId = ref(route.query.userId ? parseInt(route.query.userId as string) : null);
 const type = ref(route.query.type as string || 'all');
 const statusProp = ref(route.query.status ? parseInt(route.query.status as string) : null);
-const selectedStatus = ref<string[]>([]);
 // 是否只显示自己
-const isMe = ref(false);
+const isMe = ref(type.value === 'own' ? true : false);
 function onIsMeChange() {
     if (isMe.value) {
         type.value = "own";
@@ -186,19 +190,48 @@ function onPage(event: any) {
     first.value = event.first;
     const query = { ...route.query, currentPage: event.page + 1 };
     router.push({ query });
+
+    // 先清除轮询队列和定时器
+    pollingQueue.value = [];
+    stopPolling();
+
+    // 重新获取数据并初始化轮询队列
     getStatusData(first.value);
 }
 // 获取判题状态数据
 async function getStatusData(currentPage: number) {
-    const res = await getStatPage(currentPage, problemId.value ?? undefined, contestId.value ?? undefined, userId.value ?? undefined, type.value, statusProp.value ?? undefined);
-    problems.value = res.data ?? [];
-    initializePollingQueue();
-    startPolling();
+    // 先清除之前的轮询，防止重复启动
+    stopPolling();
+
+    try {
+        const res = await getStatPage(currentPage, problemId.value ?? undefined, contestId.value ?? undefined, userId.value ?? undefined, type.value, statusProp.value ?? undefined);
+        problems.value = res.data ?? [];
+        initializePollingQueue();
+        startPolling();
+    } catch (error: any) {
+        if (contestId.value && (error.code === ProblemStatus.ACCESS_DENIED || error.code === ProblemStatus.CONTEST_NOT_START)) {
+            // 如果是在作业中且遇到权限或比赛未开始错误，导航回作业简介
+            router.push(`/homework/${contestId.value}/intro`);
+            console.error('提交记录访问被拒绝:', error.message);
+        } else {
+            console.error('加载提交记录失败:', error.message);
+        }
+    }
 }
 // 获取判题状态总记录数
 async function getStatusCount() {
-    const res = await getStatMaxCount(problemId.value ?? undefined, contestId.value ?? undefined, userId.value ?? undefined, type.value, statusProp.value ?? undefined);
-    totalRecords.value = res.data as unknown as number;
+    try {
+        const res = await getStatMaxCount(problemId.value ?? undefined, contestId.value ?? undefined, userId.value ?? undefined, type.value, statusProp.value ?? undefined);
+        totalRecords.value = res.data as unknown as number;
+    } catch (error: any) {
+        if (contestId.value && (error.code === ProblemStatus.ACCESS_DENIED || error.code === ProblemStatus.CONTEST_NOT_START)) {
+            // 如果是在作业中且遇到权限或比赛未开始错误，导航回作业简介
+            router.push(`/homework/${contestId.value}/intro`);
+            console.error('提交记录统计访问被拒绝:', error.message);
+        } else {
+            console.error('加载提交记录统计失败:', error.message);
+        }
+    }
 }
 // 格式化内存
 function formatMemory(memory: number) {
@@ -251,6 +284,8 @@ const initializePollingQueue = () => {
             pollingQueue.value.push({ submitId: problem.submitId });
         }
     });
+    // 按submitId从小到大排序
+    pollingQueue.value.sort((a, b) => a.submitId - b.submitId);
 };
 // 获取状态更新
 const fetchStatusUpdate = async (submitId: number): Promise<Status.StatusItem> => {
@@ -273,18 +308,48 @@ const updateProblems = (statusItem: Status.StatusItem) => {
         }
     }
 };
-// 开始轮询，1s轮询一次
+let intervalId: number;
+// 清除轮询
+const stopPolling = () => {
+    if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = 0;
+    }
+};
+// 开始轮询，1.5s轮询一次
 const startPolling = () => {
+    // 先清除之前的定时器，防止重复启动
+    stopPolling();
+
     if (pollingQueue.value.length === 0) {
         return;
     }
-    setInterval(async () => {
-        for (const item of pollingQueue.value) {
-            const statusItem = await fetchStatusUpdate(item.submitId);
-            updateProblems(statusItem);
+
+    intervalId = setInterval(async () => {
+        if (pollingQueue.value.length > 0) {
+            // 获取队列中submitId最小的元素（第一个元素）
+            const firstItem = pollingQueue.value[0];
+            try {
+                const statusItem = await fetchStatusUpdate(firstItem.submitId);
+                updateProblems(statusItem);
+            } catch (error) {
+                console.error('轮询查询失败:', error);
+            }
+        } else {
+            // 队列为空时停止轮询
+            stopPolling();
         }
-    }, 1000);
+    }, 1500);
 };
+onBeforeUnmount(() => {
+    // 页面离开前清除轮询，确保定时器被及时销毁
+    stopPolling();
+    pollingQueue.value = [];
+});
+onUnmounted(() => {
+    // 组件卸载时清除轮询
+    stopPolling();
+});
 </script>
 
 <style scoped>

@@ -46,6 +46,7 @@ export default defineComponent({
                             { label: "题目列表", icon: "pi pi-list", to: "/admin/problems/list" },
                             { label: '测试点管理', icon: 'pi pi-list', to: '/admin/problem/testcases' },
                             { label: '题目编辑', icon: 'pi pi-edit', to: '/admin/problem/edit' },
+                            { label: '题目分类', icon: 'pi pi-folder', to: '/admin/problems/categories' },
                             { label: "创建题目", icon: "pi pi-plus", to: "/admin/problem/create" },
                             { label: "题目标签", icon: "pi pi-tags", to: "/admin/problems/tags" },
                             { label: "导入|导出题目", icon: "pi pi-upload", to: "/admin/problems/import-export" },
@@ -76,9 +77,24 @@ export default defineComponent({
                         items: [
                             { label: "用户列表", icon: "pi pi-user", to: "/admin/users/list" },
                             { label: "导入用户", icon: "pi pi-upload", to: "/admin/users/import" },
-                            { label: '账号生成', icon: 'pi pi-plus', to: '/admin/users/generate' }
+                            { label: '账号生成', icon: 'pi pi-plus', to: '/admin/users/generate' },
+                            { label: '启用用户', icon: 'pi pi-user-plus', to: '/admin/users/enable' },
                         ],
                     },
+                    {
+                        label: '班级管理',
+                        icon: 'pi pi-sitemap',
+                        to: '/admin/classes',
+                        items: [
+                            { label: '班级列表', icon: 'pi pi-list', to: '/admin/groups/list' },
+                            { label: '创建班级', icon: 'pi pi-plus', to: '/admin/group/create' }
+                        ]
+                    },
+                    {
+                        label: '代码重判',
+                        icon: 'pi pi-refresh',
+                        to: '/admin/rejudge',
+                    }
                 ],
             },
             {
@@ -86,8 +102,7 @@ export default defineComponent({
                 icon: "pi pi-cog",
                 to: "/admin/settings",
                 items: [
-                    { label: "公告管理", icon: "pi pi-megaphone", to: "/admin/announcements" },
-                    { label: "通知管理", icon: "pi pi-bell", to: "/admin/notifications" },
+                    { label: '公告管理', icon: 'pi pi-megaphone', to: '/admin/notices' },
                     {
                         label: '权限管理',
                         icon: 'pi pi-lock',

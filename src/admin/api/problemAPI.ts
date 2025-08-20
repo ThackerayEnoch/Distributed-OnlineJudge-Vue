@@ -8,6 +8,7 @@ export namespace ProblemSpace{
         createTime: Date;
         modifier: string;
         updateTime: Date;
+        isRemote: boolean;
         status: number;
     }
     export interface AdminCreateProblemDTO {
@@ -37,8 +38,13 @@ export namespace ProblemSpace{
         oiJudgeCaseMode?: number;
         removeBlank: boolean;
         judgeCaseStatus: boolean;
+        tags: number[];
     }
-
+    export interface TagVO {
+        id: number;
+        name: string;
+        color: string;
+    }
     export interface AdminCreateProblemSampleDTO {
         id: number;
         input: string;
@@ -87,10 +93,27 @@ export namespace ProblemSpace{
         isFileIo: boolean;
         ioReadFileName: string;
         ioWriteFileName: string;
+        isRemote: boolean;
         createdUser: number;
         createTime: Date;
         updateTime: Date;
+        tags: TagVO[];
     }
+    export interface ProblemAndTagVO{
+        id:number,
+        title:string,
+        tags:TagVO[]
+    }
+    export interface UpdateProblemTagsDTO{
+        id:number,
+        tagIds:number[]
+    }
+}
+export const UpdateProblemTags = (dto:ProblemSpace.UpdateProblemTagsDTO) => {
+    return request.put('/api/p/problems/tags',dto)
+}
+export const getAdminProblemAndTagVO = (offset:number,own:boolean,auth:number,content:string) =>{
+   return request.get<ProblemSpace.ProblemAndTagVO[]>('/api/p/admin/problems/tags',{offset,own,auth,content})
 }
 export const getAdminProblems = (offset:number,own:boolean,auth:number,content:string) => {
     return request.get<ProblemSpace.ProblemVO[]>('/api/p/admin/problems',{offset,own,auth,content})
@@ -112,4 +135,7 @@ export const getProblemLanguages = (id:number) => {
 }
 export const updateProblem = (id:number,data:ProblemSpace.AdminCreateProblemDTO) => {
     return request.put<ProblemSpace.ProblemVO>(`/api/p/admin/problem/${id}`,data)
+}
+export const uploadFile = (files:FormData,headers:object) => {
+    return request.post<string>(`/api/p/admin/problem/upload`,files, headers);
 }

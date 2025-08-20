@@ -3,34 +3,35 @@
         <Panel>
             <template #header>
                 <div class="flex justify-between items-center text-2xl font-bold text-blue-500">
-                    <span>创建题目</span>
+                    <span v-if="props.type === 'edit'">
+                        编辑题目
+                        <span v-if="isRemote" class="text-red-500">远程题目</span>
+                    </span>
+                    <span v-else>创建题目</span>
                 </div>
             </template>
             <Divider />
-            <div class="w-full">
-                <label class="text-gray-500">
-                    <span class="text-red-500">*</span> 展示ID
-                </label>
-                <InputText v-model="displayId" class="mt-2 w-full" placeholder="展示ID" />
-            </div>
-            <div class="w-full mt-2">
+            <div class=" w-full mt-2">
                 <label class="text-gray-500">
                     <span class="text-red-500">*</span> 题目标题
                 </label>
-                <InputText v-model="title" class="mt-2 w-full" placeholder="题目标题" />
+                <InputText :disabled="isRemote" v-model="title" class="mt-2 w-full" placeholder="题目标题" />
             </div>
             <div class="w-full mt-2 flex space-x-4">
                 <div class="flex-1">
                     <label class="text-gray-500"><span class="text-red-500">*</span> 时间限制(ms)</label>
-                    <InputNumber v-model="timeLimit" suffix="ms" class="mt-2 w-full" placeholder="时间限制" />
+                    <InputNumber :disabled="isRemote" v-model="timeLimit" suffix="ms" class="mt-2 w-full"
+                        placeholder="时间限制" />
                 </div>
                 <div class="flex-1">
                     <label class="text-gray-500"><span class="text-red-500">*</span> 内存限制(MiB)</label>
-                    <InputNumber v-model="memoryLimit" suffix="MiB" class="mt-2 w-full" placeholder="内存限制" />
+                    <InputNumber :disabled="isRemote" v-model="memoryLimit" suffix="MiB" class="mt-2 w-full"
+                        placeholder="内存限制" />
                 </div>
                 <div class="flex-1">
                     <label class="text-gray-500"><span class="text-red-500">*</span> 栈限制(MiB)</label>
-                    <InputNumber v-model="stackLimit" suffix="MiB" class="mt-2 w-full" placeholder="栈限制" />
+                    <InputNumber :disabled="isRemote" v-model="stackLimit" suffix="MiB" class="mt-2 w-full"
+                        placeholder="栈限制" />
                 </div>
                 <div class="flex-1">
                     <label class="text-gray-500"><span class="text-red-500">*</span> 难度</label>
@@ -40,27 +41,30 @@
             </div>
             <div class="w-full mt-6">
                 <label class="text-gray-500"><span class="text-red-500">*</span> 题目描述</label>
-                <MdEditor class="prose max-w-full shadow-md mt-2" v-model="problemDesc" />
+                <MdEditor class="prose max-w-full shadow-md mt-2" @on-upload-img="onUploadImg" v-model="problemDesc" />
             </div>
             <div class="w-full mt-8">
                 <label class="text-gray-500"><span class="text-red-500">*</span> 输入描述</label>
-                <MdEditor class="prose max-w-full shadow-md max-h-[250px] mt-2" v-model="inputDesc" />
+                <MdEditor class="prose max-w-full shadow-md max-h-[250px] mt-2" @on-upload-img="onUploadImg"
+                    v-model="inputDesc" />
             </div>
             <div class="w-full mt-8">
                 <label class="text-gray-500"><span class="text-red-500">*</span> 输出描述</label>
-                <MdEditor class="prose max-w-full shadow-md max-h-[250px] mt-2" v-model="outputDesc" />
+                <MdEditor class="prose max-w-full shadow-md max-h-[250px] mt-2" @on-upload-img="onUploadImg"
+                    v-model="outputDesc" />
             </div>
             <div class="w-full mt-8">
                 <label class="text-gray-500"> 提示</label>
-                <MdEditor class="prose max-w-full shadow-md max-h-[250px] mt-2" v-model="hintDesc" />
+                <MdEditor class="prose max-w-full shadow-md max-h-[250px] mt-2" @on-upload-img="onUploadImg"
+                    v-model="hintDesc" />
             </div>
             <div class="mt-6 flex space-x-3 justify-start max-w-3xl">
                 <div class="flex-1 min-w-[200px]">
-                    <label class="text-gray-500"> 权限</label>
+                    <label class="text-gray-500"> 可见性</label>
                     <Select suffix="ms" v-model="selectedAuth" :options="authOptions" optionLabel="label"
                         optionValue="value" class="mt-2 w-full" />
                 </div>
-                <div class="flex-1 min-w-[200px]">
+                <div v-if="!isRemote" class="flex-1 min-w-[200px]">
                     <label class="text-gray-500"> 类型</label>
                     <div class="flex flex-row flex-wrap gap-4 mt-4">
                         <div class="flex items-center gap-2">
@@ -68,8 +72,8 @@
                             <label for="ingredient1">ACM</label>
                         </div>
                         <div class="flex items-center gap-2">
-                            <RadioButton v-model="problemType" inputId="type2" name="type" :value="1" />
-                            <label for="ingredient2">OI</label>
+                            <RadioButton v-model="problemType" disabled inputId="type2" name="type" :value="1" />
+                            <label for="ingredient2" v-tooltip.top="'正在开发中'">OI</label>
                         </div>
                     </div>
                 </div>
@@ -78,12 +82,38 @@
                     <ToggleSwitch inputId="share" v-model="share" class="mt-4" />
                 </div>
             </div>
-            <div class="flex flex-col space-y-2 mt-4">
+            <div v-if="!isRemote" class="flex flex-col space-y-2 mt-4">
                 <label class="text-gray-500"><span class="text-red-500">*</span> 允许提交语言:</label>
                 <div class="flex flex-wrap gap-4">
                     <div v-for="option in languageOptions" :key="option.id" class="flex items-center mr-2 gap-2">
                         <Checkbox v-model="selectedLanguages" :inputId="option.id.toString()" :value="option.id" />
-                        <label v-tooltip.top="option.description" :for="option.id.toString()">{{ option.name }}</label>
+                        <label v-tooltip.top="option.description" :for="option.id.toString()">{{ option.name
+                        }}</label>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col space-y-2 mt-4">
+                <label class="text-gray-500"><span class="text-red-500">*</span> 题目标签:</label>
+                <div class="flex flex-wrap gap-4">
+                    <div class="flex flex-wrap gap-2">
+                        <template v-for="(tag, index) in tags" :key="index">
+                            <span :style="{ backgroundColor: tag.color }"
+                                class="inline-flex items-center text-sm font-medium rounded px-3 py-1 text-white shadow-sm max-w-full gap-1">
+                                <span class="truncate">{{ tag.name }}</span>
+                                <button @click="removeProblemTag(index)"
+                                    class="flex items-center justify-center w-5 h-5 text-white/80 hover:text-white transition-colors duration-150">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </span>
+                        </template>
+                        <button @click="onTagDialogOpen"
+                            class="flex items-center px-3 py-1 rounded bg-green-100 text-green-700 border border-green-300 hover:bg-green-200 ml-2">
+                            添加标签
+                        </button>
                     </div>
                 </div>
             </div>
@@ -97,7 +127,7 @@
                     <div class="flex justify-between items-center border-b border-gray-300 bg-gray-100 pb-4">
                         <span class="p-4 pb-2 font-bold text-lg">样例 {{ index + 1 }}</span>
                         <div class="flex items-center gap-2">
-                            <Button @click="removeSample(sample.id)" severity="danger"
+                            <Button :disabled="isRemote" @click="removeSample(sample.id)" severity="danger"
                                 class="p-4 pb-2 pl-6 pr-6">删除</Button>
                         </div>
                     </div>
@@ -109,7 +139,8 @@
                                 <label for="input" class="block text-sm font-semibold"><span
                                         class="text-red-500">*</span>
                                     样例输入</label>
-                                <Textarea v-model="sample.input" class="w-full p-2 border rounded" rows="5" />
+                                <Textarea :disabled="isRemote" v-model="sample.input" class="w-full p-2 border rounded"
+                                    rows="5" />
                             </FloatLabel>
                         </div>
                         <div class="w-1/2">
@@ -117,7 +148,8 @@
                                 <label for="output" class="block text-sm font-semibold"><span
                                         class="text-red-500">*</span>
                                     样例输出</label>
-                                <Textarea v-model="sample.output" class="w-full p-2 border rounded" rows="5" />
+                                <Textarea :disabled="isRemote" v-model="sample.output" class="w-full p-2 border rounded"
+                                    rows="5" />
                             </FloatLabel>
                         </div>
                     </div>
@@ -125,25 +157,25 @@
                         {{ sample.collapsed ? '展开' : '折叠' }}
                     </Button>
                 </div>
-                <Button @click="addSample" class="w-full mb-4">添加样例</Button>
+                <Button :disabled="isRemote" @click="addSample" class="w-full mb-4">添加样例</Button>
             </div>
-            <div class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
+            <div v-if="!isRemote" class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
                 <span v-tooltip="'1. 选手程序：给选手程序提供额外的库文件\n2. 特殊或交互程序：给特殊或交互程序提供额外的库文件'">评测额外文件 <i
                         class="ml-1 fa-regular fa-circle-question"></i></span>
             </div>
-            <div class="p-4">
+            <div v-if="!isRemote" class="p-4">
                 <div class="flex flex-wrap gap-4">
                     <div class="flex items-center mr-2 gap-2 w-1/2">
-                        <Checkbox v-model="userJudgeFile" binary />
-                        <label for="checkbox1">选手程序</label>
+                        <Checkbox v-model="userJudgeFile" binary disabled />
+                        <label for="checkbox1" v-tooltip.top="'正在开发中'">选手程序</label>
                     </div>
                     <div class="flex items-center mr-2 gap-2">
-                        <Checkbox v-model="spjJudgeFile" binary />
-                        <label for="checkbox2">特殊或交互程序</label>
+                        <Checkbox v-model="spjJudgeFile" binary disabled />
+                        <label for="checkbox2" v-tooltip.top="'正在开发中'">特殊或交互程序</label>
                     </div>
                 </div>
             </div>
-            <div v-if="userJudgeFile" class="p-4 w-1/2">
+            <div v-if="userJudgeFile && !isRemote" class="p-4 w-1/2">
                 <!-- Tag 列表 -->
                 <div class="flex flex-wrap gap-2 border border-gray-300 mt-4 p-2 rounded">
                     <div v-for="(tag, index) in userFiles" :key="index"
@@ -161,7 +193,7 @@
                     </button>
                 </div>
             </div>
-            <div v-if="spjJudgeFile" class="p-4 w-1/2">
+            <div v-if="spjJudgeFile && !isRemote" class="p-4 w-1/2">
                 <!-- Tag 列表 -->
                 <div class="flex flex-wrap gap-2 border border-gray-300 mt-4 p-2 rounded">
                     <div v-for="(tag, index) in spjFiles" :key="index"
@@ -179,31 +211,32 @@
                     </button>
                 </div>
             </div>
-            <div class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
+            <div v-if="!isRemote" class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
                 <span
                     v-tooltip="'1. 普通判题：选手程序读取题目标准输入文件，执行代码逻辑得到选手输出，对比题目标准输出文件内容得到判题结果\n2. 特殊判题：题目要求的输出结果可能不唯一，允许不同结果存在，所以需要一个特殊程序读取标准输出、选手输出和标准输入，进行对比得出最终判题结果\n3. 交互判题：交互程序的标准输出通过交互通道写到选手程序标准输入，选手程序的标准输出通过交互通道写到交互程序的标准输入，两者需要刷新输出缓冲区'">判题模式
                     <i class="ml-1 fa-regular fa-circle-question"></i></span>
             </div>
-            <div class="p-4">
+            <div v-if="!isRemote" class="p-4">
                 <div class="flex items-center gap-4 mt-4">
                     <div class="flex items-center gap-2">
                         <RadioButton v-model="judgeMode" inputId="judgeMode1" name="judgeMode" :value="0" />
-                        <label for="mode1">普通判题</label>
+                        <label for="mode1" v-tooltip.top="'正在开发中'">普通判题</label>
                     </div>
                     <div class="flex items-center gap-2">
-                        <RadioButton v-model="judgeMode" inputId="judgeMode2" name="judgeMode" :value="1" />
-                        <label for="mode2">特殊判题</label>
+                        <RadioButton v-model="judgeMode" v-tooltip.top="'正在开发中'" disabled inputId="judgeMode2"
+                            name="judgeMode" :value="1" />
+                        <label for="mode2" v-tooltip.top="'正在开发中'">特殊判题</label>
                     </div>
                     <div class="flex items-center gap-2">
-                        <RadioButton v-model="judgeMode" inputId="judgeMode3" name="judgeMode" :value="2" />
-                        <label for="mode3">交互判题</label>
+                        <RadioButton v-model="judgeMode" disabled inputId="judgeMode3" name="judgeMode" :value="2" />
+                        <label for="mode3" v-tooltip.top="'正在开发中'">交互判题</label>
                     </div>
                 </div>
             </div>
-            <div class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
+            <div v-if="!isRemote" class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
                 <span v-tooltip="'测试点评测模式。'">评测数据 <i class="ml-1 fa-regular fa-circle-question"></i></span>
             </div>
-            <div v-if="problemType === 0" class="p-4 mt-4">
+            <div v-if="problemType === 0 && !isRemote" class="p-4 mt-4">
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2">
                         <RadioButton v-model="acmJudgeCaseMode" inputId="judgeCaseMode1" name="judgeCaseMode"
@@ -217,7 +250,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else>
+            <div v-else-if="!isRemote">
                 <div class="flex items-center gap-4 mt-4">
                     <div class="flex items-center gap-2">
                         <RadioButton v-model="oiJudgeCaseMode" inputId="oiJudgeCaseMode1" name="oiJudgeCaseMode"
@@ -252,7 +285,7 @@
                 <ToggleSwitch inputId="autoRemove" v-model="judgeCaseStatus" class="mt-4" />
             </div>
             <div>
-                <Button label="保存" @click="saveProblem" icon="pi pi-check" class="w-full mt-4" />
+                <Button label="保存" @click="saveProblem" :loading="isSaving" icon="pi pi-check" class="w-full mt-4" />
             </div>
         </Panel>
     </div>
@@ -284,15 +317,59 @@
             <Button label="确认添加" icon="pi pi-check" @click="addTag(spjFiles)" class="w-full" />
         </div>
     </Dialog>
+    <Dialog v-model:visible="tagDialogVisible" header="标签管理" :modal="true" class="min-w-[360px]">
+        <!-- 搜索与新建区域 -->
+        <div class="space-y-4 p-4">
+            <div class="flex gap-2">
+                <InputText v-model="searchText" placeholder="搜索标签..." class="flex-1" />
+                <Button icon="pi pi-plus" @click="showCreate = !showCreate"
+                    class="!px-3 !py-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700" />
+            </div>
+
+            <!-- 新建标签表单 -->
+            <div v-if="showCreate" class="space-y-3 border-t pt-4">
+                <InputText v-model="newTagName" placeholder="新标签名称" class="w-full !text-sm" />
+                <div class="flex flex-wrap gap-2">
+                    <div v-for="(color, index) in colorPalette" :key="index" @click="selectedColor = color"
+                        class="w-6 h-6 rounded-full cursor-pointer border-2 transition-all"
+                        :class="[selectedColor === color ? 'scale-110 ring-2 ring-blue-500' : 'hover:scale-105']"
+                        :style="{ backgroundColor: color }" />
+                </div>
+                <Button label="添加新标签" @click="createTagEvent"
+                    class="!text-sm !px-3 !py-1.5 w-full bg-blue-500 hover:bg-blue-600 text-white"
+                    :disabled="!newTagName || !selectedColor" />
+            </div>
+        </div>
+
+        <!-- 标签选择列表 -->
+        <div class="max-h-[50vh] overflow-y-auto border-t">
+            <div v-if="filteredTags.length" class="p-4 grid gap-3">
+                <div v-for="tag in filteredTags" :key="tag.name" @click="toggleTag(tag)"
+                    class="flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors" :class="[isTagSelected(tag)
+                        ? 'bg-blue-50 dark:bg-blue-900/50'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                    ]">
+                    <span class="w-4 h-4 rounded-full shadow-inner" :style="{ backgroundColor: tag.color }" />
+                    <span class="text-sm">{{ tag.name }}</span>
+                    <i v-if="isTagSelected(tag)" class="pi pi-check ml-auto text-blue-500" />
+                </div>
+            </div>
+            <div v-else class="p-6 text-center text-gray-400 text-sm">
+                未找到相关标签
+            </div>
+        </div>
+    </Dialog>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref } from 'vue'
+import { defineComponent, onMounted, ref, computed } from 'vue'
 import { languageOptions } from '@/common/constant/AllConstant'
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 
-import { createProblem, getProblem, updateProblem, getProblemLanguages, type ProblemSpace } from '@/admin/api/problemAPI'
+import { createProblem, uploadFile, getProblem, updateProblem, getProblemLanguages, type ProblemSpace } from '@/admin/api/problemAPI'
+import { type TagsSpace, getTags, createTag } from '@/admin/api/tagAPI';
 import globalMessage from '@/common/utils/toast';
+import router from '@/common/utils/router';
 
 export default defineComponent({
     name: 'ProblemEdit',
@@ -308,6 +385,7 @@ export default defineComponent({
         }
     },
     setup(props) {
+        const isRemote = ref(false);
         const displayId = ref("");
         const title = ref("");
         const timeLimit = ref(1000);
@@ -319,7 +397,82 @@ export default defineComponent({
         const hintDesc = ref("");
         const problemType = ref(0);
         const share = ref(false);
-        const selectedLanguages = ref<number[]>([0, 1, 2]); // 绑定选中的值
+        // Tag区域--Start
+        const tagDialogVisible = ref(false);
+        const allTags = ref<TagsSpace.TagVO[]>([]);
+        const searchText = ref('')
+        const newTagName = ref('')
+        const selectedColor = ref('#3B82F6')
+        const showCreate = ref(false)
+        const tags = ref<TagsSpace.TagVO[]>([]);
+        const colorPalette = [
+            "#8b5cf6",  // 深紫
+            "#6366f1",  // 靛蓝
+            "#d946ef",  // 紫红
+            "#a855f7",  // 学士服紫
+            "#ef4444",  // 警戒红
+            "#64748b",  // 石板灰
+            "#f472b6",  // 粉红
+            "#14b8a6",  // 蓝绿
+            "#06b6d4",  // 青色
+            "#10b981",  // 翡翠绿
+            "#22c55e",  // 成功绿
+            "#0ea5e9",  // 天空蓝
+            "#f59e0b",  // 琥珀黄
+            "#eab308",  // 黄金黄
+            "#84cc16"   // 酸橙绿
+        ];
+        const onTagDialogOpen = () => {
+            tagDialogVisible.value = true;
+            loadAllTags();
+        };
+        const loadAllTags = async () => {
+            await getTags(searchText.value).then((res) => {
+                allTags.value = res.data as TagsSpace.TagVO[];
+            }).catch((err) => {
+                globalMessage.error('获取标签列表失败', err.message);
+            });
+        };
+        const removeProblemTag = (index: number) => {
+            tags.value.splice(index, 1);
+        };
+        const onSaving = ref(false);
+        const createTagEvent = async () => {
+            if (!newTagName.value) {
+                globalMessage.error('错误', '标签名称不能为空');
+                return;
+            }
+            const newTag = {
+                name: newTagName.value,
+                color: selectedColor.value
+            };
+            await createTag(newTag).then(() => {
+                loadAllTags();
+            }).catch((err) => {
+                globalMessage.error('创建标签失败', err.message);
+            });
+            newTagName.value = '';
+        };
+        // 搜索过滤
+        const filteredTags = computed(() => {
+            if (!searchText.value) {
+                return allTags.value;
+            }
+            return allTags.value.filter(tag =>
+                tag.name.toLowerCase().includes(searchText.value.toLowerCase())
+            )
+        })
+
+        // 标签选择逻辑
+        const isTagSelected = (tag: TagsSpace.TagVO) =>
+            tags.value.some(t => t.name === tag.name)
+
+        const toggleTag = (tag: TagsSpace.TagVO) => {
+            const index = tags.value.findIndex(t => t.name === tag.name)
+            index === -1 ? tags.value.push(tag) : tags.value.splice(index, 1)
+        }
+        // Tag区域--End
+        const selectedLanguages = ref<number[]>([1, 2, 3, 4, 5, 6, 9, 10]); // 绑定选中的值
         let sampleId = 0; // 用于生成唯一的样例id
         const samples = ref([
             // 示例数据
@@ -338,7 +491,7 @@ export default defineComponent({
         const oiJudgeCaseMode = ref(0);
         const removeBlank = ref(true);
         const judgeCaseStatus = ref(true);
-        // 
+        // 语言选项
         const difficulty = [
             { label: '简单', value: 0 },
             { label: '中等', value: 1 },
@@ -382,7 +535,9 @@ export default defineComponent({
         const toggleSample = (index: number) => {
             samples.value[index].collapsed = !samples.value[index].collapsed;
         };
+        const isSaving = ref(false);
         async function saveProblem() {
+            isSaving.value = true;
             let userFileDTO: ProblemSpace.AdminCreateProblemFileDTO[] = [];
             let spjFileDTO: ProblemSpace.AdminCreateProblemFileDTO[] = [];
             let sampleDTO: ProblemSpace.AdminCreateProblemSampleDTO[] = [];
@@ -408,6 +563,7 @@ export default defineComponent({
                     collapsed: sample.collapsed
                 })
             })
+            let tagIds = tags.value.map(tag => tag.id);
             let problem: ProblemSpace.AdminCreateProblemDTO = {
                 displayId: displayId.value,
                 title: title.value,
@@ -432,7 +588,8 @@ export default defineComponent({
                 selectedLanguages: selectedLanguages.value,
                 userFiles: userFileDTO,
                 spjFiles: spjFileDTO,
-                samples: sampleDTO
+                samples: sampleDTO,
+                tags: tagIds,
             }
             if (props.type === 'edit') {
                 if (!props.id) {
@@ -442,6 +599,7 @@ export default defineComponent({
                 // 编辑题目
                 await updateProblem(props.id, problem).then(res => {
                     globalMessage.success("题目更新", res.message)
+                    router.push("/admin/problems/list");
                 }).catch(err => {
                     globalMessage.error("更新失败", err.message)
                 })
@@ -450,11 +608,12 @@ export default defineComponent({
                 // 创建题目
                 await createProblem(problem).then(res => {
                     globalMessage.success("题目创建", res.message)
+                    router.push("/admin/problems/list");
                 }).catch(err => {
                     globalMessage.error("创建失败", err.message)
                 })
             }
-
+            isSaving.value = false;
         }
         async function loadProblemLanguages() {
             if (!props.id) {
@@ -481,11 +640,13 @@ export default defineComponent({
                 problemDesc.value = data.description;
                 inputDesc.value = data.input;
                 outputDesc.value = data.output;
+                isRemote.value = data.isRemote;
                 hintDesc.value = data.hint;
                 problemType.value = data.type;
                 share.value = data.codeShare;
                 selectedDifficulty.value = data.difficulty;
                 selectedAuth.value = data.auth;
+                tags.value = data.tags ? data.tags : [];
                 if (data.userExtraFile !== null && data.userExtraFile !== "") {
                     const userExtraFiles = JSON.parse(data.userExtraFile);
                     userFiles.value = [];
@@ -533,6 +694,27 @@ export default defineComponent({
                 globalMessage.error("获取题目失败", err.message)
             })
         }
+        const onUploadImg = async (files: any, callback: any) => {
+            const res = await Promise.all(
+                files.map((file: File) => {
+                    return new Promise((rev, rej) => {
+                        const form = new FormData();
+                        form.append('files', file);
+                        uploadFile(form, {
+                            headers: {
+                                "Content-Type": "multipart/form-data"
+                            },
+                        }).then((res) => {
+                            rev(res)
+                        }).catch((err) => {
+                            rej(err)
+                        })
+                    });
+                })
+            );
+
+            callback(res.map((item) => item.data[0]));
+        };
         onMounted(() => {
             if (props.type === 'edit') {
                 getProblemById()
@@ -542,7 +724,8 @@ export default defineComponent({
         return {
             displayId, difficulty, selectedDifficulty, title, timeLimit, memoryLimit, stackLimit, share, problemDesc, inputDesc, outputDesc, hintDesc, problemType, selectedLanguages, languageOptions, samples, addSample, removeSample,
             toggleSample, userJudgeFile, spjJudgeFile, userFiles, spjFiles, newTag, spjDialogVisible, dialogVisible, addTag, removeTag, judgeMode, oiJudgeCaseMode, acmJudgeCaseMode, removeBlank, judgeCaseStatus, saveProblem,
-            authOptions, selectedAuth, newCode
+            authOptions, selectedAuth, newCode, isSaving, onUploadImg, tags, allTags, colorPalette, tagDialogVisible, showCreate, searchText, newTagName, selectedColor, filteredTags, createTag, isTagSelected, toggleTag, createProblem,
+            onSaving, createTagEvent, onTagDialogOpen, removeProblemTag, isRemote, props
         }
     }
 })

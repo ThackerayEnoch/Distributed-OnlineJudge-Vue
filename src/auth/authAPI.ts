@@ -1,6 +1,6 @@
 import request from "../common/utils/api";
 
-namespace Auth {
+export namespace Auth {
     // 用户登录表单
     export interface LoginReqParams{
         username: string;
@@ -12,7 +12,8 @@ namespace Auth {
         username: string;
         nickname: string;
         roleId: number;
-        id: number;
+        userId: number;
+        isLoggedIn: boolean;
     }
     // 发送验证码表单
     export interface SendCaptchaReqParams {
@@ -25,27 +26,35 @@ namespace Auth {
         email: string;
         captcha: string;
     }
+    export interface FirstChangePasswordDTO{
+        password: string;
+    }
 }
 // 用户登录
 // 用户登录
+export const hustojLogin = ()=>{
+    return request.post<Auth.LoginResData>('/api/a/doLogin', {}, {
+        headers: {
+            'loginType':'hustojLogin'
+        }
+    });
+}
 export const login = (params: Auth.LoginReqParams) => {
     const urlEncodedParams = new URLSearchParams();
     Object.keys(params).forEach(key => {
         urlEncodedParams.append(key, (params as any)[key]);
     });
 
-    return request.post<Auth.LoginResData>('/auth-server/doLogin', urlEncodedParams, {
+    return request.post<Auth.LoginResData>('/api/a/doLogin', urlEncodedParams, {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'loginType':'memberLogin'
         }
     });
 }
-// 发送验证码
-export const sendCaptcha = (params: Auth.SendCaptchaReqParams) => {
-    return request.post('/email-service/captcha', params)
+export const survive = () =>{
+    return request.get<boolean>('/api/a/survive')
 }
-// 用户注册
-export const register = (params: Auth.RegisterReqParams) => {
-    return request.post('/user-service/api/users', params)
+export const firstChangePassword = (params: Auth.FirstChangePasswordDTO) => {
+    return request.put('/api/u/user/password/first', params)
 }

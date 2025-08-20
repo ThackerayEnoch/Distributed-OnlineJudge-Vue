@@ -1,6 +1,6 @@
 // src/plugins/globalErrorHandler.ts
 import type { ToastServiceMethods } from 'primevue/toastservice'; // 引入 ToastService 类型
-import { APIError } from '@/common/exception/APIException';
+import { APIError } from '@/common/entity/exception/APIException';
 
 // 接受 ToastService 实例的参数
 const globalErrorHandler = (toast: ToastServiceMethods) => {

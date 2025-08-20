@@ -15,20 +15,18 @@
                         <div class="space-y-3">
                             <div class="flex justify-between items-center py-1">
                                 <span class="text-gray-600">待判题数</span>
-                                <Tag severity="warning" value="128" />
+                                <Tag severity="warning" :value="judgeTask.queueLength" />
                             </div>
                             <div class="flex justify-between items-center py-1">
                                 <span class="text-gray-600">今日判题总数</span>
-                                <Tag severity="warning" value="8984" />
-                            </div>
-                            <div class="flex justify-between items-center py-1">
-                                <span class="text-gray-600">平均等待</span>
-                                <span class="text-primary">45s</span>
+                                <Tag severity="warning" :value="judgeTask.judgeCount" />
                             </div>
                             <div class="flex items-center gap-2 text-sm">
                                 <i class="pi pi-check text-green-500"></i>
                                 <span class="text-gray-600">判题机在线</span>
-                                <span class="font-medium">3/3</span>
+                                <span class="font-medium">{{ judgeTask.onlineJudgerCount }}/{{
+                                    judgeTask.judgerTotalCount
+                                    }}</span>
                             </div>
                         </div>
                     </template>
@@ -321,8 +319,8 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
-import { type DashboardSpace, getServerInfoMetrics, getJudgeMetrics, getErrorList } from '@/admin/api/dashboardAPI';
+import { onMounted, reactive, ref } from 'vue';
+import { type DashboardSpace, getServerInfoMetrics, getJudgeMetrics, getErrorList, getJudgeTask } from '@/admin/api/dashboardAPI';
 const services = ref<DashboardSpace.ServiceVO[]>([]);
 // 图表配置
 const chartOptions = ref({
@@ -355,13 +353,29 @@ const langData = ref({
         }
     ]
 });
+const judgeTask = reactive<DashboardSpace.JudgeTaskVO>({
+    queueLength: 0,
+    judgeCount: 0,
+    onlineJudgerCount: 0,
+    judgerTotalCount: 0,
+})
 const onlineUsers = ref(0);
 const totalUsers = ref(0);
 onMounted(() => {
     loadServerData();
     loadJudgeData();
     loadErrorLogs();
+    loadJudgeTaskInfo();
 });
+async function loadJudgeTaskInfo() {
+    await getJudgeTask().then((res) => {
+        const data = res.data as DashboardSpace.JudgeTaskVO;
+        judgeTask.queueLength = data.queueLength;
+        judgeTask.judgeCount = data.judgeCount;
+        judgeTask.onlineJudgerCount = data.onlineJudgerCount;
+        judgeTask.judgerTotalCount = data.judgerTotalCount;
+    });
+}
 async function loadErrorLogs() {
     await getErrorList().then((res) => {
         errorLogs.value = res.data as DashboardSpace.ErrorVO[];
@@ -434,43 +448,8 @@ const importantLogs = ref([
         time: '2024-03-20 09:15',
         type: 'ADMIN',
         icon: 'pi pi-server',
-        user: 'sysadmin@ujn.edu.cn',
-        action: '重启核心数据库集群'
-    },
-    {
-        time: '2024-03-20 10:30',
-        type: 'SUCCESS',
-        icon: 'pi pi-check-circle',
-        user: 'teacher01@ujn.edu.cn',
-        action: '批量导入127名学生实验数据'
-    },
-    {
-        time: '2024-03-20 11:45',
-        type: 'ADMIN',
-        icon: 'pi pi-shield',
-        user: 'secadmin@ujn.edu.cn',
-        action: '更新系统安全策略'
-    },
-    {
-        time: '2024-03-20 14:20',
-        type: 'INFO',
-        icon: 'pi pi-cloud-upload',
-        user: 'lab02@ujn.edu.cn',
-        action: '上传新版机器学习实验环境镜像'
-    },
-    {
-        time: '2024-03-20 16:05',
-        type: 'SUCCESS',
-        icon: 'pi pi-database',
-        user: 'dba@ujn.edu.cn',
-        action: '完成每日数据库全量备份'
-    },
-    {
-        time: '2024-03-20 17:30',
-        type: 'INFO',
-        icon: 'pi pi-tags',
-        user: 'student001@ujn.edu.cn',
-        action: '提交国家级大创项目申请'
+        user: 'sysadmin',
+        action: '测试'
     }
 ]);
 // 其他数据保持不变...

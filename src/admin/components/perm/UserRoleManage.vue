@@ -83,7 +83,7 @@ import { ref, onMounted } from 'vue'
 import { getRoles, type RoleSpace } from '@/admin/api/roleAPI';
 import { getRoleUsers, addUser, getUserCount, deleteUser, type UserSpace } from '@/admin/api/assignAPI';
 import globalMessage from '@/common/utils/toast';
-import { APIError } from '@/common/exception/APIException';
+import { APIError } from '@/common/entity/exception/APIException';
 
 const addVisible = ref(false)
 const selectedRole = ref<RoleSpace.Role>({

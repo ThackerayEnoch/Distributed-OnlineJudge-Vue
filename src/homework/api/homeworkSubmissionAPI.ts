@@ -55,11 +55,11 @@ export namespace SubmissionsStatus{
     }
 }
 export const getSubmissions = ( currentPage:number, homeworkId:number, type:boolean ) => {
-    return request.get<SubmissionsStatus.StatJSONObject[]>('/api/c/homeworks/submission/statuses',{ currentPage, homeworkId, type })
+    return request.get<SubmissionsStatus.StatJSONObject[]>('/api/c/contests/submission/statuses',{ currentPage, homeworkId, type })
 }
 export const getSubmissionsMaxCount = ( homeworkId:number, type: Boolean ) => {
-    return request.get<number>('/api/c/homeworks/submission/statuses/count', { homeworkId, type })
+    return request.get<number>('/api/c/contests/submission/statuses/count', { homeworkId, type })
 }
 export const getSubmissionBySubmitid = (submitId:number) => {
-    return request.get<SubmissionsStatus.StatusItem>(`/api/c/homeworks/submission`,{ submitId })
+    return request.get<SubmissionsStatus.StatusItem>(`/api/c/contests/submission`,{ submitId })
 }

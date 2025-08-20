@@ -14,6 +14,10 @@
                             || selectedFiles.length === 0 && uploadedFiles.length === 0
                             || isUploading"></Button>
                         <div class="flex items-center gap-2">
+                            <span class="text-gray-700">过期时间</span>
+                            <DatePicker v-model="expireTime" dateFormat="yy/mm/dd" />
+                        </div>
+                        <div class="flex items-center gap-2">
                             <span class="text-gray-700">使用随机密码</span>
                             <ToggleSwitch v-model="isRandomPassword" :disabled="isUploading" class="ml-2" />
                         </div>
@@ -132,6 +136,7 @@ import { createUserBatch, type UserSpace } from '@/admin/api/userAPI'
 const displayDialog = ref<boolean>(false);
 const isUploading = ref<boolean>(false);
 const isloading = ref<boolean>(false);
+const expireTime = ref<Date>(new Date(Date.now() + 4 * 365 * 24 * 60 * 60 * 1000)); // 过期时间
 const selectedFiles = ref<File[]>([]);
 const uploadedFiles = ref<File[]>([]); // 存储已上传的文件列表
 // 处理文件选择（只存储文件，不上传）
@@ -181,12 +186,14 @@ async function saveUsers() {
             username: user.username,
             nickname: user.nickname,
             password: user.password as string,
+            expireTime: expireTime.value.getTime(),
         });
     }
     try {
         await createUserBatch(userDTO);
         globalMessage.success('用户导入', '用户导入成功');
-
+        users.value = []; // 清空用户列表
+        uploadedFiles.value = []; // 清空已上传的文件列表
     } catch (error: any) {
         globalMessage.error('用户导入', error.message);
     }
@@ -224,7 +231,7 @@ const onCellEditComplete = (event: any) => {
     }
 };
 const generateRandomPassword = (length: number): string => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
     let password = '';
     for (let i = 0; i < length; i++) {
         const randomIndex = Math.floor(Math.random() * chars.length);

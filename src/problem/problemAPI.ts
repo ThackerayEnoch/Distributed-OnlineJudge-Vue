@@ -30,6 +30,8 @@ export namespace Problem{
         nickname: string;
         createTime: Date;
         updateTime: Date;
+        isRemote:boolean;
+        tags: TagVO[];
     }
     // 通过token无参请求用户信息
     // 定义后端返回的list<JSONObject>数据类型
@@ -49,6 +51,7 @@ export namespace Problem{
         oiSubmissionCount: number;
         oiAverageScore: number;
         hasDo: boolean;
+        tags: TagVO[];
     }
     export interface ProblemCountJSONObject {
         count: number;
@@ -59,6 +62,22 @@ export namespace Problem{
         solvedCount: number;
         userScore: number;
         isSolved: boolean;
+    }
+    export interface AsideProblem {
+        title: string;
+        acPercentage: number;
+        waPercentage: number;
+        tlePercentage: number;
+        mlePercentage: number;
+        rePercentage: number;
+        cePercentage: number;
+        oePercentage: number;
+        tags: TagVO[];
+    }
+    export interface TagVO {
+        id: number;
+        name: string;
+        color: string;
     }
 }
 export namespace Judge{
@@ -75,18 +94,26 @@ export namespace Judge{
     }
 }
 // GET获取用户数据
-export const getProblemPage = (currentPage:number,content:string) => {
-    return request.get<Problem.ProblemListJSONObject[]>('/api/p/problems',{currentPage,content})
+export const getProblemPage = (currentPage:number,content:string,tagIds:number[]) => {
+    return request.get<Problem.ProblemListJSONObject[]>('/api/p/problems',{currentPage,content,tagIds})
 }
-export const getProblemCount = (content:string) => {
-    return request.get<Problem.ProblemCountJSONObject>('/api/p/problems/count',{content})
+export const getProblemCount = (content:string,tagIds:number[]) => {
+    return request.get<Problem.ProblemCountJSONObject>('/api/p/problems/count',{content,tagIds})
 }
 export const getProblemDetail = (problemId :number,contestId?:number) => {
+    if(contestId === undefined||contestId==null) return request.get<Problem.ProblemResData>(`/api/p/problem/${problemId}`);
     return request.get<Problem.ProblemResData>(`/api/p/problem/${problemId}`,{contestId});
 }
 export const submitProblem = (submitJudgeDTO:Judge.SubmitReqData) => {
     return request.post('/api/j/judge/submit',submitJudgeDTO);
 }
 export const getProblemStatistics = (problemId:number,contestId?:number) => {
+    if(contestId === undefined||contestId==null) return request.get<Problem.ProblemStatistics>(`/api/p/problem/${problemId}/statistics`);
     return request.get<Problem.ProblemStatistics>(`/api/p/problem/${problemId}/statistics`,{contestId});
+}   
+export const getAllTags = () => {
+    return request.get<Problem.TagVO[]>('/api/p/tags')
+}
+export const survive = () =>{
+    return request.get<string>('/api/p/survive')
 }

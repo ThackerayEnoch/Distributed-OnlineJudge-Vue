@@ -1,43 +1,80 @@
 <template>
-    <h1>Welcome to WCFS!</h1>
+    <div class="w-full flex flex-col space-y-8 pt-8 pb-4">
+        <!-- 欢迎图独立容器 -->
+        <div class="max-w-7xl w-full mx-auto px-4">
+            <div class="bg-white border rounded-lg shadow-sm">
+                <div class="p-4">
+                    <img src="@/common/assets/logo.png" alt="济南大学在线测评系统"
+                        class="w-full h-64 object-cover rounded-lg bg-gray-100" />
+                </div>
+            </div>
+        </div>
+
+        <!-- 公告独立容器 -->
+        <div class="max-w-7xl w-full mx-auto px-4">
+            <div class="bg-white dark:bg-gray-900 border rounded-lg shadow-sm">
+                <h2
+                    class="text-2xl font-bold text-ujn-red bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b dark:border-gray-600">
+                    系统公告
+                </h2>
+                <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <li v-for="(notice, index) in notices" :key="index"
+                        class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <div class="flex items-center justify-between text-gray-700 dark:text-gray-300">
+                            <RouterLink :to="`/notices/${notice.id}`" class="truncate">{{ notice.title }}</RouterLink>
+                            <span class="text-sm text-gray-500 dark:text-gray-400 ml-4">{{ notice.createTime }}</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+
+        <!-- 页脚独立容器 -->
+        <div class="max-w-7xl w-full mx-auto px-4 mt-auto">
+            <footer class="pt-6 border-t border-gray-200 text-center text-sm text-gray-600">
+                <p class="mt-2">
+                    推荐浏览器：Chrome Edge Firefox
+                </p>
+                <p>
+                    © {{ new Date().getFullYear() }} UJNOJ | 部分功能基于
+                    <a href="https://github.com/HimitZH/HOJ" class="text-blue-600 hover:underline mx-1">
+                        HOJ
+                    </a>
+                    (Copyright (c) 2021 Himit_ZH) 开发，遵循
+                    <a href="https://github.com/HimitZH/HOJ/blob/master/LICENSE"
+                        class="text-blue-600 hover:underline mx-1">
+                        MIT 许可
+                    </a>
+                </p>
+            </footer>
+        </div>
+    </div>
 </template>
 
 <script lang="ts">
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted } from 'vue';
+import { type NoticesSpace, getAllNotices } from '@/common/views/noticeAPI';
 export default {
     name: 'HomeIndex',
     setup() {
-        // 1. 定义状态
-        const count = ref(0);
-        const state = reactive({
-            message: 'Hello, world!',
-        });
-
-        // 2. 定义计算属性
-        const doubledCount = computed(() => count.value * 2);
-
-        // 3. 定义侦听器
-        watch(count, (newValue, oldValue) => {
-            console.log(`Count changed from ${oldValue} to ${newValue}`);
-        });
-        // 4. 使用组合函数
-
-        // 5. 定义方法
-
-
-        // 6. 生命周期钩子
+        const notices = ref<NoticesSpace.NoticesVO[]>([]);
+        function openLink(url: string) {
+            window.open(url, '_blank');
+        }
         onMounted(() => {
-            console.log('Component mounted');
+            loadAllNotices();
         });
-
-        onUnmounted(() => {
-            console.log('Component unmounted');
-        });
-
+        async function loadAllNotices() {
+            await getAllNotices(5).then((res) => {
+                notices.value = res.data as NoticesSpace.NoticesVO[];
+            }).catch((err) => {
+                console.error('获取通知列表失败！' + err.message);
+            });
+        }
         return {
-            count,
-            state,
-            doubledCount
+            openLink,
+            notices,
         };
     },
 };
