@@ -35,7 +35,7 @@
             </Column>
             <Column field="tag" style="text-align: center;">
                 <template #header>
-                    <span class="flex-1 text-center font-bold">标签</span>
+                    <span class="flex-1 text-center font-bold">类型</span>
                 </template>
                 <template #body>
                     <span>ACM</span>

@@ -113,9 +113,10 @@ const errors = reactive({
 // 可用标签选项
 const availableLabels = [
     { name: '功能请求', value: 1 },
-    { name: 'BUG', value: 2 },
+    { name: 'BUG报告', value: 2 },
     { name: '性能问题', value: 3 },
-    { name: '其他', value: 4 }
+    { name: '使用疑问', value: 4 },
+    { name: '其他问题', value: 5 }
 ]
 
 const priorityOptions = [
@@ -153,18 +154,22 @@ const guidanceContent = `
 \`\`\`markdown
 ## 问题描述
 （简要概述问题）
-
-## 题目编号
+    加入比赛输入密码后提示加入成功，但无页面跳转，刷新依旧显示无权访问。
+    再次输入密码确认后显示用户已加入。
+## 题目编号或比赛编号
 （如：P1001）
-
-## 操作步骤
+    Contest2134
+## 复现步骤
 （例如：选择题目后点击提交按钮，页面未响应）
-
+    1.从比赛页面打开Contest2134。
+    2.输入密码，点击确认。
+    3.提示加入成功，但页面无跳转，刷新后显示无权访问。
 ## 错误信息
 （例如：服务器错误，页面显示“500 Internal Server Error”）
-
+    第一次无错误信息，第二次加入显示用户已加入。
 ## 附加信息
 （设备型号/浏览器版本等）
+    Windows11 Firefox 142.0
 \`\`\`
 
   `
