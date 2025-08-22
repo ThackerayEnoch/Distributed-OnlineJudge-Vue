@@ -6,6 +6,8 @@ import { survive } from '@/common/views/noticeAPI';
 import request from '@/common/utils/api';
 // 主题设置
 import AppConfigurator from './AppConfigurator.vue';
+// 消息组件
+import TopBarMessage from '@/message/components/TopBarMessage.vue';
 const { toggleDarkMode, isDarkTheme } = useLayout();
 // 当前用户
 import { Role } from '@/common/constant/Role';
@@ -187,10 +189,8 @@ watch(route, (newRoute) => {
 
                     <div class="layout-topbar-menu hidden lg:block">
                         <div class="layout-topbar-menu-content">
-                            <button type="button" class="layout-topbar-action">
-                                <i class="pi pi-inbox"></i>
-                                <span>Messages</span>
-                            </button>
+                            <!-- 使用TopBarMessage组件替换原来的Messages按钮 -->
+                            <TopBarMessage />
                         </div>
                     </div>
                     <!-- 修改部分：用户菜单按钮 -->
