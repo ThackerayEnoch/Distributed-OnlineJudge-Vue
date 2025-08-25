@@ -1,22 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { markMessageAsRead, markAllMessagesAsRead } from '../api/messageAPI';
+import { useRouter } from 'vue-router';
+import { markNotificationsAsRead, loadUnreadNotifications } from '../api/messageAPI';
 import type { Message } from '../entity/message';
 import { MessagePriority } from '../entity/message';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import globalMessage from '@/common/utils/toast';
+import OverlayBadge from 'primevue/overlaybadge';
+import { APIError } from '@/common/entity/exception/APIException';
 
 // 响应式数据
 const messages = ref<Message[]>([]);
 const unreadCount = ref<number>(0);
 const isLoading = ref(false);
 const showDropdown = ref(false);
-
-// 计算属性
-const displayUnreadCount = computed(() => {
-    return unreadCount.value > 99 ? '99+' : unreadCount.value.toString();
-});
 
 // 获取优先级标签样式
 const getPriorityClass = (priority: MessagePriority) => {
@@ -63,84 +61,61 @@ const truncateContent = (content: string, maxLength: number = 60) => {
     return content.length > maxLength ? content.substring(0, maxLength) + '...' : content;
 };
 
-// 加载消息
+const router = useRouter();
+
+// 仅加载未读通知（通知专用）
 const loadMessages = async () => {
     try {
         isLoading.value = true;
-
-        // 开发阶段使用模拟数据
-        const mockMessages: Message[] = [
-            {
-                id: 1,
-                subject: '系统维护通知',
-                content: '系统将于今晚23:00-01:00进行例行维护，期间可能会出现短暂的服务中断，请提前保存您的工作进度。',
-                createTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2小时前
-                author: '系统管理员',
-                priority: MessagePriority.HIGH,
-                isRead: false
-            },
-            {
-                id: 2,
-                subject: '作业提交提醒',
-                content: '您有一份数据结构作业即将截止，请及时完成并提交。截止时间为明天下午5点。',
-                createTime: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4小时前
-                author: '张教授',
-                priority: MessagePriority.MEDIUM,
-                isRead: false
-            },
-            {
-                id: 3,
-                subject: '竞赛报名开启',
-                content: '2024年度程序设计竞赛报名已开启，欢迎同学们积极参与。比赛时间为下个月15日，奖品丰厚！',
-                createTime: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1天前
-                author: '竞赛组委会',
-                priority: MessagePriority.LOW,
-                isRead: true
-            },
-            {
-                id: 4,
-                subject: '新功能发布',
-                content: '平台新增了代码对比功能，可以方便地比较不同提交版本之间的差异，提升调试效率。',
-                createTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2天前
-                author: '开发团队',
-                priority: MessagePriority.LOW,
-                isRead: true
-            }
-        ];
-
-        messages.value = mockMessages;
-        unreadCount.value = mockMessages.filter(msg => !msg.isRead).length;
-
-        // 正式环境使用API
-        // const response = await getUserMessages(1, 5);
-        // messages.value = response.messages;
-        // unreadCount.value = response.unreadCount;
+        const resp = await loadUnreadNotifications();
+        const data = (resp as any).data || resp;
+        if (Array.isArray(data)) {
+            messages.value = data.map((m: any) => ({
+                id: m.id,
+                subject: m.subject,
+                content: m.content,
+                createTime: m.createTime,
+                author: m.author,
+                priority: m.priority || MessagePriority.LOW,
+                isRead: !!m.isRead,
+                isNotification: true
+            }));
+            unreadCount.value = messages.value.filter(m => !m.isRead).length;
+        } else {
+            messages.value = [];
+            unreadCount.value = 0;
+        }
     } catch (error) {
-        console.error('加载消息失败:', error);
-        globalMessage.error('加载失败', '无法加载消息列表');
+        console.error('加载通知失败:', error);
+        globalMessage.error('加载失败', '无法加载通知列表');
+        // 轻降级：保持界面可用
+        messages.value = [];
+        unreadCount.value = 0;
     } finally {
         isLoading.value = false;
     }
 };
 
-// 标记消息已读
+// 标记通知为已读（单条）
 const handleMarkAsRead = async (message: Message) => {
     if (message.isRead) return;
-
     try {
-        await markMessageAsRead(message.id);
+        await markNotificationsAsRead([message.id]);
         message.isRead = true;
         unreadCount.value = Math.max(0, unreadCount.value - 1);
     } catch (error) {
-        console.error('标记消息已读失败:', error);
-        globalMessage.error('操作失败', '无法标记消息为已读');
+        console.error('标记通知已读失败:', error);
+        globalMessage.error('操作失败', error instanceof APIError ? error.message : String(error));
     }
 };
 
 // 标记所有消息已读
 const handleMarkAllAsRead = async () => {
     try {
-        await markAllMessagesAsRead();
+        const ids = messages.value.filter(m => !m.isRead).map(m => m.id);
+        if (ids.length > 0) {
+            await markNotificationsAsRead(ids);
+        }
         messages.value.forEach(msg => msg.isRead = true);
         unreadCount.value = 0;
         globalMessage.success('操作成功', '所有消息已标记为已读');
@@ -151,44 +126,46 @@ const handleMarkAllAsRead = async () => {
 };
 
 // 切换下拉菜单
-const toggleDropdown = () => {
+const toggleDropdown = async () => {
     showDropdown.value = !showDropdown.value;
-    if (showDropdown.value && messages.value.length === 0) {
-        loadMessages();
+    if (showDropdown.value) {
+        await loadMessages();
     }
+};
+
+const viewMessageDetail = (message: Message) => {
+    // 不在这里标记为已读，导航到详情页，由详情页负责标记和展示
+    router.push(`/messages/${message.id}`);
+    showDropdown.value = false;
 };
 
 // 组件挂载时加载未读消息数量
 onMounted(() => {
-    // 开发阶段使用模拟数据
-    unreadCount.value = 2; // 模拟2条未读消息
-
-    // 正式环境使用API
-    // getUnreadMessageCount().then(count => {
-    //     unreadCount.value = count;
-    // });
+    // 尝试从后端获取未读消息
+    // 初次挂载时预加载未读通知（非阻塞）
+    loadMessages();
 });
 
 // 定义暴露给父组件的方法
 defineExpose({
     loadMessages,
     unreadCount: computed(() => unreadCount.value),
-    displayUnreadCount
 });
 </script>
 
 <template>
     <div class="relative">
-        <!-- 消息按钮 -->
-        <button type="button" class="layout-topbar-action relative" @click="toggleDropdown">
-            <i class="pi pi-inbox"></i>
-            <!-- 未读消息数量徽章 -->
-            <span v-if="unreadCount > 0"
-                class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1"
-                :class="unreadCount > 99 ? 'text-[0.65rem]' : 'text-xs'">
-                {{ displayUnreadCount }}
+        <!-- 消息按钮：只有在有未读时显示 OverlayBadge，未读为 0 时只渲染图标 -->
+        <template v-if="unreadCount > 0">
+            <OverlayBadge severity="danger" :value="unreadCount" :badge="unreadCount" @click="toggleDropdown">
+                <i class="pi pi-envelope layout-topbar-action" style="font-size: 1.25rem" />
+            </OverlayBadge>
+        </template>
+        <template v-else>
+            <span @click="toggleDropdown" class="cursor-pointer">
+                <i class="pi pi-envelope layout-topbar-action" style="font-size: 1.25rem" />
             </span>
-        </button>
+        </template>
 
         <!-- 下拉消息面板 -->
         <div v-show="showDropdown"
@@ -225,7 +202,7 @@ defineExpose({
                 <div v-else>
                     <div v-for="message in messages" :key="message.id"
                         class="border-b border-gray-100 dark:border-gray-800 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer relative message-item group"
-                        @click="handleMarkAsRead(message)">
+                        @click="viewMessageDetail(message)">
                         <div class="p-4">
                             <!-- 消息头部：标题和优先级 -->
                             <div class="flex items-start justify-between mb-2">
@@ -254,7 +231,7 @@ defineExpose({
                             <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                                 <span class="flex items-center gap-1">
                                     <i class="pi pi-user text-xs"></i>
-                                    {{ message.author }}
+                                    系统消息
                                 </span>
                                 <span class="flex items-center gap-1">
                                     <i class="pi pi-clock text-xs"></i>
@@ -300,6 +277,7 @@ defineExpose({
     height: 2.5rem;
     border-radius: 9999px;
     transition: background-color 0.15s ease-in-out;
+    /* 确保顶部栏按钮可溢出以显示徽章 */
 }
 
 .layout-topbar-action:hover {
@@ -365,5 +343,11 @@ defineExpose({
 /* 为消息项添加组样式以支持悬停效果 */
 .message-item:hover .message-actions {
     opacity: 1;
+}
+
+/* 徽章置顶并且不捕获指针事件，避免阻挡按钮点击 */
+.badge-z {
+    z-index: 60;
+    pointer-events: none;
 }
 </style>
