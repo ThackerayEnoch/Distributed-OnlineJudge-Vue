@@ -310,7 +310,7 @@
         <template #footer>
             <div class="flex justify-between w-full px-4 pb-4">
                 <Button label="取消" icon="pi pi-times" class="p-button-text text-gray-500 hover:bg-gray-100 px-5"
-                    @click="displayDialog = false" />
+                    @click="expireTimeDialogVisible = false" />
                 <Button label="保存修改" icon="pi pi-check" class="px-5 bg-primary-500 hover:bg-primary-600 border-none"
                     :disabled="!expireTimeTmp || loading.edit" :loading="loading.edit" @click="updateExpirationEvent"
                     @keyup.enter="updateExpirationEvent" />
@@ -326,7 +326,7 @@ import globalMessage from '@/common/utils/toast';
 
 const addDialogVisible = ref<boolean>(false);
 const displayDialog = ref<boolean>(false);
-const newPassword = ref<string>('Ujn@12345');
+const newPassword = ref<string>('ujn@12345');
 const passwordDisplayDialog = ref<boolean>(false);
 const roleDisplayDialog = ref<boolean>(false);
 const isloading = ref<boolean>(true);

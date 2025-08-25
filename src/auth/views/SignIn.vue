@@ -28,8 +28,6 @@
                 </div>
                 <Button label="登录" class="w-full p-button-primary" :loading="isloading"
                     :disabled="isHustojLogin || isloading" type="submit" />
-                <Button label="通过旧系统登录" @click="loginByHustOJ" :loading="isHustojLogin"
-                    :disabled="isHustojLogin || isloading" class="w-full mt-2 p-button-secondary" />
             </form>
         </div>
     </div>
