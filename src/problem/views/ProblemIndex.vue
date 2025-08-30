@@ -27,7 +27,8 @@
                                 class="p-button-outlined custom-button p-button-md mr-3" />
                             <Button label="HDU" @click="selectProblemBank(1023)"
                                 class="p-button-outlined custom-button mr-3" />
-                            <Button label="POJ" class="p-button-outlined custom-button" />
+                            <Button label="POJ" @click="selectProblemBank(1025)"
+                                class="p-button-outlined custom-button" />
                         </div>
                     </div>
                 </div>

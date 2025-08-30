@@ -87,7 +87,6 @@ const loadMessages = async () => {
         }
     } catch (error) {
         console.error('加载通知失败:', error);
-        globalMessage.error('加载失败', '无法加载通知列表');
         // 轻降级：保持界面可用
         messages.value = [];
         unreadCount.value = 0;

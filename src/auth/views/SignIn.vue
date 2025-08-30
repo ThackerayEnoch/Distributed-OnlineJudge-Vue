@@ -37,8 +37,7 @@
         :style="{ width: '90vw', maxWidth: '400px' }">
         <div class="p-4">
             <p class="text-lg text-gray-700 dark:text-gray-300 mb-2">
-                如果您是首次登录，请先在旧OJ中登录，然后点击新OJ中的
-                <span class="text-red-500 font-bold">“通过旧系统登录”</span>按钮完成登录。
+                如果您是首次登录，请使用旧系统中的密码进行登录。
             </p>
         </div>
         <template #footer>

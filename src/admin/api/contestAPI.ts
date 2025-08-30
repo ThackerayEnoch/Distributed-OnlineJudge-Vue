@@ -35,6 +35,8 @@ export namespace ContestSpace{
         visible: boolean;
         duplicateCheck: boolean;
         languages: number[];
+    // per-remote-OJ selected language ids, e.g. { HDU: [1,2], POJ: [3] }
+    remoteLanguages?: Record<string, number[]>;
         problems: contestProblem[];
         groupIds: number[];
         users: string[];

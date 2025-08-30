@@ -44,12 +44,39 @@
         <div class="flex flex-col space-y-2 mt-4">
             <label class="text-gray-500"><span class="text-red-500">*</span> 允许提交语言:</label>
             <div class="flex flex-wrap gap-4">
-                <div v-for="option in languageOptions" :key="option.id" class="flex items-center mr-2 gap-2">
+                <div v-for="option in localSupportLanguages" :key="option.id" class="flex items-center mr-2 gap-2">
                     <Checkbox v-model="homework.languages" :inputId="option.id.toString()" :value="option.id" />
                     <label :for="option.id.toString()">{{ option.name }}</label>
                 </div>
             </div>
         </div>
+        <!-- 远程 OJ 语言配置（基于后端已经加载的 OJ 列表） -->
+        <div class="flex flex-col space-y-2 mt-6">
+            <label class="text-gray-500"><span class="text-red-500">*</span> 远程 OJ 语言设置</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div v-for="oj in supprotRemoteOJList" :key="oj" class="p-4 border rounded-lg bg-white shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <Checkbox :inputId="`enable-${oj}`" v-model="enabledRemoteOJs" :value="oj"
+                                @change="() => onRemoteOjToggle(oj)" />
+                            <label :for="`enable-${oj}`" class="font-medium">{{ oj }}</label>
+                        </div>
+                        <div v-if="enabledRemoteOJs.includes(oj)" class="text-sm text-green-600">已启用</div>
+                    </div>
+                    <div v-if="enabledRemoteOJs.includes(oj)"
+                        class="mt-3 grid grid-cols-2 gap-2 max-h-40 overflow-auto">
+                        <div v-if="!(remoteLanguagesByOj[oj] && remoteLanguagesByOj[oj].length)">正在加载或暂无语言</div>
+                        <div v-else v-for="lang in remoteLanguagesByOj[oj]" :key="lang.id"
+                            class="flex items-center gap-2">
+                            <Checkbox :inputId="`remote-${oj}-${lang.id}`" :value="lang.id"
+                                v-model="homework.languages" />
+                            <label :for="`remote-${oj}-${lang.id}`">{{ lang.name }}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 删除重复的远程 OJ 区块 -->
         <div class="mt-6 max-w-3xl space-y-4">
             <div class="grid grid-cols-3 gap-4">
                 <!-- 作业权限 -->
@@ -333,9 +360,9 @@
     </Dialog>
 </template>
 <script lang="ts">
-import { languageOptions } from '@/common/constant/AllConstant'
+import { type LanguageSpace, getLocalLanguages, getRemoteLanguages } from '@/common/api/languageAPI';
 import CustomToggleButton from './CustomToggleButton.vue';
-import { reactive, ref, defineComponent, onMounted } from 'vue'
+import { reactive, ref, defineComponent, onMounted, nextTick } from 'vue'
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import { parseUsers, getHomeworkGroup, getCollaborators, createHomework, uploadFile, getHomeworkDetail, updateHomework, getAdminAllProblems, getAdminProblems, getAdminProblemsCount, type ContestSpace } from '@/admin/api/contestAPI'
@@ -398,6 +425,8 @@ export default defineComponent({
             visible: true,
             duplicateCheck: false,
             languages: [1, 2, 3, 4, 9, 10],
+            // per-remote-OJ selected language ids, e.g. { HDU: [1,2], POJ: [3] }
+            remoteLanguages: {} as Record<string, number[]>,
             users: '',
             selectedClasses: [] as number[],
             startTime: (() => {
@@ -411,6 +440,69 @@ export default defineComponent({
                 return now;
             })(),
         })
+        const languageOptions = ref<LanguageSpace.LanguageVO[]>([]);
+        const localSupportLanguages = ref<LanguageSpace.LanguageVO[]>([]);
+        const RemoteSupportLanguages = ref<LanguageSpace.LanguageVO[]>([]);
+        const supprotRemoteOJList = ["HDU", "POJ"];
+        // alias for template: some templates may reference supportedRemoteOJs
+        const supportedRemoteOJs = supprotRemoteOJList;
+
+        // reactive state for remote OJ UI
+        const enabledRemoteOJs = ref<string[]>([])
+        const remoteLanguagesByOj = ref<Record<string, Array<{ id: number; name: string }>>>({})
+
+        // helper: build id -> oj map from current local/remote support lists
+        const buildIdToOjMap = () => {
+            const map = new Map<number, string>()
+            localSupportLanguages.value.forEach(l => map.set(l.id, l.oj || 'LOCAL'))
+            RemoteSupportLanguages.value.forEach(l => map.set(l.id, l.oj || ''))
+            return map
+        }
+
+        // when toggling an OJ on/off, load its languages if enabled; if disabled, remove its language ids from homework.languages
+        const onRemoteOjToggle = async (oj: string) => {
+            // wait nextTick so v-model (enabledRemoteOJs) is updated by the Checkbox
+            await nextTick()
+            // if disabled, remove all language ids that belong to this oj from homework.languages
+            if (!enabledRemoteOJs.value.includes(oj)) {
+                const idToOj = buildIdToOjMap()
+                homework.languages = homework.languages.filter(id => idToOj.get(id) !== oj)
+                return
+            }
+            // enabled: ensure remote language list is loaded for this oj
+            if (remoteLanguagesByOj.value[oj] && remoteLanguagesByOj.value[oj].length) {
+                return
+            }
+            try {
+                const res = await getRemoteLanguages(oj)
+                const arr = (res && res.data) as LanguageSpace.LanguageVO[]
+                remoteLanguagesByOj.value[oj] = arr.map(l => ({ id: l.id, name: l.name }))
+            } catch (e) {
+                globalMessage.error('加载远程语言失败', (e as Error).message)
+            }
+        }
+        // language
+        const loadAllLanguages = () => {
+            loadLocalLanguages();
+            RemoteSupportLanguages.value = []
+            supprotRemoteOJList.forEach(oj => {
+                loadRemoteLanguagse(oj);
+            });
+        }
+        const loadRemoteLanguagse = async (ojName: string) => {
+            await getRemoteLanguages(ojName).then(res => {
+                RemoteSupportLanguages.value.push(...(res.data as LanguageSpace.LanguageVO[]));
+            }).catch(err => {
+                globalMessage.error("加载远程语言失败", err.message);
+            });
+        }
+        const loadLocalLanguages = async () => {
+            await getLocalLanguages().then(res => {
+                localSupportLanguages.value = res.data as LanguageSpace.LanguageVO[];
+            }).catch(err => {
+                globalMessage.error("加载语言失败", err.message);
+            });
+        }
         // problem
         const contestProblemsDialog = ref(false);
         const addProblemDialog = ref(false);
@@ -565,6 +657,7 @@ export default defineComponent({
         }
         // event
         onMounted(() => {
+            loadAllLanguages();
             loadClasses();
             if (props.type !== undefined && props.type === 'edit') {
                 loadHomeworkDetail(Number(props.id));
@@ -624,6 +717,19 @@ export default defineComponent({
                 visible: homework.visible,
                 duplicateCheck: homework.duplicateCheck,
                 languages: homework.languages,
+                // build remoteLanguages from unified homework.languages
+                remoteLanguages: (() => {
+                    const map = buildIdToOjMap();
+                    const res: Record<string, number[]> = {};
+                    homework.languages.forEach(id => {
+                        const oj = map.get(id);
+                        if (oj && oj !== 'LOCAL') {
+                            if (!res[oj]) res[oj] = [];
+                            res[oj].push(id);
+                        }
+                    });
+                    return res;
+                })(),
                 problems: problemTmp,
                 users: stu,
                 collaborators: collaborators.value,
@@ -641,15 +747,36 @@ export default defineComponent({
             });
         }
         async function loadHomeworkDetail(id: number) {
-            await getHomeworkDetail(id).then(res => {
+            try {
+                const res = await getHomeworkDetail(id);
                 const data = res.data as ContestSpace.HomeworkDetailVO;
+
+                // ensure language data is loaded before splitting
+                await loadLocalLanguages();
+                // reset remote list then load remote languages for each supported oj
+                RemoteSupportLanguages.value = [];
+                await Promise.all(supprotRemoteOJList.map(async (oj) => await loadRemoteLanguagse(oj)));
+
+                // build id -> oj map from known languages
+                const idToOj = new Map<number, string>();
+                localSupportLanguages.value.forEach(l => idToOj.set(l.id, l.oj || 'LOCAL'));
+                RemoteSupportLanguages.value.forEach(l => idToOj.set(l.id, l.oj || ''));
+
+                // reset remoteLanguagesByOj
+                remoteLanguagesByOj.value = {};
+                RemoteSupportLanguages.value.forEach(l => {
+                    const oj = l.oj || '';
+                    if (!remoteLanguagesByOj.value[oj]) remoteLanguagesByOj.value[oj] = [];
+                    remoteLanguagesByOj.value[oj].push({ id: l.id, name: l.name });
+                });
+
+                // set basic homework fields
                 homework.title = data.title;
                 homework.description = data.description;
                 homework.auth = data.auth;
                 homework.password = data.password;
                 homework.visible = data.visible;
                 homework.duplicateCheck = data.duplicateCheck;
-                homework.languages = data.languages;
                 homework.selectedClasses = data.groupIds;
                 homework.startTime = new Date(data.startTime);
                 homework.endTime = new Date(data.endTime);
@@ -665,9 +792,25 @@ export default defineComponent({
                     number: problem.displayId
                 }));
                 filteredClasses.value.push(...(data.groups as ContestSpace.AdminHomeworkGroupVO[]));
-            }).catch(err => {
+
+                // data.languages is a mixed list of local + remote language ids
+                const returnedLangIds = data.languages || [];
+
+                // set homework.languages to the returned mixed list (filter unknown ids to avoid stray values)
+                const knownIds = new Set([...localSupportLanguages.value, ...RemoteSupportLanguages.value].map(l => l.id))
+                homework.languages = returnedLangIds.filter(id => knownIds.has(id));
+
+                // set enabledRemoteOJs based on returned ids
+                enabledRemoteOJs.value = [];
+                supprotRemoteOJList.forEach(oj => {
+                    const idsForOj = returnedLangIds.filter(id => idToOj.get(id) === oj);
+                    if (idsForOj.length > 0) {
+                        enabledRemoteOJs.value.push(oj);
+                    }
+                });
+            } catch (err: any) {
                 globalMessage.error("加载数据失败", err.message);
-            });
+            }
             isSubmiting.value = false;
         }
         async function updateHomeworkFun() {
@@ -691,6 +834,18 @@ export default defineComponent({
                 visible: homework.visible,
                 duplicateCheck: homework.duplicateCheck,
                 languages: homework.languages,
+                remoteLanguages: (() => {
+                    const map = buildIdToOjMap();
+                    const res: Record<string, number[]> = {};
+                    homework.languages.forEach(id => {
+                        const oj = map.get(id);
+                        if (oj && oj !== 'LOCAL') {
+                            if (!res[oj]) res[oj] = [];
+                            res[oj].push(id);
+                        }
+                    });
+                    return res;
+                })(),
                 problems: problemTmp,
                 users: stu,
                 collaborators: collaborators.value,
@@ -736,12 +891,14 @@ export default defineComponent({
             callback(res.map((item) => item.data[0]));
         };
         return {
-            homework, authOptions, languageOptions, visibleOptions, searchContent, onlyMyClasses, filteredClasses, studentInput, students,
+            homework, authOptions, RemoteSupportLanguages, localSupportLanguages, languageOptions, visibleOptions, searchContent, onlyMyClasses, filteredClasses, studentInput, students,
             onOwnClassesChange, parseButtonEvent, createHomeworkFun, onSubmitEvent, contestProblemsDialog, contestProblems, addProblemDialog,
             allProblems, selectedProblems, problemTotalRecords, problemFirst, onProblemPage, onAddPageOpen, onListPageOpen, problemFinalSaveEvent,
             selectedProblemSaveEvent, filterType, problemSearchContent, searchProblemInAllEvent, convertToLetter, deleteContestProblems,
             onUploadImg, isSubmiting, isDuplicateNumber, tagContent, problemTagOptions, problemTagIds, collaborators, clearStudents, parsing,
-            collaboratorContent, collaboratorOptions, searchCollaborators
+            collaboratorContent, collaboratorOptions, searchCollaborators,
+            // expose remote OJ helpers
+            supprotRemoteOJList, supportedRemoteOJs, enabledRemoteOJs, remoteLanguagesByOj, onRemoteOjToggle
         }
     }
 })

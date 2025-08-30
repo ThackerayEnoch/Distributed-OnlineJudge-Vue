@@ -5,9 +5,9 @@
         <span class="mt-2 text-gray-500">加载排行榜中...</span>
     </div>
     <div v-else class="rankings">
-        <DataTable :key="rankData.cacheStartTime" :value="rankData.users" tableStyle="width: 1000px;min-height:60px"
-            showGridlines paginator :rows="currentPageSize" :rowsPerPageOptions="[10, 20, 50]" :rowClass="getRowClass"
-            @page="onPageChange">
+        <DataTable ref="dataTableRef" :key="rankData.cacheStartTime" :value="rankData.users"
+            tableStyle="width: 1000px;min-height:60px" showGridlines paginator v-model:first="first"
+            :rows="currentPageSize" :rowsPerPageOptions="[10, 20, 50]" :rowClass="getRowClass" @page="onPageChange">
             <template #header>
                 <div class="flex flex-wrap items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
@@ -18,7 +18,7 @@
                             </span>
                             <Button label="刷新" icon="pi pi-refresh" size="small" @click="refreshRanking"
                                 :disabled="true" class="p-button-sm" severity="secondary" />
-                            <Button label="定位到我" icon="pi pi-map-marker" size="small" @click="scrollToCurrentUser"
+                            <Button label="定位到我" icon="pi pi-map-marker" size="small" @click="openScroll"
                                 :disabled="isloading || !currentUserFound" class="p-button-sm" severity="info" />
                         </div>
                         <div v-else class="flex items-center gap-2">
@@ -125,6 +125,7 @@ import { ProblemStatus } from '../status/homeworkStatus';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/common/utils/store';
 import globalMessage from '@/common/utils/toast';
+import { is } from 'date-fns/locale';
 
 const props = defineProps<{
     homeworkId: string;
@@ -139,6 +140,9 @@ const currentUserFound = ref(false);
 const currentUserRank = ref(0);
 // 页面大小跟踪
 const currentPageSize = ref(20);
+// 当前页索引（0 基），通过 DataTable 的 @page 事件更新
+const currentPageIndex = ref(0);
+const first = ref(0); // 用于绑定 DataTable 的 first 属性
 // 标记是否需要在数据加载完成后自动定位
 const shouldAutoLocateAfterLoad = ref(false);
 // 倒计时相关
@@ -185,13 +189,26 @@ const refreshRanking = () => {
     loadRankingData(Number(props.homeworkId));
 };// 页面变化事件处理
 const onPageChange = (event: any) => {
-    console.log('Page changed:', event); // 调试用
     currentPageSize.value = event.rows;
-    console.log('Updated currentPageSize:', currentPageSize.value); // 调试用
-};
+    // event.page 是 0 基当前页
+    if (typeof event.page === 'number') {
+        currentPageIndex.value = event.page;
+    }
 
+
+};
+const isOpenScollToCurrentUser = ref(false);
+const openScroll = () => {
+    isOpenScollToCurrentUser.value = true;
+    scrollToCurrentUser();
+}
 // 定位到当前用户
 const scrollToCurrentUser = () => {
+
+    if (!isOpenScollToCurrentUser.value) {
+        return
+    }
+
     const currentUserId = userStore.currentUser.userId;
 
     if (!currentUserId) {
@@ -219,20 +236,11 @@ const scrollToCurrentUser = () => {
     const targetPage = Math.floor(userIndex / pageSize);
     const rowIndexInPage = userIndex % pageSize;
 
-    // 获取当前页码
-    const paginatorCurrent = document.querySelector('.p-paginator-current');
-    let currentPage = 0;
-    if (paginatorCurrent) {
-        const currentText = paginatorCurrent.textContent || '';
-        const match = currentText.match(/(\d+)/);
-        if (match) {
-            currentPage = parseInt(match[1]) - 1; // 转换为0基础索引
-        }
-    }
+    // 使用 currentPageIndex（由 @page 事件维护）作为当前页
+    let currentPage = currentPageIndex.value || 0;
 
     // 如果用户就在当前页，直接高亮
     if (targetPage === currentPage) {
-        // 等待DOM更新后再高亮
         setTimeout(() => {
             highlightCurrentUser(rowIndexInPage);
             globalMessage.success('定位成功', `已定位到第 ${currentUserRank.value} 名：${rankData.value.users[userIndex].nickname}`);
@@ -243,21 +251,76 @@ const scrollToCurrentUser = () => {
     // 需要跳转到其他页面
     const dataTableRef = document.querySelector('.p-datatable');
     if (dataTableRef) {
-        // 查找分页按钮并点击
         setTimeout(() => {
-            const paginatorLinks = document.querySelectorAll('.p-paginator-page');
-            if (paginatorLinks[targetPage]) {
-                (paginatorLinks[targetPage] as HTMLElement).click();
+            const paginatorLinks = Array.from(document.querySelectorAll('.p-paginator-page')) as HTMLElement[];
+            const targetLabel = String(targetPage + 1);
+            const matchBtn = paginatorLinks.find(el => (el.textContent || '').trim() === targetLabel);
 
-                // 等待页面更新后滚动到用户位置
-                setTimeout(() => {
-                    highlightCurrentUser(rowIndexInPage);
-                    globalMessage.success('定位成功', `已定位到第 ${currentUserRank.value} 名：${rankData.value.users[userIndex].nickname}`);
-                }, 400); // 增加等待时间确保页面完全更新
-            } else {
-                // 如果找不到对应页面按钮，可能页面数量有变化，尝试其他方法
-                globalMessage.warn('定位失败', '无法定位到目标页面，请尝试手动查找');
+            if (matchBtn) {
+                matchBtn.click();
+                // 等待 @page 更新 currentPageIndex
+                const waitForPage = () => {
+                    if (currentPageIndex.value === targetPage) {
+                        setTimeout(() => {
+                            highlightCurrentUser(rowIndexInPage);
+                            globalMessage.success('定位成功', `已定位到第 ${currentUserRank.value} 名：${rankData.value.users[userIndex].nickname}`);
+                        }, 100);
+                        return;
+                    }
+                    setTimeout(waitForPage, 150);
+                };
+                waitForPage();
+                return;
             }
+
+            // 否则，使用 next/prev 循环依赖 @page 更新 currentPageIndex
+
+
+            const nextBtn = document.querySelector('.p-paginator-next') as HTMLElement | null;
+            const prevBtn = document.querySelector('.p-paginator-prev') as HTMLElement | null;
+            if (!nextBtn && !prevBtn) {
+                globalMessage.warn('定位失败', '无法定位到目标页面，请尝试手动查找');
+                return;
+            }
+
+            const maxNavAttempts = Math.max(10, Math.abs(targetPage - currentPage) + 10);
+            let navAttempts = 0;
+
+            const doNavStep = () => {
+                navAttempts++;
+                if (navAttempts > maxNavAttempts) {
+
+                    globalMessage.warn('定位失败', '自动翻页失败，请尝试手动翻页后再次定位');
+                    return;
+                }
+
+
+
+                if (currentPageIndex.value < targetPage) {
+                    nextBtn?.click();
+                } else if (currentPageIndex.value > targetPage) {
+                    prevBtn?.click();
+                } else {
+                    setTimeout(() => {
+                        highlightCurrentUser(rowIndexInPage);
+                        globalMessage.success('定位成功', `已定位到第 ${currentUserRank.value} 名：${rankData.value.users[userIndex].nickname}`);
+                    }, 100);
+                    return;
+                }
+
+                setTimeout(() => {
+                    if (currentPageIndex.value === targetPage) {
+                        setTimeout(() => {
+                            highlightCurrentUser(rowIndexInPage);
+                            globalMessage.success('定位成功', `已定位到第 ${currentUserRank.value} 名：${rankData.value.users[userIndex].nickname}`);
+                        }, 100);
+                    } else {
+                        doNavStep();
+                    }
+                }, 250);
+            };
+
+            doNavStep();
         }, 100);
     }
 };
@@ -366,7 +429,7 @@ const getBackgroundClass = (isSolved: boolean, tries: number) => {
 async function loadRankingData(homeworkId: number) {
     // 防止重复请求
     if (isLoadingData) {
-        console.log('Already loading data, skipping duplicate request');
+
         return;
     }
 
@@ -442,23 +505,30 @@ async function loadRankingData(homeworkId: number) {
         rankData.value = tmpData // 解除深层响应式
         isloading.value = false;
 
-        // 确保DataTable的页面大小与我们的状态同步
+        // 确保DataTable的页面大小与我们的状态同步，并同步当前页索引
         setTimeout(() => {
-            // 检查DataTable实际的页面大小
+            // 检查DataTable实际的分页文本，例如 "1 to 20 of 100" 或 "21 to 40 of 100"
             const paginatorCurrent = document.querySelector('.p-paginator-current');
             if (paginatorCurrent) {
-                const currentText = paginatorCurrent.textContent || '';
-                // 提取当前显示的信息，例如 "1 to 20 of 100"
-                const match = currentText.match(/1 to (\d+)/);
-                if (match) {
-                    const actualPageSize = parseInt(match[1]);
+                const currentText = (paginatorCurrent.textContent || '').trim();
+                const m = currentText.match(/(\d+)\s*to\s*(\d+)\s*of\s*(\d+)/i);
+                if (m) {
+                    const start = parseInt(m[1], 10);
+                    const end = parseInt(m[2], 10);
+                    const actualPageSize = Math.max(1, end - start + 1);
                     if (actualPageSize !== currentPageSize.value) {
-                        console.log('同步页面大小:', actualPageSize);
+
                         currentPageSize.value = actualPageSize;
+                    }
+                    // 计算并同步当前页索引（0 基）
+                    const pageIndex = Math.floor((start - 1) / actualPageSize);
+                    if (currentPageIndex.value !== pageIndex) {
+                        currentPageIndex.value = pageIndex;
+
                     }
                 }
             }
-        }, 100);
+        }, 300); // 延长等待以提高 DOM 同步可靠性
 
         // 如果需要在数据加载完成后自动定位
         if (shouldAutoLocateAfterLoad.value && currentUserFound.value) {
@@ -466,7 +536,7 @@ async function loadRankingData(homeworkId: number) {
             // 延迟一点时间确保DOM完全更新和页面大小同步
             setTimeout(() => {
                 scrollToCurrentUser();
-            }, 300);
+            }, 500);
         }
     } catch (error: any) {
         isloading.value = false;

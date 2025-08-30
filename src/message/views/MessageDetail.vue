@@ -2,7 +2,7 @@
 import { ref, onMounted, computed, nextTick } from 'vue';
 import { useUserStore } from '@/common/utils/store';
 import { useRouter, useRoute } from 'vue-router';
-import { getMailDetail, sendMail, loadNotifications, loadMails, getNotificationsCount, getMailsCount, type SendMailDTO } from '../api/messageAPI';
+import { getMailDetail, sendMail, loadNotifications, loadMails, getNotificationsCount, getMailsCount, markNotificationsAsRead, type SendMailDTO } from '../api/messageAPI';
 import type { Message, MessageReply } from '../entity/message';
 import { MessagePriority } from '../entity/message';
 import { format } from 'date-fns';
@@ -230,7 +230,8 @@ const loadMessages = async () => {
                     // 发送/已读 状态
                     isSent: !!parent.isSent,
                     isRead: !!parent.isRead,
-                    isNotification: !!data.isNotification,
+                    // 优先使用 MailDetailVO.isNotification；若未提供，则退回到 parent.type 或 author 名称判断
+                    isNotification: !!data.isNotification || ((parent as any).type === 'NOTIFICATION') || (parent?.author === '系统管理员' || parent?.author === '开发团队'),
                     replies: children.map((c: any) => ({
                         id: c.id,
                         messageId: c.parentId ?? parent.id,
@@ -244,13 +245,24 @@ const loadMessages = async () => {
                     }))
                 };
 
-                // 不替换左侧列表，只设置为选中详情。后端在 getMailDetail 中已经标记为已读，
-                // 前端仅使用返回的 isRead 字段更新本地展示，不再调用后端标记接口。
+                // 不替换左侧列表，只设置为选中详情。
+                // 对于通知类型：后端可能不会在 getMailDetail 自动标记（视实现），因此在这里确保通知被标记为已读。
+                // 仅对通知调用标记接口，普通消息保持原有行为（前端不主动标记）。
                 selectedMessage.value = msg;
                 // 使用后端返回的已读状态同步左侧列表项（不调用 mark 接口）
                 msg.isRead = !!parent.isRead;
                 const idx = messages.value.findIndex(m => m.id === msg.id);
                 if (idx >= 0) messages.value[idx].isRead = msg.isRead;
+                // 如果这是通知且后端返回为未读，则主动调用后端标记为已读并更新 UI
+                if (msg.isNotification && !msg.isRead) {
+                    try {
+                        await markNotificationsAsRead([msg.id]);
+                        msg.isRead = true;
+                        if (idx >= 0) messages.value[idx].isRead = true;
+                    } catch (e) {
+                        console.warn('标记通知已读失败', e);
+                    }
+                }
                 nextTick(() => scrollToBottom());
                 router.replace(`/messages/${msg.id}`);
                 return;
@@ -296,7 +308,8 @@ const selectMessage = async (message: Message) => {
             isSent: !!parent.isSent,
             isRead: !!parent.isRead,
             priority: parent.priority ?? MessagePriority.LOW,
-            isNotification: !!data.isNotification,
+            // 同样在 selectMessage 路径中使用相同的判定规则
+            isNotification: !!data.isNotification || ((parent as any).type === 'NOTIFICATION') || (parent?.author === '系统管理员' || parent?.author === '开发团队'),
             replies: children.map((c: any) => ({
                 id: c.id,
                 messageId: c.parentId ?? parent.id,
@@ -313,10 +326,20 @@ const selectMessage = async (message: Message) => {
         // 不覆盖左侧消息列表，保持 messages.value 不变，直接设置选中消息
         selectedMessage.value = msg;
 
-        // 后端会在 getMailDetail 中标记为已读，前端仅使用返回的 isRead 并同步左侧列表项
+        // 后端会在 getMailDetail 中标记为已读（或非通知时不标记），前端仅使用返回的 isRead 并同步左侧列表项
         msg.isRead = !!parent.isRead;
         const idx = messages.value.findIndex(m => m.id === msg.id);
         if (idx >= 0) messages.value[idx].isRead = msg.isRead;
+        // 若为通知且后端未标记，则主动标记为已读
+        if (msg.isNotification && !msg.isRead) {
+            try {
+                await markNotificationsAsRead([msg.id]);
+                msg.isRead = true;
+                if (idx >= 0) messages.value[idx].isRead = true;
+            } catch (e) {
+                console.warn('标记通知已读失败', e);
+            }
+        }
         nextTick(() => scrollToBottom());
         router.replace(`/messages/${msg.id}`);
     } catch (err) {
@@ -485,10 +508,26 @@ const goBack = () => {
     router.push('/messages');
 };
 
-onMounted(() => {
+onMounted(async () => {
     // 加载左侧列表（分页）与右侧详情（如果 route 带 id）
-    loadList();
-    loadMessages();
+    // 如果 route 带有 id（非新会话），优先通过后端获取该 id 的详情来判断是通知还是消息，再加载左侧列表
+    messages.value = [];
+    const messageId = Number(route.params.id || 0);
+    if (messageId && messageId !== 0) {
+        try {
+            const resp = await getMailDetail(messageId);
+            const data = (resp as any).data || resp;
+            const parent = data.parentMail as any;
+            const inferredIsNotification = !!data.isNotification || ((parent as any).type === 'NOTIFICATION') || (parent?.author === '系统管理员' || parent?.author === '开发团队');
+            showNotifications.value = inferredIsNotification;
+        } catch (e) {
+            // 无法从后端判断则保持默认，不阻塞加载
+            console.warn('无法根据 id 推断消息类型，使用默认侧栏：', e);
+        }
+    }
+    // 根据上面的判断加载左侧列表与详情
+    await loadList();
+    await loadMessages();
 });
 
 const totalPages = computed(() => Math.max(1, Math.ceil((totalCount.value || 0) / pageSize)));

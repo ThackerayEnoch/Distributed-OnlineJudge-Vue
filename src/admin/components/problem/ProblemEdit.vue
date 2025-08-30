@@ -362,7 +362,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, onMounted, ref, computed } from 'vue'
-import { languageOptions } from '@/common/constant/AllConstant'
+import { type LanguageSpace, getLocalLanguages } from '@/common/api/languageAPI';
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 
@@ -715,7 +715,17 @@ export default defineComponent({
 
             callback(res.map((item) => item.data[0]));
         };
+        const languageOptions = ref<LanguageSpace.LanguageVO[]>([]);
+        // 获取本地语言列表
+        const loadLocalLanguages = async () => {
+            await getLocalLanguages().then(res => {
+                languageOptions.value = res.data as LanguageSpace.LanguageVO[];
+            }).catch(err => {
+                globalMessage.error("获取语言失败", err.message)
+            })
+        }
         onMounted(() => {
+            loadLocalLanguages();
             if (props.type === 'edit') {
                 getProblemById()
                 loadProblemLanguages()

@@ -8,6 +8,8 @@ import request from '@/common/utils/api';
 import AppConfigurator from './AppConfigurator.vue';
 // 消息组件
 import TopBarMessage from '@/message/components/TopBarMessage.vue';
+// template ref，用于调用子组件通过 defineExpose 暴露的方法
+const topBarMessageRef = ref<any>(null);
 const { toggleDarkMode, isDarkTheme } = useLayout();
 // 当前用户
 import { Role } from '@/common/constant/Role';
@@ -131,9 +133,17 @@ function switchMenu(menu: string) {
     }
 }
 // 监听路由变化
-watch(route, (newRoute) => {
+watch(route, async (newRoute) => {
     const currentRoute = newRoute.path.split('/')[1].toLowerCase();
     switchMenu(currentRoute);
+    // 当路由变化时，尝试调用子组件暴露的 loadMessages 方法刷新消息
+    // 使用可选链以防组件尚未挂载
+    try {
+        await topBarMessageRef.value?.loadMessages?.();
+    } catch (e) {
+        // 忽略子组件刷新错误，避免阻塞路由切换
+        console.error('刷新 TopBarMessage 失败:', e);
+    }
 });
 </script>
 
@@ -190,7 +200,7 @@ watch(route, (newRoute) => {
                     <div class="layout-topbar-menu hidden lg:block">
                         <div class="layout-topbar-menu-content">
                             <!-- 使用TopBarMessage组件替换原来的Messages按钮 -->
-                            <TopBarMessage />
+                            <TopBarMessage ref="topBarMessageRef" />
                         </div>
                     </div>
                     <!-- 修改部分：用户菜单按钮 -->
