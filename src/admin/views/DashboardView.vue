@@ -14,8 +14,16 @@
                     <template #content>
                         <div class="space-y-3">
                             <div class="flex justify-between items-center py-1">
-                                <span class="text-gray-600">待判题数</span>
+                                <span class="text-gray-600">本地待判题数</span>
                                 <Tag severity="warning" :value="judgeTask.queueLength" />
+                            </div>
+                            <div class="flex justify-between items-center py-1">
+                                <span class="text-gray-600">远程待判题数</span>
+                                <Tag severity="info" :value="judgeTask.remoteWaitingQueueLength" />
+                            </div>
+                            <div class="flex justify-between items-center py-1">
+                                <span class="text-gray-600">远程判题中</span>
+                                <Tag severity="success" :value="judgeTask.remoteJudgingQueueLength" />
                             </div>
                             <div class="flex justify-between items-center py-1">
                                 <span class="text-gray-600">今日判题总数</span>
@@ -107,7 +115,7 @@
                     <template #header>
                         <div class="flex items-center gap-2">
                             <i class="pi pi-database text-orange-500"></i>
-                            <h3 class="text-lg font-semibold truncate">数据库集群 ({{ dbNodes.length }} nodes)</h3>
+                            <h3 class="text-lg font-semibold truncate">数据库 ({{ dbNodes.length }} nodes)</h3>
                         </div>
                     </template>
                     <template #content>
@@ -185,7 +193,7 @@
                     <template #header>
                         <div class="flex items-center gap-2">
                             <i class="pi pi-cloud text-green-500"></i>
-                            <h3 class="text-lg font-semibold">微服务集群</h3>
+                            <h3 class="text-lg font-semibold">微服务</h3>
                         </div>
                     </template>
                     <template #content>
@@ -262,14 +270,30 @@
                             </Column>
                             <Column field="message" header="错误信息" header-class="font-semibold">
                                 <template #body="{ data }">
-                                    <div class="font-mono text-sm text-gray-700 truncate hover:text-clip">
-                                        {{ data.errorMessage }}
+                                    <div class="flex items-center gap-3">
+                                        <!-- 左侧：查看按钮（优先通过 API 获取详情） -->
+                                        <div class="shrink-0">
+                                            <Button icon="pi pi-search" class="p-button-text p-button-sm"
+                                                :aria-label="'查看错误 ' + (data.id ?? data.logId ?? data.errorId ?? '')"
+                                                @click="openErrorDetailByApi(data)" />
+                                        </div>
+
+                                        <!-- 右侧：简略消息，文本可点击显示降级详情（不强制调用 API） -->
+                                        <div class="flex-1">
+                                            <button
+                                                class="text-left w-full font-mono text-sm text-gray-700 truncate hover:underline"
+                                                :aria-label="'查看错误 ' + (data.id ?? '')"
+                                                @click.prevent="openErrorDetailByApi(data)">
+                                                {{ data.errorMessage }}
+                                            </button>
+                                        </div>
                                     </div>
                                 </template>
                             </Column>
                             <Column header-class="w-10">
-                                <template #body>
-                                    <Button icon="pi pi-ellipsis-h" class="p-button-text p-button-sm" />
+                                <template #body="{ data }">
+                                    <Button icon="pi pi-ellipsis-h" class="p-button-text p-button-sm"
+                                        @click.stop="openErrorDetailByApi(data)" />
                                 </template>
                             </Column>
                         </DataTable>
@@ -314,13 +338,72 @@
                     </template>
                 </Card>
             </div>
+            <!-- 错误详情对话框 -->
+            <Dialog v-model:visible="showErrorDialog" :modal="true" :style="{ width: '720px' }">
+                <template #header>
+                    <div class="flex items-center justify-between w-full">
+                        <div class="flex items-center gap-3">
+                            <Tag :severity="selectedError?.errorLevel === 'ERROR' ? 'danger' : 'warning'">{{
+                                selectedError?.errorLevel || 'ERROR' }}</Tag>
+                            <h3 class="text-lg font-semibold">错误详情</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <Button icon="pi pi-copy" class="p-button-text" :disabled="!selectedError"
+                                @click="copyErrorMessage" />
+                            <Button icon="pi pi-times" class="p-button-text" @click="showErrorDialog = false" />
+                        </div>
+                    </div>
+                </template>
+                <div v-if="loadingErrorDetail" class="flex items-center justify-center h-48">
+                    <ProgressSpinner />
+                </div>
+                <div v-else-if="selectedError" class="space-y-3 text-sm">
+                    <div class="flex items-center justify-between">
+                        <div class="text-xs text-gray-500">时间</div>
+                        <div class="font-medium">{{ formatDate(selectedError.timestamp.toString()) }}</div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="text-xs text-gray-500">级别</div>
+                        <Tag :severity="selectedError.errorLevel === 'ERROR' ? 'danger' : 'warning'">{{
+                            selectedError.errorLevel }}
+                        </Tag>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">异常类</div>
+                        <div class="font-mono text-sm break-words">{{ selectedError.exceptionClass }}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">请求路径</div>
+                        <div class="font-mono text-sm break-words">{{ selectedError.requestUri }}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">HTTP 方法</div>
+                        <div class="font-mono text-sm">{{ selectedError.httpMethod }}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">客户端 IP</div>
+                        <div class="font-mono text-sm">{{ selectedError.clientIp }}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">错误信息</div>
+                        <pre class="bg-gray-50 p-3 rounded text-xs overflow-auto">{{ selectedError.errorMessage }}</pre>
+                    </div>
+                </div>
+                <div v-else class="text-center text-gray-500">暂无详细信息</div>
+                <template #footer>
+                    <div class="flex justify-end">
+                        <Button label="关闭" icon="pi pi-times" class="p-button-text" @click="showErrorDialog = false" />
+                    </div>
+                </template>
+            </Dialog>
         </div>
     </div>
 </template>
 
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue';
-import { type DashboardSpace, getServerInfoMetrics, getJudgeMetrics, getErrorList, getJudgeTask } from '@/admin/api/dashboardAPI';
+import { type DashboardSpace, getServerInfoMetrics, getJudgeMetrics, getErrorList, getJudgeTask, getErrorDetail } from '@/admin/api/dashboardAPI';
+import globalMessage from '@/common/utils/toast';
 const services = ref<DashboardSpace.ServiceVO[]>([]);
 // 图表配置
 const chartOptions = ref({
@@ -355,6 +438,8 @@ const langData = ref({
 });
 const judgeTask = reactive<DashboardSpace.JudgeTaskVO>({
     queueLength: 0,
+    remoteWaitingQueueLength: 0,
+    remoteJudgingQueueLength: 0,
     judgeCount: 0,
     onlineJudgerCount: 0,
     judgerTotalCount: 0,
@@ -442,6 +527,48 @@ const copyDelay = ref(0);
 const avgDelay = ref(0);
 const errorLogs = ref<DashboardSpace.ErrorVO[]>([
 ]);
+
+// 单条错误详情弹窗
+const showErrorDialog = ref(false);
+const loadingErrorDetail = ref(false);
+const selectedError = ref<DashboardSpace.LogError | null>(null);
+
+// 直接使用 API 路径：openErrorDetailByApi
+
+/**
+ * 优先通过可用的 id 字段调用后端详情接口获取完整错误信息并展示。
+ * 支持常见字段名：id, logId, errorId
+ */
+async function openErrorDetailByApi(item: any) {
+    // 优先使用明确的 id 字段
+    const id = item.id as number;
+    console.log('Opening error detail for ID:', item);
+    loadingErrorDetail.value = true;
+    try {
+        const res = await getErrorDetail(id);
+        // res 是 ResultData<LogError>，其 data 字段为真正的 LogError
+        selectedError.value = (res as any).data as DashboardSpace.LogError;
+        showErrorDialog.value = true;
+    } catch (err: any) {
+        globalMessage.error('获取错误详情失败', err?.message || String(err));
+    } finally {
+        loadingErrorDetail.value = false;
+    }
+    return;
+}
+
+// closeErrorDialog removed: use showErrorDialog = false to close and reset selectedError when needed
+
+function copyErrorMessage() {
+    if (!selectedError?.value) return;
+    const text = selectedError.value.errorMessage || '';
+    try {
+        void navigator.clipboard.writeText(text);
+        globalMessage.successNoTitle('已复制到剪贴板');
+    } catch (e) {
+        globalMessage.error('复制失败', String(e));
+    }
+}
 
 const importantLogs = ref([
     {

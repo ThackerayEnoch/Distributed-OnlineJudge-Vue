@@ -34,6 +34,7 @@ export namespace DashboardSpace{
         languageCount: number[];
     }
     export interface ErrorVO {
+        id:number
         date: string;
         errorLevel: string;
         errorMessage: string;
@@ -50,6 +51,8 @@ export namespace DashboardSpace{
     }
     export interface JudgeTaskVO {
         queueLength: number;
+        remoteWaitingQueueLength: number;
+        remoteJudgingQueueLength: number;
         judgeCount: number;
         onlineJudgerCount: number;
         judgerTotalCount: number;

@@ -37,7 +37,7 @@
         </div>
         <div class="flex items-center gap-2 mt-2 mb-6">
             <span class="text-gray-700">过期时间</span>
-            <DatePicker v-model="expireTime" dateFormat="yy/mm/dd" />
+            <DatePicker v-model="expireTime" dateFormat="yy/mm/dd" showTime hourFormat="24" timeFormat="HH:mm" />
         </div>
 
         <!-- 结果展示 -->
@@ -103,7 +103,13 @@ const usernameInput = ref('');
 const passwordInput = ref('');
 const nicknameInput = ref('');
 const passwordMode = ref('random');
-const expireTime = ref<Date>(new Date(Date.now() + 4 * 365 * 24 * 60 * 60 * 1000));
+const expireTime = ref<Date>((() => {
+    const d = new Date();
+    // add 4 years, preserve hour, set minutes/seconds/ms to 0
+    d.setFullYear(d.getFullYear() + 4);
+    d.setMinutes(0, 0, 0);
+    return d;
+})());
 const isloading = ref(false);
 
 const passwordOptions = ref([
@@ -159,7 +165,7 @@ const saveBatch = async () => {
         isloading.value = false;
     }
 };
-const defaultPassword = 'Ujn@12345';
+const defaultPassword = 'ujn@12345';
 const passwordPlaceholder = ref<string>('随机生成密码');
 const passwordModeChange = () => {
     switch (passwordMode.value) {

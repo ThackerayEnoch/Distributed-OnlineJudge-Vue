@@ -56,6 +56,7 @@ import router from '@/common/utils/router';
 import { useUserStore } from '@/common/utils/store';
 import { User } from '@/common/entity/user'
 import { Role } from '@/common/constant/Role'
+import type { APIError } from '@/common/entity/exception/APIException';
 const counterStore = useUserStore();
 
 const isloading = ref(false);
@@ -119,12 +120,10 @@ const { value: password, errorMessage: passwordError } = useField<string>('passw
 
 const onSubmit = handleSubmit(async (values) => {
     isloading.value = true;
-    try {
-        const res = await login({
-            username: values.username,
-            password: values.password,
-        });
-
+    await login({
+        username: values.username,
+        password: values.password,
+    }).then(res => {
         if (res?.data) {
             const user = new User(res.data.userId, res.data.username, res.data.nickname, res.data.roleId ?? Role.STUDENT);
             counterStore.setUser(user);
@@ -137,11 +136,11 @@ const onSubmit = handleSubmit(async (values) => {
         } else {
             globalMessage.error('错误', '登录失败');
         }
-    } catch (error: any) {
-        globalMessage.error('错误', error.message);
-    } finally {
+    }).catch((error: APIError) => {
+        globalMessage.error('登录失败', error.msg);
+    }).finally(() => {
         isloading.value = false;
-    }
+    });
 });
 const loginByHustOJ = () => {
     hustojLoginFun();
