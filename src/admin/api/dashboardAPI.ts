@@ -49,6 +49,12 @@ export namespace DashboardSpace{
         httpMethod: string;
         clientIp: string;
     }
+    export interface OperationLogVO {
+        id: number;
+        title: string;
+        type: string;
+        time: Date;
+    }
     export interface JudgeTaskVO {
         queueLength: number;
         remoteWaitingQueueLength: number;
@@ -69,6 +75,9 @@ export const getErrorList = () => {
 }
 export const getErrorDetail = (id: number) => {
     return request.get<DashboardSpace.LogError>('/api/m/dashboard/error',{id})
+}
+export const getOperationLogs = () => {
+    return request.get<DashboardSpace.OperationLogVO[]>('/api/m/dashboard/operation-log', {})
 }
 export const getJudgeTask = () => {
     return request.get<DashboardSpace.JudgeTaskVO>('/api/m/dashboard/judgeTask',{})

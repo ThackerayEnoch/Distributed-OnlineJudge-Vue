@@ -12,29 +12,30 @@
                         </div>
                     </template>
                     <template #content>
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-center py-1">
+                        <div class="space-y-1 text-xs">
+                            <div class="flex justify-between items-center py-0.5">
                                 <span class="text-gray-600">本地待判题数</span>
-                                <Tag severity="warning" :value="judgeTask.queueLength" />
+                                <Tag severity="warning" :value="judgeTask.queueLength" class="text-xs px-2 py-0.5" />
                             </div>
-                            <div class="flex justify-between items-center py-1">
+                            <div class="flex justify-between items-center py-0.5">
+                                <span class="text-gray-600">远程等待账户任务数</span>
+                                <Tag severity="info" :value="judgeTask.remoteWaitingQueueLength"
+                                    class="text-xs px-2 py-0.5" />
+                            </div>
+                            <div class="flex justify-between items-center py-0.5">
                                 <span class="text-gray-600">远程待判题数</span>
-                                <Tag severity="info" :value="judgeTask.remoteWaitingQueueLength" />
+                                <Tag severity="success" :value="judgeTask.remoteJudgingQueueLength"
+                                    class="text-xs px-2 py-0.5" />
                             </div>
-                            <div class="flex justify-between items-center py-1">
-                                <span class="text-gray-600">远程判题中</span>
-                                <Tag severity="success" :value="judgeTask.remoteJudgingQueueLength" />
-                            </div>
-                            <div class="flex justify-between items-center py-1">
+                            <div class="flex justify-between items-center py-0.5">
                                 <span class="text-gray-600">今日判题总数</span>
-                                <Tag severity="warning" :value="judgeTask.judgeCount" />
+                                <Tag severity="warning" :value="judgeTask.judgeCount" class="text-xs px-2 py-0.5" />
                             </div>
-                            <div class="flex items-center gap-2 text-sm">
-                                <i class="pi pi-check text-green-500"></i>
+                            <div class="flex items-center gap-1 text-xs">
+                                <i class="pi pi-check text-green-500 text-sm"></i>
                                 <span class="text-gray-600">判题机在线</span>
                                 <span class="font-medium">{{ judgeTask.onlineJudgerCount }}/{{
-                                    judgeTask.judgerTotalCount
-                                    }}</span>
+                                    judgeTask.judgerTotalCount }}</span>
                             </div>
                         </div>
                     </template>
@@ -309,29 +310,26 @@
                         </div>
                     </template>
                     <template #content>
-                        <Timeline :value="importantLogs" layout="vertical"
-                            class="p-timeline-vertical h-[420px] overflow-y-auto pl-0 -ml-1">
-                            <template #marker="{ item }">
-                                <div class="flex items-center justify-center w-6 h-6 rounded-full text-white shadow"
-                                    :class="{
-                                        'bg-green-500': item.type === 'SUCCESS',
-                                        'bg-blue-500': item.type === 'INFO',
-                                        'bg-purple-500': item.type === 'ADMIN'
-                                    }">
-                                    <i :class="item.icon" class="text-sm"></i>
-                                </div>
-                            </template>
-                            <template #opposite>
+                        <Timeline :value="operationLogs" layout="vertical" align="left"
+                            class="p-timeline-vertical h-[460px] overflow-y-auto overflow-x-hidden pl-0 pr-2">
 
-                            </template>
                             <template #content="{ item }">
-                                <div class="pl-0"> <!-- 从原先的pl-4调整为pl-3 -->
-                                    <div class="text-xs text-gray-500 mb-1">{{ item.time }}</div>
-                                    <div class="font-medium text-sm leading-tight">
-                                        <span class="block text-gray-900">{{ item.user }}</span>
-                                        <span class="text-gray-600 font-normal">{{ item.action }}</span>
+                                <div class="pl-1 pr-1">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div class="flex-1 min-w-0">
+                                            <div
+                                                class="text-sm font-medium text-gray-900 break-words whitespace-normal">
+                                                {{ item.title }}</div>
+                                            <div class="text-xs text-gray-500 mt-1">{{ formatDate(String(item.time)) }}
+                                            </div>
+                                        </div>
+                                        <div class="ml-2 flex-shrink-0">
+                                            <Tag :value="item.type"
+                                                :severity="item.type === 'DELETE' ? 'danger' : item.type === 'CREATE' ? 'success' : item.type === 'UPDATE' ? 'info' : 'warning'"
+                                                class="text-xs" />
+                                        </div>
                                     </div>
-                                    <Divider class="my-3" />
+                                    <Divider class="my-2" />
                                 </div>
                             </template>
                         </Timeline>
@@ -402,7 +400,7 @@
 
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue';
-import { type DashboardSpace, getServerInfoMetrics, getJudgeMetrics, getErrorList, getJudgeTask, getErrorDetail } from '@/admin/api/dashboardAPI';
+import { type DashboardSpace, getServerInfoMetrics, getJudgeMetrics, getErrorList, getJudgeTask, getErrorDetail, getOperationLogs } from '@/admin/api/dashboardAPI';
 import globalMessage from '@/common/utils/toast';
 const services = ref<DashboardSpace.ServiceVO[]>([]);
 // 图表配置
@@ -451,7 +449,15 @@ onMounted(() => {
     loadJudgeData();
     loadErrorLogs();
     loadJudgeTaskInfo();
+    loadOperationLogs();
 });
+async function loadOperationLogs() {
+    await getOperationLogs().then((res: any) => {
+        operationLogs.value = (res.data as unknown) as DashboardSpace.OperationLogVO[];
+    }).catch((e: any) => {
+        globalMessage.error('加载操作日志失败', e?.message || String(e));
+    });
+}
 async function loadJudgeTaskInfo() {
     await getJudgeTask().then((res) => {
         const data = res.data as DashboardSpace.JudgeTaskVO;
@@ -570,15 +576,7 @@ function copyErrorMessage() {
     }
 }
 
-const importantLogs = ref([
-    {
-        time: '2024-03-20 09:15',
-        type: 'ADMIN',
-        icon: 'pi pi-server',
-        user: 'sysadmin',
-        action: '测试'
-    }
-]);
+const operationLogs = ref<DashboardSpace.OperationLogVO[]>([]);
 // 其他数据保持不变...
 </script>
 <style scoped>
@@ -588,19 +586,27 @@ const importantLogs = ref([
 }
 
 .p-datatable-sm .p-datatable-thead>tr>th {
-    @apply px-3 py-2 text-sm;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 0.875rem;
 }
 
 .p-datatable-sm .p-datatable-tbody>tr>td {
-    @apply px-3 py-2 text-sm;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 0.875rem;
 }
 
 /* 时间线样式 */
 .p-timeline-vertical .p-timeline-event-marker {
-    @apply shadow-md;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
 }
 
 .p-timeline-vertical .p-timeline-event-connector {
-    @apply bg-gray-200;
+    background-color: #e5e7eb;
 }
 </style>
