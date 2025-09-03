@@ -420,10 +420,13 @@ async function submitForm() {
 async function testAccount(account: RemoteAccount) {
     testing.value[account.id] = true;
     try {
-        await testRemoteJudgeAccount(account.id);
-        globalMessage.success('测试成功', `${account.oj} 账号连接正常`);
+        const res = await testRemoteJudgeAccount(account.id);
+        // 优先显示后端返回的 data 或 message，fallback 到默认提示
+        const successMsg = (res && (res.data || res.message)) || `${account.oj} 账号连接正常`;
+        globalMessage.success('测试成功', String(successMsg));
     } catch (error: any) {
-        globalMessage.error('测试失败', error.message || '账号连接失败');
+        const errMsg = (error && (error.message || error.data || error.msg)) || '账号连接失败';
+        globalMessage.error('测试失败', errMsg);
     } finally {
         testing.value[account.id] = false;
     }

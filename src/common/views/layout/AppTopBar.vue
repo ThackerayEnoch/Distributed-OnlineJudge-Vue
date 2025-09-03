@@ -162,7 +162,7 @@ watch(route, async (newRoute) => {
 
 
             <template #item="{ item }">
-                <a v-if="item.root && (item.name !== 'admin' || item.name === 'admin' && counterStore.currentUser.roleId <= Role.TEACHER)"
+                <a v-if="item.root && (item.name !== 'admin' || item.name === 'admin' && counterStore.currentUser.roleId <= Role.COLLBORATOR)"
                     class="flex items-center w-[7rem] cursor-pointer px-4 py-2 overflow-hidden relative font-semibold text-lg uppercase"
                     :class="[
                         activeMenu === item.name

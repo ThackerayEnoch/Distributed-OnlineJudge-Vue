@@ -35,8 +35,9 @@ export namespace ContestSpace{
         visible: boolean;
         duplicateCheck: boolean;
         languages: number[];
-    // per-remote-OJ selected language ids, e.g. { HDU: [1,2], POJ: [3] }
-    remoteLanguages?: Record<string, number[]>;
+        // per-remote-OJ selected language ids, e.g. { HDU: [1,2], POJ: [3] }
+        remoteLanguages?: Record<string, number[]>;
+        isHideAdminUser:boolean;
         problems: contestProblem[];
         groupIds: number[];
         users: string[];
@@ -56,6 +57,7 @@ export namespace ContestSpace{
         groupIds: number[];
         groups: AdminHomeworkGroupVO[];
         startTime: number;
+        isHideAdminUser:boolean;
         endTime: number;
         languages: number[];
         problems: contestProblem[];

@@ -506,15 +506,15 @@ async function loadUsers() {
             user.status = !user.status;
         });
         isloading.value = false;
-    }).catch(() => {
-        globalMessage.error('加载数据失败', '获取用户列表失败');
+    }).catch((e) => {
+        globalMessage.error('加载数据失败', e.message);
     });
 }
 async function loadUsersCount() {
     await getAdminUserCount(content.value).then(res => {
         totalRecords.value = res.data as number;
-    }).catch(() => {
-        globalMessage.error('加载数据失败', '获取用户总数失败');
+    }).catch((e) => {
+        globalMessage.error('加载数据失败', e.getMessage());
     });
 }
 </script>

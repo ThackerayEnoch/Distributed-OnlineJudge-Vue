@@ -322,6 +322,7 @@
 import { ref, computed, reactive, watch, onMounted } from 'vue';
 import { WhitelistSpace } from '@/admin/api/whitelist'
 import globalMessage from '@/common/utils/toast';
+import type { APIError } from '@/common/entity/exception/APIException';
 
 interface User {
     userId: number;
@@ -473,8 +474,8 @@ const loadData = async () => {
 
         tableData.value = dataResponse.data || [];
         totalRecords.value = countResponse.data || 0;
-    } catch (error) {
-        console.error('加载数据失败:', error);
+    } catch (error: any) {
+        globalMessage.error('加载数据失败', error.message);
         tableData.value = [];
         totalRecords.value = 0;
     } finally {

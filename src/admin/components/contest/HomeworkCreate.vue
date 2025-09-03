@@ -118,6 +118,13 @@
             </label>
             <ToggleSwitch class="mt-2" disible v-tooltip.top="'正在开发中'" v-model="homework.duplicateCheck" />
         </div>
+        <!-- 是否在排行榜中隐藏管理用户 -->
+        <div class="flex flex-col mt-6">
+            <label class="text-gray-500">
+                <span class="text-red-500">*</span> 是否在排行榜中隐藏管理人员
+            </label>
+            <ToggleSwitch class="mt-2" v-model="isHideAdminUser" />
+        </div>
         <!-- 是否开启查重 -->
         <div class="flex flex-col mt-6">
             <label class="text-gray-500">
@@ -404,6 +411,7 @@ export default defineComponent({
         const studentInput = ref('');
         const students = ref<ContestSpace.AdminParseUsers[]>([]);
         const collaborators = ref<number[]>([]);
+        const isHideAdminUser = ref(true);
         const collaboratorContent = ref('');
         const collaboratorOptions = ref<ContestSpace.AdminParseUsers[]>([]);
         const searchCollaborators = async () => {
@@ -713,6 +721,7 @@ export default defineComponent({
                 description: homework.description,
                 auth: homework.auth,
                 type: 0,
+                isHideAdminUser: isHideAdminUser.value,
                 password: homework.password,
                 visible: homework.visible,
                 duplicateCheck: homework.duplicateCheck,
@@ -782,6 +791,7 @@ export default defineComponent({
                 homework.endTime = new Date(data.endTime);
                 studentInput.value = data.users.join('\n');
                 collaborators.value = data.collaboratorIds;
+                isHideAdminUser.value = data.isHideAdminUser;
                 collaboratorOptions.value = data.collaborators as ContestSpace.AdminParseUsers[];
                 contestProblems.value = data.problems.map(problem => ({
                     id: problem.problemId,
@@ -830,6 +840,7 @@ export default defineComponent({
                 description: homework.description,
                 auth: homework.auth,
                 type: 0,
+                isHideAdminUser: isHideAdminUser.value,
                 password: homework.password,
                 visible: homework.visible,
                 duplicateCheck: homework.duplicateCheck,
@@ -896,7 +907,7 @@ export default defineComponent({
             allProblems, selectedProblems, problemTotalRecords, problemFirst, onProblemPage, onAddPageOpen, onListPageOpen, problemFinalSaveEvent,
             selectedProblemSaveEvent, filterType, problemSearchContent, searchProblemInAllEvent, convertToLetter, deleteContestProblems,
             onUploadImg, isSubmiting, isDuplicateNumber, tagContent, problemTagOptions, problemTagIds, collaborators, clearStudents, parsing,
-            collaboratorContent, collaboratorOptions, searchCollaborators,
+            collaboratorContent, collaboratorOptions, searchCollaborators, isHideAdminUser, parseUsersFun,
             // expose remote OJ helpers
             supprotRemoteOJList, supportedRemoteOJs, enabledRemoteOJs, remoteLanguagesByOj, onRemoteOjToggle
         }

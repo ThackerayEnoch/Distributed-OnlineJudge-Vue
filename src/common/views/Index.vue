@@ -37,15 +37,15 @@
                     推荐浏览器：Chrome Edge Firefox
                 </p>
                 <p>
-                    © {{ new Date().getFullYear() }} UJNOJ | 部分功能基于
+                    {{ new Date().getFullYear() }} UJNOJ | 部分功能基于
                     <a href="https://github.com/HimitZH/HOJ" class="text-blue-600 hover:underline mx-1">
                         HOJ
                     </a>
-                    (Copyright (c) 2021 Himit_ZH) 开发，遵循
-                    <a href="https://github.com/HimitZH/HOJ/blob/master/LICENSE"
-                        class="text-blue-600 hover:underline mx-1">
-                        MIT 许可
+                    和
+                    <a href="https://github.com/criyle/go-judge" class="text-blue-600 hover:underline mx-1">
+                        go-judge
                     </a>
+                    开发。
                 </p>
             </footer>
         </div>
