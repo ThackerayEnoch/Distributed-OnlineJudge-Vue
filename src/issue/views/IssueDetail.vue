@@ -59,10 +59,13 @@
                         <div class="shadow-none flex gap-3">
                             <Avatar icon="pi pi-user" shape="circle" size="large" />
                             <div class="flex-1 border p-4 rounded">
-                                <span class="font-bold">添加评论</span>
-                                <MdEditor v-model:model-value="newComment" style="max-height: 250px;;" class="mt-2"
-                                    :theme="theme" placeholder="请输入您的评论..." @on-upload-img="onUploadImg"
-                                    :toolbars="toolbars" />
+                                <span v-if="issue.status !== 4" class="font-bold">添加评论</span>
+                                <MdEditor v-if="issue.status !== 4" v-model:model-value="newComment"
+                                    style="max-height: 250px;;" class="mt-2" :theme="theme" placeholder="请输入您的评论..."
+                                    @on-upload-img="onUploadImg" :toolbars="toolbars" />
+                                <div v-else class="mt-2 p-4 bg-gray-100 text-gray-500 rounded">
+                                    该问题已关闭，无法添加评论。
+                                </div>
                                 <div class="mt-4 flex justify-end">
                                     <Button v-if="issue.status === 4" label="重新打开"
                                         class="p-button-outlined mr-2 p-button-secondary" icon="pi pi-refresh"
@@ -201,7 +204,9 @@ const changeStatus = async (status?: number) => {
     const statusTmp = status == undefined ? issue.value.status : status
     await updateIssueStatus(Number(props.id), statusTmp).then(() => {
         issue.value.status = status || issue.value.status
-        globalMessage.success("操作成功", "更新为" + statusValueMap(status || issue.value.status))
+        globalMessage.success("操作成功", "更新为" + statusValueMap(statusTmp))
+        //刷新
+        loadDetail();
     }).catch((err) => {
         globalMessage.error("更新状态失败", err.message)
     })

@@ -1,4 +1,5 @@
 import request from "@/common/utils/api";
+import { is } from "date-fns/locale";
 export namespace IssueSpace {
     export interface AddIssueDTO {
         title: string;
@@ -49,11 +50,11 @@ export namespace IssueSpace {
         createTime: Date;
     }
 }
-export const getAllIssues = (offset: number, priority: number, status: number[],type:number) => {
-    return request.get<IssueSpace.IssuesVO[]>('/api/u/issues', { offset, priority, status,type });
+export const getAllIssues = (offset: number, priority: number, status: number[],type:number,isOwn:boolean) => {
+    return request.get<IssueSpace.IssuesVO[]>('/api/u/issues', { offset, priority, status,type,isOwn });
 };
-export const getIssuesCount = (priority: number, status: number[],type:number) => {
-    return request.get<number>('/api/u/issues/count', { priority, status,type });
+export const getIssuesCount = (priority: number, status: number[],type:number,isOwn:boolean) => {
+    return request.get<number>('/api/u/issues/count', { priority, status,type,isOwn });
 }
 export const getIssueById = (id: number) => {
     return request.get<IssueSpace.IssueVO>(`/api/u/issue/${id}`);

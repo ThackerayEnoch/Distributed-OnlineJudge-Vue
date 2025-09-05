@@ -185,6 +185,7 @@ async function saveUsers() {
         userDTO.push({
             username: user.username,
             nickname: user.nickname,
+            needChangePassword: true,
             password: user.password as string,
             expireTime: expireTime.value.getTime(),
         });

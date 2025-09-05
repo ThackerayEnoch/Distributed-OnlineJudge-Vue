@@ -38,6 +38,9 @@
         <div class="flex items-center gap-2 mt-2 mb-6">
             <span class="text-gray-700">过期时间</span>
             <DatePicker v-model="expireTime" dateFormat="yy/mm/dd" showTime hourFormat="24" timeFormat="HH:mm" />
+            <span class="text-gray-700 ml-6">首次登录需要修改密码</span>
+            <ToggleButton v-model="needChangePassword" onLabel="是" offLabel="否" onIcon="pi pi-check"
+                offIcon="pi pi-times" />
         </div>
 
         <!-- 结果展示 -->
@@ -102,6 +105,7 @@ import { exportToExcel, type ExportHeader } from '@/common/utils/excel';
 const usernameInput = ref('');
 const passwordInput = ref('');
 const nicknameInput = ref('');
+const needChangePassword = ref<boolean>(true);
 const passwordMode = ref('random');
 const expireTime = ref<Date>((() => {
     const d = new Date();
@@ -183,7 +187,7 @@ const passwordModeChange = () => {
     }
 };
 const generatePassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789abcdefghjkmnpqrstuvwxyz';
     return Array(8)
         .fill(null)
         .map(() => chars[Math.floor(Math.random() * chars.length)])
@@ -198,6 +202,7 @@ const generatedAccounts = computed(() => {
         index: index,
         username: username.trim(),
         password: getPasswordForIndex(index),
+        needChangePassword: needChangePassword.value,
         nickname: (nicknames[index] || '').trim(),
         expireTime: expireTime.value.getTime()
     }));
