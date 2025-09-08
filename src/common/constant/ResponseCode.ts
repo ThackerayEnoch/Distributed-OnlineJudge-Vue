@@ -25,7 +25,8 @@ export enum ResponseCode {
     USER_NOT_FOUND = 13001, // 用户不存在
     USER_IS_EXIST = 13002, // 用户已存在
     EMAIL_IS_EXIST_USER = 13003, // 邮箱已存在
-    USER_IS_BANNED_USER = 13004 // 用户已被封禁
+    USER_IS_BANNED_USER = 13004, // 用户已被封禁
+    IP_ADDRESS_ILLEGAL = 11008// IP地址不合法
 }
 
 export const ResponseMessage: { [key in ResponseCode]: string } = {
@@ -55,7 +56,8 @@ export const ResponseMessage: { [key in ResponseCode]: string } = {
     [ResponseCode.USER_IS_EXIST]: "用户已存在",
     [ResponseCode.EMAIL_IS_EXIST_USER]: "邮箱已存在",
     [ResponseCode.USER_IS_BANNED_USER]: "用户已被封禁",
-    [ResponseCode.ACCOUNT_EXPIRED]: "账号已过期"
+    [ResponseCode.ACCOUNT_EXPIRED]: "账号已过期",
+    [ResponseCode.IP_ADDRESS_ILLEGAL]: "IP策略禁止登录"
 };
 // 根据数字获取具体信息的函数
 export function getResponseMessage(code: number): string {

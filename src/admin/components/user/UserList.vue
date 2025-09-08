@@ -351,6 +351,7 @@ const form = reactive({
     username: '',
     password: 'Ujn@12345',
     nickname: '',
+    needChangePassword: true,
     email: '',
     major: '',
     expireTime: 0,
