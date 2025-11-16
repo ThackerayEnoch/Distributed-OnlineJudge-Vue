@@ -22,11 +22,11 @@ export interface ResultData<T = any> extends Result {
   data?: T;
 }
 // 请求地址
-const URL: string = "http://192.168.1.128:8000";
+const URL: string = "http://192.168.200.9:8080";
 
 const config = {
   // 默认地址
-  // baseURL: URL as string,
+   baseURL: URL as string,
   // 设置超时时间
   timeout: 1000000,
   // 跨域时候允许携带凭证

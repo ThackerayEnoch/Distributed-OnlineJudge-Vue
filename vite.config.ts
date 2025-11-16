@@ -8,7 +8,7 @@ import prismjsPlugin from 'vite-plugin-prismjs';
 import { resolve } from 'path';
 
 export default defineConfig({
-  base: '/', // 与 Nginx 和 WebVPN 路径匹配
+  base: '/app/', // 与 Nginx 和 WebVPN 路径匹配
   build: {
     outDir: 'dist',
     rollupOptions: {

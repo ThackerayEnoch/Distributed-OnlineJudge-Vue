@@ -2,7 +2,7 @@
     <Panel>
         <template #header>
             <div class="flex justify-between items-center text-2xl font-bold text-blue-500">
-                <span>创建作业</span>
+                <span>创建比赛</span>
             </div>
         </template>
         <Divider />
@@ -13,7 +13,7 @@
             <InputText v-model="homework.title" class="mt-2 w-full" placeholder="标题" />
         </div>
         <div class="w-full mt-6">
-            <label class="text-gray-500">作业描述</label>
+            <label class="text-gray-500">比赛描述</label>
             <MdEditor class="prose max-w-full shadow-md mt-2" @on-upload-img="onUploadImg"
                 v-model="homework.description" />
         </div>
@@ -24,7 +24,8 @@
                 <label class="text-gray-500">
                     <span class="text-red-500">*</span> 开始时间
                 </label>
-                <Calendar v-model="homework.startTime" showTime hourFormat="24" class="mt-2 w-full" />
+                <Calendar v-model="homework.startTime" showTime dateFormat="yy/mm/dd" hourFormat="24"
+                    class="mt-2 w-full" />
             </div>
 
             <!-- 结束时间 -->
@@ -32,14 +33,15 @@
                 <label class="text-gray-500">
                     <span class="text-red-500">*</span> 结束时间
                 </label>
-                <Calendar v-model="homework.endTime" showTime hourFormat="24" class="mt-2 w-full" />
+                <Calendar v-model="homework.endTime" dateFormat="yy/mm/dd" showTime hourFormat="24"
+                    class="mt-2 w-full" />
             </div>
         </div>
         <div class="mt-4 flex flex-col space-y-2 w-[20%]">
             <label class="text-gray-500">
-                <span class="text-red-500">*</span> 作业题目
+                <span class="text-red-500">*</span> 比赛题目
             </label>
-            <Button severity="secondary" label="点击编辑作业题目" @click="onListPageOpen" />
+            <Button severity="secondary" label="点击编辑比赛题目" @click="onListPageOpen" />
         </div>
         <div class="flex flex-col space-y-2 mt-4">
             <label class="text-gray-500"><span class="text-red-500">*</span> 允许提交语言:</label>
@@ -51,8 +53,8 @@
             </div>
         </div>
         <!-- 远程 OJ 语言配置（基于后端已经加载的 OJ 列表） -->
-        <div class="flex flex-col space-y-2 mt-6">
-            <label class="text-gray-500"><span class="text-red-500">*</span> 远程 OJ 语言设置</label>
+        <div class="flex flex-col space-y-2 mt-6" style="display: none;">
+            <label class="text-gray-500"> 远程 OJ 语言设置</label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 <div v-for="oj in supprotRemoteOJList" :key="oj" class="p-4 border rounded-lg bg-white shadow-sm">
                     <div class="flex items-center justify-between">
@@ -79,12 +81,12 @@
         <!-- 删除重复的远程 OJ 区块 -->
         <div class="mt-6 max-w-3xl space-y-4">
             <div class="grid grid-cols-3 gap-4">
-                <!-- 作业权限 -->
+                <!-- 比赛权限 -->
                 <div class="flex flex-col">
                     <label class="text-gray-500">
-                        <span class="text-red-500">*</span> 作业权限
+                        <span class="text-red-500">*</span> 比赛权限
                         <i class="ml-1 fa-regular fa-circle-question text-blue-500 cursor-pointer"
-                            v-tooltip.top="'公开模式：任何人均可参与。\n私有模式：仅允许预先设定的参与者，此作业对非参与者不可见。\n保护模式：允许预先设定参与者，其他参与者需通过密码加入。'"></i>
+                            v-tooltip.top="'公开模式：任何人均可参与。\n私有模式：仅允许预先设定的参与者，此比赛对非参与者不可见。\n保护模式：允许预先设定参与者，其他参与者需通过密码加入。'"></i>
                     </label>
                     <Select v-model="homework.auth" :options="authOptions" optionLabel="label" optionValue="value"
                         class="mt-2 w-full" />
@@ -101,23 +103,21 @@
                 <!-- 是否可见 -->
                 <div class="flex flex-col">
                     <label class="text-gray-500">
-                        <span class="text-red-500">*</span> 是否可见
-                        <i class="ml-1 fa-regular fa-circle-question text-blue-500 cursor-pointer"
-                            v-tooltip.top="'不可见: 参与用户不可见'"></i>
+                        <span class="text-red-500">*</span> 用户是否可见
                     </label>
                     <CustomToggleButton class="text-sm mt-2" v-model="homework.visible" />
                 </div>
             </div>
         </div>
         <!-- 是否开启查重 -->
-        <div class="flex flex-col mt-6">
+        <!--<div class="flex flex-col mt-6">
             <label class="text-gray-500">
                 <span class="text-red-500">*</span> 是否开启查重
                 <i class="ml-1 fa-regular fa-circle-question text-blue-500 cursor-pointer"
                     v-tooltip.top="'代码查重结果详见统计信息'"></i>
             </label>
             <ToggleSwitch class="mt-2" disible v-tooltip.top="'正在开发中'" v-model="homework.duplicateCheck" />
-        </div>
+        </div>-->
         <!-- 是否在排行榜中隐藏管理用户 -->
         <div class="flex flex-col mt-6">
             <label class="text-gray-500">
@@ -128,9 +128,9 @@
         <!-- 是否开启查重 -->
         <div class="flex flex-col mt-6">
             <label class="text-gray-500">
-                协助用户
+                协助用户(可为空)
                 <i class="ml-1 fa-regular fa-circle-question text-blue-500 cursor-pointer"
-                    v-tooltip.top="'与其他用户共同管理作业'"></i>
+                    v-tooltip.top="'与其他用户共同管理比赛'"></i>
             </label>
             <MultiSelect v-model="collaborators" :options="collaboratorOptions" optionLabel="nickname" optionValue="id"
                 placeholder="选择班级..." lazy class="w-[30%] mt-2">
@@ -153,7 +153,7 @@
         </div>
         <div v-if="homework.auth !== 0" class="mt-4">
             <label class="text-gray-500">
-                参与班级
+                参与班级(可为空)
             </label>
         </div>
         <div v-if="homework.auth !== 0" class="p-0 mt-4 space-y-4">
@@ -175,7 +175,7 @@
             <div class="space-y-2 w-full">
                 <label class="block font-medium text-gray-700">
                     学生名单
-                    <span class="text-sm text-gray-500">（每行输入一个学生信息，格式：学号/用户名）</span>
+                    <span class="text-sm text-gray-500">（每行输入一个学号，解析仅用于确认名单）</span>
                 </label>
                 <div class="flex gap-4 h-64">
                     <!-- 输入区 -->
@@ -396,9 +396,9 @@ export default defineComponent({
     },
     setup(props) {
         const authOptions = ref([
-            { label: '公开作业', value: 0 },
-            { label: '私有作业', value: 2 },
-            { label: '保护作业', value: 1 },
+            { label: '公开比赛', value: 0 },
+            { label: '私有比赛', value: 2 },
+            { label: '保护比赛', value: 1 },
         ])
         const visibleOptions = ref([
             { label: '可见', value: 1 },
@@ -432,7 +432,7 @@ export default defineComponent({
             password: '',
             visible: true,
             duplicateCheck: false,
-            languages: [1, 2, 3, 4, 9, 10],
+            languages: [1, 3],
             // per-remote-OJ selected language ids, e.g. { HDU: [1,2], POJ: [3] }
             remoteLanguages: {} as Record<string, number[]>,
             users: '',
@@ -748,7 +748,7 @@ export default defineComponent({
             }
             await createHomework(homeworkDTO).then(() => {
                 router.push("/admin/homeworks/list")
-                globalMessage.success("创建作业", "操作成功");
+                globalMessage.success("创建比赛", "操作成功");
             }).catch(err => {
                 globalMessage.error("创建失败", err.message);
             }).finally(() => {
@@ -866,7 +866,7 @@ export default defineComponent({
             }
             await updateHomework(homeworkDTO).then(() => {
                 router.push("/admin/homeworks/list")
-                globalMessage.success("更新作业", "操作成功");
+                globalMessage.success("更新比赛", "操作成功");
             }).catch(err => {
                 globalMessage.error("加载数据失败", err.message);
             });

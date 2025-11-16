@@ -214,7 +214,7 @@ const formatSize = (bytes: any) => {
 // Excel解析
 const users = ref<ExcelUser[]>([])
 const usersEdit = ref<any>([])
-const isRandomPassword = ref<boolean>(true)
+const isRandomPassword = ref<boolean>(false);
 // 单元格编辑完成
 const onCellEditComplete = (event: any) => {
     let { data, newValue, field } = event;
