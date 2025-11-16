@@ -40,6 +40,7 @@ export namespace UserSpace{
     export interface AdminCreateUserBatchDTO {
         username: string;
         nickname: string;
+        needChangePassword: boolean;
         password: string;
         expireTime: number;
     }

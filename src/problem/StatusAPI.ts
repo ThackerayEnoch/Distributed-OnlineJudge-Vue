@@ -51,6 +51,7 @@ export namespace Status{
         language: string;
         code: string;
         openCase: boolean;
+        codeShare:boolean;
         isRemote: boolean;
         errorMessage: string;
         testcase: TestCase[];

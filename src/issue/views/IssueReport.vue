@@ -85,20 +85,28 @@
                                         <label class="block text-sm font-medium mb-2">标签</label>
                                         <Dropdown v-model:model-value="selectedLabels" :options="availableLabels"
                                             optionLabel="name" optionValue="value" class="w-full"
-                                            @change="loadAllIssues" />
+                                            @change="() => { loadAllIssues(); loadIssuesCount(); }" />
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium mb-2">状态(多选)</label>
                                         <MultiSelect v-model:model-value="selectedStatus" :options="statusOptions"
                                             optionLabel="label" optionValue="value" display="chip" class="w-full"
-                                            @change="loadAllIssues" />
+                                            @change="() => { loadAllIssues(); loadIssuesCount(); }" />
 
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium mb-2">优先级</label>
                                         <Dropdown v-model:model-value="selectedPriority" :options="priorityOptions"
                                             optionLabel="label" optionValue="value" class="w-full"
-                                            @change="loadAllIssues" />
+                                            @change="() => { loadAllIssues(); loadIssuesCount(); }" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">范围</label>
+                                        <div class="flex items-center">
+                                            <ToggleButton v-model="isOwn" onLabel="只看我的" offLabel="查看全部"
+                                                onIcon="pi pi-user" offIcon="pi pi-users" class="w-full text-sm"
+                                                @change="() => { loadAllIssues(); loadIssuesCount(); }" />
+                                        </div>
                                     </div>
                                 </div>
                             </template>
@@ -161,10 +169,10 @@ const loadAllIssues = async () => {
     if (selectedStatus.value.length === 0) {
         selectedStatus.value = [0, 1, 2, 3]
     }
-    await getAllIssues((currentPage.value - 1) * pageSize.value, selectedPriority.value, selectedStatus.value, selectedLabels.value).then((res) => {
+    await getAllIssues((currentPage.value - 1) * pageSize.value, selectedPriority.value, selectedStatus.value, selectedLabels.value, isOwn.value).then((res) => {
         issues.value = res.data as unknown as IssueSpace.IssuesVO[];
-    }).catch((err) => {
-        globalMessage.error("获取问题列表错误", err.message)
+    }).catch((err: any) => {
+        globalMessage.error("获取问题列表错误", err?.message || String(err))
     })
     isloading.value = false
 }
@@ -172,10 +180,10 @@ const loadIssuesCount = async () => {
     if (selectedStatus.value.length === 0) {
         selectedStatus.value = [0, 1, 2, 3]
     }
-    await getIssuesCount(selectedPriority.value, selectedStatus.value, selectedLabels.value).then((res) => {
+    await getIssuesCount(selectedPriority.value, selectedStatus.value, selectedLabels.value, isOwn.value).then((res) => {
         totalRecords.value = res.data as number;
-    }).catch((err) => {
-        globalMessage.error("获取问题列表错误", err.message)
+    }).catch((err: any) => {
+        globalMessage.error("获取问题列表错误", err?.message || String(err))
     })
 }
 const availableLabels = [
@@ -212,6 +220,7 @@ const selectedFilter = ref(-1)
 const selectedStatus = ref([0, 1, 2, 3])
 const selectedLabels = ref(-1)
 const selectedPriority = ref(-1)
+const isOwn = ref(false)
 
 function routePush(path: string) {
     router.push(path);

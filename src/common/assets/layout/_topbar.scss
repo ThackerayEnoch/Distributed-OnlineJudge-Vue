@@ -82,11 +82,13 @@
         margin-left: auto;
         display: flex;
         gap: 1rem;
+        overflow: visible; // allow badges to overflow
     }
 
     .layout-topbar-menu-content {
         display: flex;
         gap: 1rem;
+        overflow: visible;
     }
 
     .layout-config-menu {

@@ -160,18 +160,18 @@
                 <Button :disabled="isRemote" @click="addSample" class="w-full mb-4">添加样例</Button>
             </div>
             <div v-if="!isRemote" class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
-                <span v-tooltip="'1. 选手程序：给选手程序提供额外的库文件\n2. 特殊或交互程序：给特殊或交互程序提供额外的库文件'">评测额外文件 <i
+                <span v-tooltip="'1. 选手程序：给选手程序提供额外的库文件\n2. 特殊或交互额外库文件：给特殊或交互程序提供额外的库文件'">评测额外文件 <i
                         class="ml-1 fa-regular fa-circle-question"></i></span>
             </div>
             <div v-if="!isRemote" class="p-4">
                 <div class="flex flex-wrap gap-4">
                     <div class="flex items-center mr-2 gap-2 w-1/2">
-                        <Checkbox v-model="userJudgeFile" binary disabled />
-                        <label for="checkbox1" v-tooltip.top="'正在开发中'">选手程序</label>
+                        <Checkbox v-model="userJudgeFile" binary />
+                        <label for="checkbox1">选手程序</label>
                     </div>
-                    <div class="flex items-center mr-2 gap-2">
-                        <Checkbox v-model="spjJudgeFile" binary disabled />
-                        <label for="checkbox2" v-tooltip.top="'正在开发中'">特殊或交互程序</label>
+                    <div class="flex items-center mr-2 gap-2" v-if="judgeMode === 1 || judgeMode === 2">
+                        <Checkbox v-model="spjJudgeFile" binary />
+                        <label for="checkbox2">特殊或交互额外库文件</label>
                     </div>
                 </div>
             </div>
@@ -220,23 +220,31 @@
                 <div class="flex items-center gap-4 mt-4">
                     <div class="flex items-center gap-2">
                         <RadioButton v-model="judgeMode" inputId="judgeMode1" name="judgeMode" :value="0" />
-                        <label for="mode1" v-tooltip.top="'正在开发中'">普通判题</label>
+                        <label for="mode1">普通判题</label>
                     </div>
                     <div class="flex items-center gap-2">
-                        <RadioButton v-model="judgeMode" v-tooltip.top="'正在开发中'" disabled inputId="judgeMode2"
-                            name="judgeMode" :value="1" />
-                        <label for="mode2" v-tooltip.top="'正在开发中'">特殊判题</label>
+                        <RadioButton v-model="judgeMode" inputId="judgeMode2" name="judgeMode" :value="1" />
+                        <label for="mode2">特殊判题</label>
                     </div>
                     <div class="flex items-center gap-2">
-                        <RadioButton v-model="judgeMode" disabled inputId="judgeMode3" name="judgeMode" :value="2" />
-                        <label for="mode3" v-tooltip.top="'正在开发中'">交互判题</label>
+                        <RadioButton v-model="judgeMode" inputId="judgeMode3" name="judgeMode" :value="2" />
+                        <label for="mode3">交互判题</label>
                     </div>
                 </div>
+                <div v-if="judgeMode === 1 || judgeMode === 2" class="mt-4">
+                    <Button @click="judgeCodeDialogVisible = true; hasInteractedWithJudgeCode = true;"
+                        :label="judgeMode === 1 ? '添加/编辑特殊判题代码' : '添加/编辑交互判题代码'" icon="pi pi-pencil" severity="info" />
+                    <span v-if="isJudgeCodeCompiled" class="ml-4 text-green-500 flex items-center">
+                        <i class="pi pi-check-circle mr-2"></i>
+                        编译成功
+                    </span>
+                </div>
             </div>
-            <div v-if="!isRemote" class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
-                <span v-tooltip="'测试点评测模式。'">评测数据 <i class="ml-1 fa-regular fa-circle-question"></i></span>
+            <div v-if="!isRemote && judgeMode == 0"
+                class="flex justify-between mt-6 items-center text-2xl font-bold text-blue-500">
+                <span v-tooltip="'测试点评测评模式。'">评测数据 <i class="ml-1 fa-regular fa-circle-question"></i></span>
             </div>
-            <div v-if="problemType === 0 && !isRemote" class="p-4 mt-4">
+            <div v-if="problemType === 0 && !isRemote && judgeMode == 0" class="p-4 mt-4">
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2">
                         <RadioButton v-model="acmJudgeCaseMode" inputId="judgeCaseMode1" name="judgeCaseMode"
@@ -250,7 +258,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else-if="!isRemote">
+            <div v-else-if="!isRemote && problemType === 1 && judgeMode == 0" class="p-4 mt-4">
                 <div class="flex items-center gap-4 mt-4">
                     <div class="flex items-center gap-2">
                         <RadioButton v-model="oiJudgeCaseMode" inputId="oiJudgeCaseMode1" name="oiJudgeCaseMode"
@@ -285,12 +293,13 @@
                 <ToggleSwitch inputId="autoRemove" v-model="judgeCaseStatus" class="mt-4" />
             </div>
             <div>
-                <Button label="保存" @click="saveProblem" :loading="isSaving" icon="pi pi-check" class="w-full mt-4" />
+                <Button label="保存" @click="saveProblem" :loading="isSaving" :disabled="isSaveDisabled"
+                    icon="pi pi-check" class="w-full mt-4" />
             </div>
         </Panel>
     </div>
     <!-- PrimeVue Dialog -->
-    <Dialog v-model:visible="dialogVisible" header="添加新文件-User" :modal="true">
+    <Dialog v-model:visible="dialogVisible" header="添加新文件-User" :modal="true" :style="{ width: '50vw' }">
         <div class="p-4 flex flex-col gap-4">
             <div>
                 <label class="pl-0 font-bold"><span class="text-red-500">*</span> 文件名</label>
@@ -298,23 +307,54 @@
             </div>
             <div>
                 <label class="pl-0 font-bold"><span class="text-red-500">*</span> 代码 </label>
-                <Textarea v-model="newCode" rows="5" cols="30" class="w-full mb-3" />
+                <CodeMirror v-model:model-value="newCode" :dark="true" :extensions="extensions" basic :lang="lang"
+                    class="w-full min-h-[400px] bg-[#282C34] mt-2" style="height: auto;" :tab-size="4" />
             </div>
-            <Button label="确认添加" icon="pi pi-check" @click="addTag(userFiles)" class="w-full" />
+            <div class="flex justify-end space-x-2 mt-2">
+                <Button label="编译" icon="pi pi-cog" @click="compileUserFile" severity="secondary"
+                    :loading="isCompiling" />
+                <Button label="确认添加" icon="pi pi-check" @click="addTag(userFiles)" :disabled="!isCompiled" />
+            </div>
         </div>
     </Dialog>
     <!-- PrimeVue Dialog -->
-    <Dialog v-model:visible="spjDialogVisible" header="添加新文件-SPJ" :modal="true">
+    <Dialog v-model:visible="spjDialogVisible" header="添加新文件-SPJ" :modal="true" :style="{ width: '50vw' }">
         <div class="p-4 flex flex-col gap-4">
             <div>
-                <label class="pl-0 font-bold"><span class="text-red-500">*</span> 文件名</label>
-                <InputText v-model="newTag" placeholder="example.h" class="w-full mb-3" />
+                <label class="pl-0 font-bold"><span class="text-red-500">*</span> 代码 (因testlib.h文件较大，编译平均耗时8s，请耐心等待)
+                </label>
+                <CodeMirror v-model:model-value="newCode" :dark="true" :extensions="extensions" basic :lang="lang"
+                    class="w-full min-h-[400px] bg-[#282C34] mt-2" style="height: auto;" :tab-size="4" />
             </div>
+            <div class="flex justify-end space-x-2 mt-2">
+                <Button label="编译" icon="pi pi-cog" @click="compileSpjFile" severity="secondary"
+                    :loading="isCompiling" />
+                <Button label="确认添加" icon="pi pi-check" @click="addTag(spjFiles)" :disabled="!isCompiled" />
+            </div>
+        </div>
+    </Dialog>
+    <!-- 新增的判题代码Dialog -->
+    <Dialog v-model:visible="judgeCodeDialogVisible" :header="judgeMode === 1 ? '编辑特殊判题(SPJ)代码' : '编辑交互判题代码'"
+        :modal="true" :style="{ width: '50vw' }">
+        <div class="p-4 flex flex-col gap-4">
             <div>
-                <label class="pl-0 font-bold"><span class="text-red-500">*</span> 代码 </label>
-                <Textarea v-model="newCode" rows="5" cols="30" class="w-full mb-3" />
+                <label class="pl-0 font-bold"><span class="text-red-500">*</span> 判题代码 (因testlib.h文件较大，编译平均耗时8s，请耐心等待)
+                </label>
+                <CodeMirror v-model:model-value="judgeCode" :dark="true" :extensions="extensions" basic :lang="lang"
+                    class="w-full min-h-[400px] bg-[#282C34] mt-2" style="height: auto;" :tab-size="4" />
             </div>
-            <Button label="确认添加" icon="pi pi-check" @click="addTag(spjFiles)" class="w-full" />
+            <div class="flex justify-end space-x-2 mt-2">
+                <Button label="编译" icon="pi pi-cog" @click="compileJudgeCode" severity="secondary"
+                    :loading="isCompiling" />
+                <Button label="确认" icon="pi pi-check" @click="judgeCodeDialogVisible = false"
+                    :disabled="!isJudgeCodeCompiled" />
+            </div>
+        </div>
+    </Dialog>
+    <!-- 编译错误 Dialog -->
+    <Dialog v-model:visible="compileErrorDialogVisible" header="编译错误" :modal="true" :style="{ width: '60vw' }">
+        <div class="p-4 bg-gray-900 text-white rounded">
+            <pre class="whitespace-pre-wrap break-words">{{ compileErrorMessage }}</pre>
         </div>
     </Dialog>
     <Dialog v-model:visible="tagDialogVisible" header="标签管理" :modal="true" class="min-w-[360px]">
@@ -361,11 +401,15 @@
     </Dialog>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, computed } from 'vue'
-import { languageOptions } from '@/common/constant/AllConstant'
+import { defineComponent, onMounted, ref, computed, watch } from 'vue'
+import { type LanguageSpace, getLocalLanguages } from '@/common/api/languageAPI';
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
+import CodeMirror from 'vue-codemirror6';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { cpp } from '@codemirror/lang-cpp';
 
+import { type CompileSpace, compileCode } from '@/admin/api/compileAPI';
 import { createProblem, uploadFile, getProblem, updateProblem, getProblemLanguages, type ProblemSpace } from '@/admin/api/problemAPI'
 import { type TagsSpace, getTags, createTag } from '@/admin/api/tagAPI';
 import globalMessage from '@/common/utils/toast';
@@ -373,7 +417,7 @@ import router from '@/common/utils/router';
 
 export default defineComponent({
     name: 'ProblemEdit',
-    components: { MdEditor },
+    components: { MdEditor, CodeMirror },
     props: {
         id: {
             type: Number,
@@ -385,6 +429,8 @@ export default defineComponent({
         }
     },
     setup(props) {
+        const extensions = [oneDark];
+        const lang = cpp();
         const isRemote = ref(false);
         const displayId = ref("");
         const title = ref("");
@@ -436,17 +482,16 @@ export default defineComponent({
         const removeProblemTag = (index: number) => {
             tags.value.splice(index, 1);
         };
-        const onSaving = ref(false);
         const createTagEvent = async () => {
             if (!newTagName.value) {
                 globalMessage.error('错误', '标签名称不能为空');
                 return;
             }
-            const newTag = {
+            const newTagData = {
                 name: newTagName.value,
                 color: selectedColor.value
             };
-            await createTag(newTag).then(() => {
+            await createTag(newTagData).then(() => {
                 loadAllTags();
             }).catch((err) => {
                 globalMessage.error('创建标签失败', err.message);
@@ -487,6 +532,59 @@ export default defineComponent({
         const dialogVisible = ref(false);
         const spjDialogVisible = ref(false);
         const judgeMode = ref(0);
+        const isCompiled = ref(false);
+        const isCompiling = ref(false);
+        const isEditLoadingData = ref(false);
+
+        const judgeCodeDialogVisible = ref(false);
+        const judgeCode = ref("");
+        const isJudgeCodeCompiled = ref(false);
+        const hasInteractedWithJudgeCode = ref(false);
+
+        const compileErrorDialogVisible = ref(false);
+        const compileErrorMessage = ref("");
+
+        const isSaveDisabled = computed(() => {
+            if (props.type === 'edit') {
+                return hasInteractedWithJudgeCode.value && !isJudgeCodeCompiled.value;
+            } else {
+                return (judgeMode.value === 1 || judgeMode.value === 2) && !isJudgeCodeCompiled.value;
+            }
+        });
+
+        watch(newCode, () => {
+            if (props.type === 'edit' && isEditLoadingData.value) {
+                // If we are in edit mode and still loading data, do not reset the judge code state.
+                return;
+            }
+            isCompiled.value = false;
+        });
+
+        watch(judgeCode, (newValue, oldValue) => {
+            if (props.type === 'edit' && isEditLoadingData.value) {
+                // If we are in edit mode and still loading data, do not reset the judge code state.
+                return;
+            }
+            // This watcher is triggered when judgeCode changes.
+            // We only want to lock the save button if the user *manually* changes the code.
+            // The initial population from getProblemById should not lock the save button.
+            // So, if oldValue is not undefined (meaning it's not the very first initial set), we consider it a manual change.
+            if (oldValue !== undefined) {
+                isJudgeCodeCompiled.value = false;
+                hasInteractedWithJudgeCode.value = true;
+            }
+        });
+
+        watch(judgeMode, () => {
+            if (props.type === 'edit' && isEditLoadingData.value) {
+                // If we are in edit mode and still loading data, do not reset the judge code state.
+                return;
+            }
+            isJudgeCodeCompiled.value = false;
+            judgeCode.value = "";
+            hasInteractedWithJudgeCode.value = false;
+        });
+
         const acmJudgeCaseMode = ref(1);
         const oiJudgeCaseMode = ref(0);
         const removeBlank = ref(true);
@@ -506,9 +604,11 @@ export default defineComponent({
         // 添加新 Tag
         const addTag = (files: { name: string; code: string }[]) => {
             if (newTag.value.trim() && !files.some(tag => tag.name === newTag.value.trim())) {
-                files.push({ name: newTag.value.trim(), code: '' });
+                files.push({ name: newTag.value.trim(), code: newCode.value });
             }
             newTag.value = "";
+            newCode.value = "";
+            isCompiled.value = false;
             dialogVisible.value = false;
             spjDialogVisible.value = false;
         };
@@ -518,7 +618,55 @@ export default defineComponent({
             files.splice(index, 1);
         };
 
+        const compileUserFile = () => {
+            const dto: CompileSpace.CompileDTO = {
+                code: newCode.value,
+                type: "user"
+            }
+            compileFile(dto);
+        }
 
+        const compileSpjFile = () => {
+            // TODO: Implement SPJ file compilation API call
+            const dto: CompileSpace.CompileDTO = {
+                code: newCode.value,
+                type: judgeMode.value === 1 ? "spj" : "interactive"
+            }
+            compileFile(dto);
+        }
+
+        const compileJudgeCode = () => {
+            isCompiling.value = true;
+            const dto: CompileSpace.CompileDTO = {
+                code: judgeCode.value,
+                type: judgeMode.value === 1 ? "spj" : "interactive",
+                id: props.id ? props.id : undefined
+            }
+            compileCode(dto).then(res => {
+                globalMessage.success('判题代码编译成功', res.data as string);
+                isJudgeCodeCompiled.value = true;
+            }).catch(err => {
+                compileErrorMessage.value = err.message;
+                compileErrorDialogVisible.value = true;
+                isJudgeCodeCompiled.value = false;
+            }).finally(() => {
+                isCompiling.value = false;
+            });
+        }
+
+        const compileFile = async (dto: CompileSpace.CompileDTO) => {
+            isCompiling.value = true;
+            await compileCode(dto).then(res => {
+                globalMessage.success(dto.type + '编译成功', res.data as string);
+                isCompiled.value = true;
+            }).catch(err => {
+                compileErrorMessage.value = err.message;
+                compileErrorDialogVisible.value = true;
+                isCompiled.value = false;
+            }).finally(() => {
+                isCompiling.value = false;
+            });
+        }
         // 添加样例函数
         const addSample = () => {
             samples.value.push({ id: sampleId++, input: '', output: '', collapsed: false });
@@ -588,6 +736,8 @@ export default defineComponent({
                 selectedLanguages: selectedLanguages.value,
                 userFiles: userFileDTO,
                 spjFiles: spjFileDTO,
+                spjCode: judgeCode.value,
+                spjLanguage: judgeCode.value === "spj" ? "C++" : "",
                 samples: sampleDTO,
                 tags: tagIds,
             }
@@ -690,9 +840,16 @@ export default defineComponent({
                 }
                 removeBlank.value = data.isRemoveEndBlank
                 judgeCaseStatus.value = data.openCaseResult
+                judgeCode.value = data.spjCode;
+                if (judgeCode.value && judgeCode.value !== "") {
+                    isJudgeCodeCompiled.value = true;
+                    hasInteractedWithJudgeCode.value = true;
+                }
             }).catch(err => {
                 globalMessage.error("获取题目失败", err.message)
-            })
+            }).finally(() => {
+                isEditLoadingData.value = false;
+            });
         }
         const onUploadImg = async (files: any, callback: any) => {
             const res = await Promise.all(
@@ -715,17 +872,93 @@ export default defineComponent({
 
             callback(res.map((item) => item.data[0]));
         };
+        const languageOptions = ref<LanguageSpace.LanguageVO[]>([]);
+        // 获取本地语言列表
+        const loadLocalLanguages = async () => {
+            await getLocalLanguages().then(res => {
+                languageOptions.value = res.data as LanguageSpace.LanguageVO[];
+            }).catch(err => {
+                globalMessage.error("获取语言失败", err.message)
+            })
+        }
         onMounted(() => {
+            loadLocalLanguages();
             if (props.type === 'edit') {
+                isEditLoadingData.value = true;
                 getProblemById()
                 loadProblemLanguages()
             }
         })
         return {
-            displayId, difficulty, selectedDifficulty, title, timeLimit, memoryLimit, stackLimit, share, problemDesc, inputDesc, outputDesc, hintDesc, problemType, selectedLanguages, languageOptions, samples, addSample, removeSample,
-            toggleSample, userJudgeFile, spjJudgeFile, userFiles, spjFiles, newTag, spjDialogVisible, dialogVisible, addTag, removeTag, judgeMode, oiJudgeCaseMode, acmJudgeCaseMode, removeBlank, judgeCaseStatus, saveProblem,
-            authOptions, selectedAuth, newCode, isSaving, onUploadImg, tags, allTags, colorPalette, tagDialogVisible, showCreate, searchText, newTagName, selectedColor, filteredTags, createTag, isTagSelected, toggleTag, createProblem,
-            onSaving, createTagEvent, onTagDialogOpen, removeProblemTag, isRemote, props
+            displayId,
+            difficulty,
+            selectedDifficulty,
+            title,
+            timeLimit,
+            memoryLimit,
+            stackLimit,
+            share,
+            problemDesc,
+            inputDesc,
+            outputDesc,
+            hintDesc,
+            problemType,
+            selectedLanguages,
+            languageOptions,
+            samples,
+            addSample,
+            removeSample,
+            toggleSample,
+            userJudgeFile,
+            spjJudgeFile,
+            userFiles,
+            spjFiles,
+            newTag,
+            spjDialogVisible,
+            dialogVisible,
+            addTag,
+            removeTag,
+            judgeMode,
+            oiJudgeCaseMode,
+            acmJudgeCaseMode,
+            removeBlank,
+            judgeCaseStatus,
+            saveProblem,
+            authOptions,
+            selectedAuth,
+            newCode,
+            isSaving,
+            onUploadImg,
+            tags,
+            allTags,
+            colorPalette,
+            tagDialogVisible,
+            showCreate,
+            searchText,
+            newTagName,
+            selectedColor,
+            filteredTags,
+            isTagSelected,
+            toggleTag,
+            createTagEvent,
+            onTagDialogOpen,
+            removeProblemTag,
+            props,
+            isRemote,
+            extensions,
+            lang,
+            compileUserFile,
+            compileSpjFile,
+            isCompiled,
+            judgeCodeDialogVisible,
+            judgeCode,
+            isJudgeCodeCompiled,
+            compileJudgeCode,
+            isCompiling,
+            isSaveDisabled,
+            hasInteractedWithJudgeCode,
+            compileErrorDialogVisible,
+            compileErrorMessage
         }
     }
 })

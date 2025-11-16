@@ -37,7 +37,7 @@ onBeforeMount(() => {
         router.push('/auth/login');
     } else {
         console.log("username is not empty");
-        if (user.roleId === null || user.roleId > Role.TEACHER) {
+        if (user.roleId === null || user.roleId > Role.COLLBORATOR) {
             router.push('/forbidden');
         }
     }

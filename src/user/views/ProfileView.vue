@@ -86,6 +86,10 @@
                     <Button v-if="editMode" :loading="loading" label="保存更改" severity="success" icon="pi pi-check"
                         @click="saveProfile" />
                 </div>
+                <div v-else class="flex gap-4 justify-end">
+                    <Button label="发送消息" icon="pi pi-envelope"
+                        @click="() => router.push({ path: '/messages/0', query: { toId: String(user.id), toNick: user.nickname } })" />
+                </div>
             </section>
 
             <!-- 修改密码区域 -->
@@ -114,12 +118,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useUserStore } from '@/common/utils/store';
 import { Role } from '@/common/constant/Role';
 import { type UserSpace, getUserInfoById, updatePassword, updateUserInfo } from '@/user/userAPI';
 import globalMessage from '@/common/utils/toast';
 const userStore = useUserStore();
 const props = defineProps<{ id: String }>();
+const router = useRouter();
 
 interface PasswordForm {
     current: string;

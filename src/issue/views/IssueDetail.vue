@@ -12,7 +12,7 @@
                 <div class="flex items-center justify-between">
                     <div class="space-y-2">
                         <h1 class="text-2xl font-bold">{{ issue.title }} <span class="text-gray-500">#{{ issue.id
-                                }}</span></h1>
+                        }}</span></h1>
                         <div class="flex items-center gap-2 text-sm text-gray-600">
                             <Tag :severity="statusSeverityMap(issue.status)" :value="statusValueMap(issue.status)" />
                             <span>{{ issue.author }}</span>
@@ -59,10 +59,13 @@
                         <div class="shadow-none flex gap-3">
                             <Avatar icon="pi pi-user" shape="circle" size="large" />
                             <div class="flex-1 border p-4 rounded">
-                                <span class="font-bold">添加评论</span>
-                                <MdEditor v-model:model-value="newComment" style="max-height: 250px;;" class="mt-2"
-                                    :theme="theme" placeholder="请输入您的评论..." @on-upload-img="onUploadImg"
-                                    :toolbars="toolbars" />
+                                <span v-if="issue.status !== 4" class="font-bold">添加评论</span>
+                                <MdEditor v-if="issue.status !== 4" v-model:model-value="newComment"
+                                    style="max-height: 250px;;" class="mt-2" :theme="theme" placeholder="请输入您的评论..."
+                                    @on-upload-img="onUploadImg" :toolbars="toolbars" />
+                                <div v-else class="mt-2 p-4 bg-gray-100 text-gray-500 rounded">
+                                    该问题已关闭，无法添加评论。
+                                </div>
                                 <div class="mt-4 flex justify-end">
                                     <Button v-if="issue.status === 4" label="重新打开"
                                         class="p-button-outlined mr-2 p-button-secondary" icon="pi pi-refresh"
@@ -201,7 +204,9 @@ const changeStatus = async (status?: number) => {
     const statusTmp = status == undefined ? issue.value.status : status
     await updateIssueStatus(Number(props.id), statusTmp).then(() => {
         issue.value.status = status || issue.value.status
-        globalMessage.success("操作成功", "更新为" + statusValueMap(status || issue.value.status))
+        globalMessage.success("操作成功", "更新为" + statusValueMap(statusTmp))
+        //刷新
+        loadDetail();
     }).catch((err) => {
         globalMessage.error("更新状态失败", err.message)
     })
@@ -230,42 +235,98 @@ const isSubmiting = ref(false);
 // 提交评论
 const submitComment = async () => {
     isSubmiting.value = true;
-    if (!newComment.value.trim()) return
-    console.log(newComment.value)
-    await appendMessage(Number(props.id), newComment.value).then((res) => {
+    try {
+        if (!newComment.value.trim()) {
+            isSubmiting.value = false;
+            return;
+        }
+
+        // 先检测并上传本地临时图片（blob: URL）
+        const blobRegex = /blob:[^\s)"']+/g;
+        const localUrls = Array.from(new Set((newComment.value.match(blobRegex) || [])));
+        if (localUrls.length > 0) {
+            // 预校验：确保 pendingUploads 中存在对应文件且合法
+            const missing = localUrls.filter(u => !pendingUploads.value[u]);
+            if (missing.length > 0) {
+                globalMessage.error('上传失败', '部分附件尚未准备或已失效，请重新插入或刷新页面');
+                isSubmiting.value = false;
+                return;
+            }
+            const invalid = localUrls.filter(u => {
+                const f = pendingUploads.value[u];
+                return !f || !f.name || String(f.name).trim() === '' || !f.type || !String(f.type).startsWith('image/');
+            });
+            if (invalid.length > 0) {
+                globalMessage.error('上传失败', '部分附件不合法（必须为图片且文件名不可为空）');
+                isSubmiting.value = false;
+                return;
+            }
+
+            try {
+                const uploadResults = await Promise.all(localUrls.map(async (localUrl) => {
+                    const file = pendingUploads.value[localUrl];
+                    if (!file) return { local: localUrl, remote: localUrl };
+                    const form = new FormData();
+                    form.append('files', file);
+                    const resp = await uploadFile(form, {
+                        headers: {
+                            "Content-Type": "multipart/form-data"
+                        }
+                    });
+                    const data = (resp as any).data ?? resp;
+                    let remoteUrl = '';
+                    if (typeof data === 'string') remoteUrl = data;
+                    else if (Array.isArray(data) && data.length > 0) remoteUrl = data[0];
+                    else if (data && typeof data === 'object') remoteUrl = data.url || data.path || JSON.stringify(data);
+
+                    // 清理本地临时 URL
+                    try { URL.revokeObjectURL(localUrl); } catch (e) { /* ignore */ }
+                    delete pendingUploads.value[localUrl];
+                    return { local: localUrl, remote: remoteUrl };
+                }));
+
+                // 替换评论内容中的本地地址为远端地址
+                uploadResults.forEach(r => {
+                    if (r.remote && r.remote !== r.local) {
+                        newComment.value = newComment.value.split(r.local).join(r.remote);
+                    }
+                });
+            } catch (err: any) {
+                console.error('上传附件失败', err);
+                globalMessage.error('上传失败', err?.message || '部分附件上传失败');
+                isSubmiting.value = false;
+                return;
+            }
+        }
+
+        // 上传并替换完成后提交评论
+        const res = await appendMessage(Number(props.id), newComment.value);
         const data = res.data as IssueSpace.CommentVO;
         issue.value.comments.push(data);
-    }).catch((err) => {
-        globalMessage.error("提交失败", err.message)
-    });
-    isSubmiting.value = false;
-    newComment.value = ''
+        newComment.value = '';
+    } catch (err: any) {
+        globalMessage.error('提交失败', err?.message || String(err));
+    } finally {
+        isSubmiting.value = false;
+    }
 }
 
 // 公共方法
 const formatDate = (date: Date) => {
     return format(date, 'yyyy-MM-dd HH:mm')
 }
-const onUploadImg = async (files: any, callback: any) => {
-    const res = await Promise.all(
-        files.map((file: File) => {
-            return new Promise((rev, rej) => {
-                const form = new FormData();
-                form.append('files', file);
-                uploadFile(form, {
-                    headers: {
-                        "Content-Type": "multipart/form-data"
-                    },
-                }).then((res) => {
-                    rev(res)
-                }).catch((err) => {
-                    rej(err)
-                })
-            });
-        })
-    );
+// 本地暂存上传文件：key=blobUrl, value=File
+const pendingUploads = ref<Record<string, File>>({});
 
-    callback(res.map((item) => item.data[0]));
+const onUploadImg = async (files: any, callback: any) => {
+    // 不立即上传；先将文件保存为本地 blob URL，交给编辑器预览，并在提交时统一上传
+    const urls = files.map((file: File) => {
+        const blobUrl = URL.createObjectURL(file);
+        pendingUploads.value[blobUrl] = file;
+        return blobUrl;
+    });
+    // 将本地临时地址返回给编辑器以便立即显示
+    callback(urls);
 };
 </script>
 

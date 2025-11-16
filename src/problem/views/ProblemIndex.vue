@@ -23,10 +23,12 @@
                     <div class="flex items-center mb-0">
                         <span class="mr-2 text-lg font-bold">题库</span>
                         <div class="ml-2">
-                            <Button label="全部" class="p-button-outlined custom-button p-button-md mr-3" />
-                            <Button label="主题库" class="p-button-outlined custom-button mr-3" />
-                            <Button label="HDU" class="p-button-outlined custom-button mr-3" />
-                            <Button label="POJ" class="p-button-outlined custom-button" />
+                            <Button label="全部" @click="selectProblemBank(-1)"
+                                class="p-button-outlined custom-button p-button-md mr-3" />
+                            <Button label="HDU" @click="selectProblemBank(1023)"
+                                class="p-button-outlined custom-button mr-3" />
+                            <Button label="POJ" @click="selectProblemBank(1025)"
+                                class="p-button-outlined custom-button" />
                         </div>
                     </div>
                 </div>
@@ -220,6 +222,31 @@ export default {
                 globalMessage.error('获取标签失败', error.message);
             });
         };
+        const selectProblemBank = (id: number) => {
+            if (id != undefined && id > 0) {
+                router.push({
+                    query: {
+                        ...route.query,
+                        TagId: id,
+                    },
+                });
+                selectedTagIds.value = [id];
+
+                getCount();
+                getProblems(0);
+            } else if (id < 0) {
+                // 清除筛选
+                selectedTagIds.value = [];
+                router.push({
+                    query: {
+                        ...route.query,
+                        TagId: undefined,
+                    },
+                });
+                getCount();
+                getProblems(0);
+            }
+        }
         // 题目筛选
         const tagFilter = (index: number) => {
             const tag = Tags.value[index];
@@ -309,7 +336,7 @@ export default {
                 behavior: 'smooth', // 平滑滚动
             });
         };
-        return { problems, tagFilter, randomProblem, Tags, onSearch, searchContent, selectRow, getProgressBarColor, getTagSeverity, totalRecords, first, onPage, statTitle, selectedProblem };
+        return { problems, selectProblemBank, tagFilter, randomProblem, Tags, onSearch, searchContent, selectRow, getProgressBarColor, getTagSeverity, totalRecords, first, onPage, statTitle, selectedProblem };
     },
 };
 </script>

@@ -80,7 +80,8 @@ export const deleteRemoteJudgeAccount = (id: number) => {
     return request.delete<string>(`/api/u/admin/remote-judge-accounts/${id}`);
 };
 
-// 测试远程账号连接（如果后端有此接口）
+// 测试远程评测账号连接 (后端: GET /admin/remote-judge-accounts/test/{id})
 export const testRemoteJudgeAccount = (id: number) => {
-    return request.post<string>(`/api/u/admin/remote-judge-accounts/${id}/test`);
+    // 对应后端接口: @GetMapping("/admin/remote-judge-accounts/test/{id}")
+    return request.get<string>(`/api/u/admin/remote-judge-accounts/test/${id}`);
 };

@@ -22,11 +22,11 @@ export interface ResultData<T = any> extends Result {
   data?: T;
 }
 // 请求地址
-const URL: string = "http://192.168.1.128:8000";
+const URL: string = "http://192.168.200.9:8080";
 
 const config = {
   // 默认地址
-  baseURL: URL as string,
+   baseURL: URL as string,
   // 设置超时时间
   timeout: 1000000,
   // 跨域时候允许携带凭证
@@ -85,11 +85,24 @@ class RequestHttp {
       (response: AxiosResponse) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { data, config } = response; // 解构
-        // 全局错误信息拦截（防止下载文件得时候返回数据流，没有code，直接报错）
-        if (!data.status || response.status >= 400) {
-          globalMessage.error("错误", data.message || "发生未知错误"); // 此处也可以使用组件提示报错信息
+        // 根据 Content-Type 判断返回内容类型，防止 NGINX/网关返回 HTML 页面导致 data 不是期望的 JSON
+        const contentType = (response.headers && (response.headers['content-type'] || response.headers['Content-Type'])) || '';
+        const isHtmlResponse = typeof data === 'string' && contentType.toLowerCase().includes('text/html');
+        const isJsonResponse = typeof data === 'object' || contentType.toLowerCase().includes('application/json') || contentType.toLowerCase().includes('text/json');
+
+        if (isHtmlResponse) {
+          // 网关或后端返回 HTML（例如 502/504），提示友好错误并返回一个可识别的错误对象
+          globalMessage.error('服务器错误', `Nginx返回 HTML 页面（状态码: ${response.status}）`);
+          return Promise.reject({ status: response.status, message: 'Server returned HTML error page', raw: data });
+        }
+
+        // 全局错误信息拦截（防止下载文件得时候返回数据流，没有 code，直接报错）
+        if (!isJsonResponse || !data?.status || response.status >= 400) {
+          const msg = (data && (data.message || data.msg)) || response.statusText || '发生未知错误';
+          globalMessage.error('错误', msg); // 此处也可以使用组件提示报错信息
           return Promise.reject(data);
         }
+
         return data;
       },
       (error: AxiosError) => {
@@ -98,8 +111,16 @@ class RequestHttp {
           // 服务器有返回
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { data, config } = response; // 解构
+          // 如果返回的是 HTML（例如 NGINX 错误页），不要把它当 JSON 解析
+          const contentType = (response.headers && (response.headers['content-type'] || response.headers['Content-Type'])) || '';
+          const isHtmlResponse = typeof data === 'string' && contentType.toLowerCase().includes('text/html');
+          if (isHtmlResponse) {
+            globalMessage.error('错误', `网关或后端错误（状态码: ${response.status}）`);
+            const apiError = new APIError(response.status || -1, '', `Gateway/HTML response (${response.status})`);
+            return Promise.reject(apiError);
+          }
           // 使用类型断言明确 data 的类型
-          const responseData = data as { status: number;message:string; data: string };
+          const responseData = data as { status: number; message: string; data: string };
           if (response.status === HttpStatusCode.Unauthorized) {
             // 登录信息失效，应跳转到登录页面，并清空本地的token
             localStorage.setItem("token", "");

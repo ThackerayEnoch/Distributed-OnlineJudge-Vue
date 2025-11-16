@@ -96,6 +96,9 @@ const theme = ref<'light' | 'dark'>('light')
 const isPreview = ref(false)
 const isSubmitting = ref(false)
 
+// 本地暂存上传文件：key=blobUrl, value=File
+const pendingUploads = ref<Record<string, File>>({});
+
 // 表单数据
 const formData = reactive<IssueSpace.AddIssueDTO>({
     title: '',
@@ -107,15 +110,17 @@ const formData = reactive<IssueSpace.AddIssueDTO>({
 // 验证错误信息
 const errors = reactive({
     title: '',
-    content: ''
+    content: '',
+    priority: ''
 })
 
 // 可用标签选项
 const availableLabels = [
     { name: '功能请求', value: 1 },
-    { name: 'BUG', value: 2 },
+    { name: 'BUG报告', value: 2 },
     { name: '性能问题', value: 3 },
-    { name: '其他', value: 4 }
+    { name: '使用疑问', value: 4 },
+    { name: '其他问题', value: 5 }
 ]
 
 const priorityOptions = [
@@ -153,18 +158,22 @@ const guidanceContent = `
 \`\`\`markdown
 ## 问题描述
 （简要概述问题）
-
-## 题目编号
+    加入比赛输入密码后提示加入成功，但无页面跳转，刷新依旧显示无权访问。
+    再次输入密码确认后显示用户已加入。
+## 题目编号或比赛编号
 （如：P1001）
-
-## 操作步骤
+    Contest2134
+## 复现步骤
 （例如：选择题目后点击提交按钮，页面未响应）
-
+    1.从比赛页面打开Contest2134。
+    2.输入密码，点击确认。
+    3.提示加入成功，但页面无跳转，刷新后显示无权访问。
 ## 错误信息
 （例如：服务器错误，页面显示“500 Internal Server Error”）
-
+    第一次无错误信息，第二次加入显示用户已加入。
 ## 附加信息
 （设备型号/浏览器版本等）
+    Windows11 Firefox 142.0
 \`\`\`
 
   `
@@ -189,10 +198,86 @@ const cancelForm = () => {
 const submitForm = async () => {
     validateField('title')
     validateField('content')
+    // 校验 priority 必选
+    if (typeof formData.priority === 'undefined' || formData.priority === null) {
+        errors.priority = '请选择类型';
+    } else {
+        errors.priority = '';
+    }
 
-    if (errors.title || errors.content) return
+    // 去除 labels 中的空字符串并校验
+    if (Array.isArray(formData.labels)) {
+        formData.labels = formData.labels.filter((l: any) => String(l).trim() !== '');
+        if (formData.labels.length === 0) {
+            globalMessage.error('提示', '请至少选择一个标签');
+            return;
+        }
+    }
+
+    if (errors.title || errors.content || errors.priority) return
     isSubmitting.value = true
     try {
+        // 先处理待上传的本地文件（blob: URLs）
+        const blobRegex = /blob:[^\s)"']+/g;
+        const localUrls = Array.from(new Set((formData.content.match(blobRegex) || [])));
+        if (localUrls.length > 0) {
+            // 预校验：确保所有本地 URL 对应的文件仍存在于 pendingUploads 且为合法图片
+            const missing = localUrls.filter(u => !pendingUploads.value[u]);
+            if (missing.length > 0) {
+                globalMessage.error('上传失败', '部分附件尚未准备或已失效，请重新插入或刷新页面');
+                isSubmitting.value = false;
+                return;
+            }
+            const invalid = localUrls.filter(u => {
+                const f = pendingUploads.value[u];
+                return !f || !f.name || String(f.name).trim() === '' || !f.type || !String(f.type).startsWith('image/');
+            });
+            if (invalid.length > 0) {
+                globalMessage.error('上传失败', '部分附件不合法（必须为图片且文件名不可为空）');
+                isSubmitting.value = false;
+                return;
+            }
+
+            try {
+                const uploadResults = await Promise.all(localUrls.map(async (localUrl) => {
+                    const file = pendingUploads.value[localUrl];
+                    if (!file) return { local: localUrl, remote: localUrl };
+                    const form = new FormData();
+                    form.append('files', file);
+                    const resp = await uploadFile(form, {
+                        headers: {
+                            "Content-Type": "multipart/form-data"
+                        }
+                    });
+                    const data = (resp as any).data ?? resp;
+                    // 后端可能返回字符串、数组或对象，尝试提取第一个可用的 URL/路径
+                    let remoteUrl = '';
+                    if (typeof data === 'string') remoteUrl = data;
+                    else if (Array.isArray(data) && data.length > 0) remoteUrl = data[0];
+                    else if (data && typeof data === 'object') remoteUrl = data.url || data.path || JSON.stringify(data);
+                    // 保持后端返回的路径原样（例如 /api/u/issue/upload/xxx.jpg），不要强制添加 origin
+
+                    // 清理本地临时 URL
+                    try { URL.revokeObjectURL(localUrl); } catch (e) { /* ignore */ }
+                    delete pendingUploads.value[localUrl];
+                    return { local: localUrl, remote: remoteUrl };
+                }));
+
+                // 用返回的远端地址替换内容中的本地地址
+                uploadResults.forEach(r => {
+                    if (r.remote && r.remote !== r.local) {
+                        formData.content = formData.content.split(r.local).join(r.remote);
+                    }
+                });
+            } catch (err: any) {
+                console.error('上传附件失败', err);
+                globalMessage.error('上传失败', err?.message || '部分附件上传失败');
+                isSubmitting.value = false;
+                return;
+            }
+        }
+
+        // 所有附件替换完成后再提交 issue
         await createIssue(formData).then(() => {
             globalMessage.success('提示', '问题反馈提交成功')
             router.push('/issues')
@@ -205,25 +290,38 @@ const submitForm = async () => {
     }
 }
 const onUploadImg = async (files: any, callback: any) => {
-    const res = await Promise.all(
-        files.map((file: File) => {
-            return new Promise((rev, rej) => {
-                const form = new FormData();
-                form.append('files', file);
-                uploadFile(form, {
-                    headers: {
-                        "Content-Type": "multipart/form-data"
-                    },
-                }).then((res) => {
-                    rev(res)
-                }).catch((err) => {
-                    rej(err)
-                })
-            });
-        })
-    );
+    // 校验并过滤文件：文件名不能空，且必须为图片类型
+    const validFiles: File[] = [];
+    const invalidReasons: string[] = [];
+    files.forEach((file: any) => {
+        if (!(file instanceof File)) {
+            invalidReasons.push('存在非文件对象，已忽略');
+            return;
+        }
+        if (!file.name || String(file.name).trim() === '') {
+            invalidReasons.push('文件名不能为空');
+            return;
+        }
+        if (!file.type || !file.type.startsWith('image/')) {
+            invalidReasons.push(`${file.name} 不是图片类型，已忽略`);
+            return;
+        }
+        validFiles.push(file);
+    });
 
-    callback(res.map((item) => item.data[0]));
+    if (invalidReasons.length > 0) {
+        // 只提示一次，避免过多弹窗
+        globalMessage.warn('上传提醒', invalidReasons.join('; '));
+    }
+
+    // 为通过校验的文件生成本地 blob URL 并暂存
+    const urls = validFiles.map((file: File) => {
+        const blobUrl = URL.createObjectURL(file);
+        pendingUploads.value[blobUrl] = file;
+        return blobUrl;
+    });
+    // 将本地临时地址返回给编辑器以便立即显示
+    callback(urls);
 };
 </script>
 

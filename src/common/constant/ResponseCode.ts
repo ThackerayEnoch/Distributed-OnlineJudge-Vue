@@ -15,6 +15,7 @@ export enum ResponseCode {
     USERNAME_OR_EMAIL_NOT_UNIQUE = 11002, // 用户名或邮箱重复
     UNSUPPORTED_GRANT_TYPE = 11003, // 不支持的认证模式
     USER_IS_BANNED = 11004, // 用户已被封禁
+    ACCOUNT_EXPIRED = 11009, // 账号已过期
     VERIFICATION_CODE_ERROR = 12001, // 验证码错误
     CAPTCHA_NOT_FOUND = 12002, // 请先发送验证码
     TOO_MANY_REQUESTS_CAPTCHA = 12003, // 发送验证码过于频繁，请稍后再试
@@ -24,7 +25,8 @@ export enum ResponseCode {
     USER_NOT_FOUND = 13001, // 用户不存在
     USER_IS_EXIST = 13002, // 用户已存在
     EMAIL_IS_EXIST_USER = 13003, // 邮箱已存在
-    USER_IS_BANNED_USER = 13004 // 用户已被封禁
+    USER_IS_BANNED_USER = 13004, // 用户已被封禁
+    IP_ADDRESS_ILLEGAL = 11008// IP地址不合法
 }
 
 export const ResponseMessage: { [key in ResponseCode]: string } = {
@@ -53,7 +55,9 @@ export const ResponseMessage: { [key in ResponseCode]: string } = {
     [ResponseCode.USER_NOT_FOUND]: "用户不存在",
     [ResponseCode.USER_IS_EXIST]: "用户已存在",
     [ResponseCode.EMAIL_IS_EXIST_USER]: "邮箱已存在",
-    [ResponseCode.USER_IS_BANNED_USER]: "用户已被封禁"
+    [ResponseCode.USER_IS_BANNED_USER]: "用户已被封禁",
+    [ResponseCode.ACCOUNT_EXPIRED]: "账号已过期",
+    [ResponseCode.IP_ADDRESS_ILLEGAL]: "IP策略禁止登录"
 };
 // 根据数字获取具体信息的函数
 export function getResponseMessage(code: number): string {

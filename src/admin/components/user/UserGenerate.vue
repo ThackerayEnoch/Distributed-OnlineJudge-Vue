@@ -37,7 +37,10 @@
         </div>
         <div class="flex items-center gap-2 mt-2 mb-6">
             <span class="text-gray-700">过期时间</span>
-            <DatePicker v-model="expireTime" dateFormat="yy/mm/dd" />
+            <DatePicker v-model="expireTime" dateFormat="yy/mm/dd" showTime hourFormat="24" timeFormat="HH:mm" />
+            <span class="text-gray-700 ml-6">首次登录需要修改密码</span>
+            <ToggleButton v-model="needChangePassword" onLabel="是" offLabel="否" onIcon="pi pi-check"
+                offIcon="pi pi-times" />
         </div>
 
         <!-- 结果展示 -->
@@ -102,8 +105,15 @@ import { exportToExcel, type ExportHeader } from '@/common/utils/excel';
 const usernameInput = ref('');
 const passwordInput = ref('');
 const nicknameInput = ref('');
+const needChangePassword = ref<boolean>(true);
 const passwordMode = ref('random');
-const expireTime = ref<Date>(new Date(Date.now() + 4 * 365 * 24 * 60 * 60 * 1000));
+const expireTime = ref<Date>((() => {
+    const d = new Date();
+    // add 4 years, preserve hour, set minutes/seconds/ms to 0
+    d.setFullYear(d.getFullYear() + 4);
+    d.setMinutes(0, 0, 0);
+    return d;
+})());
 const isloading = ref(false);
 
 const passwordOptions = ref([
@@ -159,7 +169,7 @@ const saveBatch = async () => {
         isloading.value = false;
     }
 };
-const defaultPassword = 'Ujn@12345';
+const defaultPassword = 'ujn@12345';
 const passwordPlaceholder = ref<string>('随机生成密码');
 const passwordModeChange = () => {
     switch (passwordMode.value) {
@@ -177,7 +187,7 @@ const passwordModeChange = () => {
     }
 };
 const generatePassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789abcdefghjkmnpqrstuvwxyz';
     return Array(8)
         .fill(null)
         .map(() => chars[Math.floor(Math.random() * chars.length)])
@@ -192,6 +202,7 @@ const generatedAccounts = computed(() => {
         index: index,
         username: username.trim(),
         password: getPasswordForIndex(index),
+        needChangePassword: needChangePassword.value,
         nickname: (nicknames[index] || '').trim(),
         expireTime: expireTime.value.getTime()
     }));

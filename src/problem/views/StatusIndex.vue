@@ -3,7 +3,9 @@
         <div class="w-full h-[75%] p-4 shadow-lg bg-white dark:bg-gray-800">
             <DataTable :value="problems" v-model:filters="filters" filterDisplay="menu" stripedRows paginator :rows="30"
                 tableStyle="min-width: 60%" responsiveLayout="scroll" class="custom-font-size" size="small"
-                :totalRecords="totalRecords" lazy :first="first" @page="onPage" headerClass="h-4">
+                :totalRecords="totalRecords" lazy :first="first" @page="onPage" headerClass="h-4"
+                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink CurrentPageReport"
+                currentPageReportTemplate="显示 {first} 到 {last} 条，共 {totalRecords} 条">
                 <template #header>
                     <div class="flex flex-row space-x-4 items-center">
                         <h1 class="text-2xl font-bold">评测状态</h1>
@@ -187,8 +189,22 @@ onMounted(() => {
 });
 // 页面切换事件，重新加载数据
 function onPage(event: any) {
+    // 限制用户最多只能跳转到前100页，但保持总记录数不变
+    const maxAllowedPage = 100;
+    const currentPage = event.page + 1;
+
+    if (currentPage > maxAllowedPage) {
+        // 如果超出限制，回到最大允许的页面
+        const maxFirst = (maxAllowedPage - 1) * 30;
+        first.value = maxFirst;
+        const query = { ...route.query, currentPage: maxAllowedPage };
+        router.push({ query });
+        getStatusData(maxFirst);
+        return;
+    }
+
     first.value = event.first;
-    const query = { ...route.query, currentPage: event.page + 1 };
+    const query = { ...route.query, currentPage: currentPage };
     router.push({ query });
 
     // 先清除轮询队列和定时器

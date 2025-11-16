@@ -28,7 +28,7 @@
                 </div>
                 <Button label="登录" class="w-full p-button-primary" :loading="isloading"
                     :disabled="isHustojLogin || isloading" type="submit" />
-                <Button label="通过旧系统登录" @click="loginByHustOJ" :loading="isHustojLogin"
+                <Button label="通过旧系统登录" @click="hustojLoginFun" :loading="isHustojLogin"
                     :disabled="isHustojLogin || isloading" class="w-full mt-2 p-button-secondary" />
             </form>
         </div>
@@ -39,8 +39,7 @@
         :style="{ width: '90vw', maxWidth: '400px' }">
         <div class="p-4">
             <p class="text-lg text-gray-700 dark:text-gray-300 mb-2">
-                如果您是首次登录，请先在旧OJ中登录，然后点击新OJ中的
-                <span class="text-red-500 font-bold">“通过旧系统登录”</span>按钮完成登录。
+                如果您是首次登录，请使用旧系统中的密码进行登录。
             </p>
         </div>
         <template #footer>
@@ -141,14 +140,11 @@ const onSubmit = handleSubmit(async (values) => {
             globalMessage.error('错误', '登录失败');
         }
     } catch (error: any) {
-        globalMessage.error('错误', error.message);
+        globalMessage.error('登录失败', error?.message || String(error));
     } finally {
         isloading.value = false;
     }
 });
-const loginByHustOJ = () => {
-    hustojLoginFun();
-}
 
 
 

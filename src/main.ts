@@ -23,6 +23,7 @@ const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 app.use(pinia)
 app.use(router)
+import { zhCN } from './locales/zh-cn'
 
 app.use(PrimeVue, {
     theme: {
@@ -30,7 +31,8 @@ app.use(PrimeVue, {
         options: {
             darkModeSelector: '.app-dark'
         }
-    }
+    },
+    locale: zhCN
 });
 app.use(ToastService);
 app.use(ConfirmationService);

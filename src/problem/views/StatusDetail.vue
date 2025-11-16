@@ -155,7 +155,7 @@
             </div>
         </div>
         <!-- 新增的代码显示区域 -->
-        <div v-if="status.code != null && status.code.trim() !== ''"
+        <div v-if="status.code != null && status.code.trim() !== '' && status.codeShare"
             class="bg-white dark:bg-gray-800 mt-6 p-4 rounded-md shadow">
             <h2 class="text-custom font-semibold mb-4">代码</h2>
             <hr class="border-gray-300 my-2 mb-4">
@@ -218,6 +218,7 @@ const status = ref<Status.StatusDetail>(
         language: '',
         code: '',
         openCase: false,
+        codeShare: false,
         isRemote: false,
         errorMessage: '',
         testcase: []
