@@ -150,7 +150,7 @@
         </div>
 </template>
 <script lang="ts" setup>
-import { onMounted, defineProps, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { getHomeworkSummary, getHomeworkProblems, type HomeworkSpace } from '@/homework/api/homeworkAPI';
 import globalMessage from '@/common/utils/toast';
 import ProgressBar from 'primevue/progressbar';
@@ -353,7 +353,8 @@ async function localHomeworkProblems(homeworkId: number) {
     getHomeworkProblems(homeworkId).then(res => {
         problems.value = res.data as HomeworkSpace.HomeworkProblemsVO[];
         homework.value.solved = problems.value.filter(problem => problem.isSolved).length;
-
+        // 对题目按DisplayId(int)数字顺序升序排序
+        problems.value.sort((a, b) => a.displayId - b.displayId);
         // 成功加载后，确保错误状态被清除
         if (isAccessDenied.value) {
             isAccessDenied.value = false;
