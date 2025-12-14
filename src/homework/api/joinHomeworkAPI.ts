@@ -2,6 +2,7 @@ import request from "@/common/utils/api";
 export namespace JoinHomeworkSpace {
     export interface BlockContestInfoVO {
         title: string;
+        hasPassword: boolean;
         auth: number;
     }
     

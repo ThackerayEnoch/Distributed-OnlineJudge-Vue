@@ -6,7 +6,7 @@
     </div>
     <div class="w-full" v-else>
         <JoinHomeworkComponent v-if="isAccessDenied && joinAuth !== 2" :contestId="homeworkId" :auth="joinAuth"
-            :title="joinTitle" :onSuccess="onSuccess" />
+            :title="joinTitle" :hasPassword="joinHasPassword" :onSuccess="onSuccess" />
         <AccessDenied v-else-if="isAccessDenied && joinAuth === 2" :message="message" btnLabel="返回作业" btnTo="/homeworks"
             btnIcon="pi pi-book" />
         <div v-else class=" felx flex-col w-full dark:bg-gray-800">
@@ -297,6 +297,7 @@ function getProgressBarColor(accuracy: number) {
 }
 const joinTitle = ref('');
 const joinAuth = ref(2);
+const joinHasPassword = ref(false);
 const isBlockAPILoading = ref(false);
 async function loadBlockContest(id: number) {
     isBlockAPILoading.value = true;
@@ -304,6 +305,7 @@ async function loadBlockContest(id: number) {
         const data = res.data as JoinHomeworkSpace.BlockContestInfoVO;
         joinTitle.value = data.title;
         joinAuth.value = data.auth;
+        joinHasPassword.value = data.hasPassword;
     }).catch(error => {
         console.error(error.message);
     }).finally(() => {
