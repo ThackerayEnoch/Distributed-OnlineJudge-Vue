@@ -6,7 +6,7 @@
     </div>
     <div class="w-full" v-else>
         <JoinHomeworkComponent v-if="isAccessDenied && joinAuth !== 2" :contestId="homeworkId" :auth="joinAuth"
-            :title="joinTitle" :onSuccess="onSuccess" />
+            :title="joinTitle" :hasPassword="joinHasPassword" :onSuccess="onSuccess" />
         <AccessDenied v-else-if="isAccessDenied && joinAuth === 2" :message="message" btnLabel="返回作业" btnTo="/homeworks"
             btnIcon="pi pi-book" />
         <div v-else class=" felx flex-col w-full dark:bg-gray-800">
@@ -150,7 +150,7 @@
         </div>
 </template>
 <script lang="ts" setup>
-import { onMounted, defineProps, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { getHomeworkSummary, getHomeworkProblems, type HomeworkSpace } from '@/homework/api/homeworkAPI';
 import globalMessage from '@/common/utils/toast';
 import ProgressBar from 'primevue/progressbar';
@@ -297,6 +297,7 @@ function getProgressBarColor(accuracy: number) {
 }
 const joinTitle = ref('');
 const joinAuth = ref(2);
+const joinHasPassword = ref(false);
 const isBlockAPILoading = ref(false);
 async function loadBlockContest(id: number) {
     isBlockAPILoading.value = true;
@@ -304,6 +305,7 @@ async function loadBlockContest(id: number) {
         const data = res.data as JoinHomeworkSpace.BlockContestInfoVO;
         joinTitle.value = data.title;
         joinAuth.value = data.auth;
+        joinHasPassword.value = data.hasPassword;
     }).catch(error => {
         console.error(error.message);
     }).finally(() => {
@@ -353,7 +355,8 @@ async function localHomeworkProblems(homeworkId: number) {
     getHomeworkProblems(homeworkId).then(res => {
         problems.value = res.data as HomeworkSpace.HomeworkProblemsVO[];
         homework.value.solved = problems.value.filter(problem => problem.isSolved).length;
-
+        // 对题目按DisplayId(int)数字顺序升序排序
+        problems.value.sort((a, b) => a.displayId - b.displayId);
         // 成功加载后，确保错误状态被清除
         if (isAccessDenied.value) {
             isAccessDenied.value = false;

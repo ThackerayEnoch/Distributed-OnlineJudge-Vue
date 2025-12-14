@@ -155,7 +155,7 @@ watch(route, async (newRoute) => {
                     <div @click="navigateTo('home')" class="layout-topbar-logo flex items-center">
                         <img src="@/common/assets/ujn.svg" alt="Logo" class="w-[21%] h-auto" />
                         <span class="ml-1" @click="navigateTo('home')">UJNOJ</span>
-                        <div class="ml-0 text-xs whitespace-nowrap self-end">v1.0.0</div>
+                        <div class="ml-0 text-xs whitespace-nowrap self-end">v1.1.0</div>
                     </div>
                 </div>
             </template>

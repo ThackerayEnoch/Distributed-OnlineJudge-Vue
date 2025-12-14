@@ -16,8 +16,10 @@
                 <!-- 认证区域 -->
                 <div class="space-y-4">
                     <!-- 公开竞赛 -->
-                    <div v-if="props.auth === 0" class="text-center">
-                        <p class="text-gray-600 mb-4">该比赛对所有人开放</p>
+                    <div v-if="props.auth === 0 || !props.hasPassword" class="text-center">
+                        <p class="text-gray-600 mb-4">
+                            {{ props.auth === 0 ? '该比赛对所有人开放' : '该比赛受保护但无需密码' }}
+                        </p>
                         <Button label="立即加入" :loading="isloading" icon="pi pi-arrow-right"
                             class="w-full bg-primary-500 hover:bg-primary-600" @click="handleJoin" />
                     </div>
@@ -52,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineProps } from 'vue';
+import { ref, computed } from 'vue';
 import { type JoinHomeworkSpace, joinHomework } from '@/homework/api/joinHomeworkAPI';
 import globalMessage from '@/common/utils/toast';
 import { useRouter } from 'vue-router';
@@ -62,6 +64,7 @@ const props = defineProps<{
     contestId: number;
     auth: number;
     title: string;
+    hasPassword: boolean;
     onSuccess: () => void;
 }>();
 
@@ -69,8 +72,8 @@ const props = defineProps<{
 const password = ref('');
 
 const iconClass = computed(() => ({
-    'pi pi-globe text-green-400': props.auth === 0,
-    'pi pi-lock text-red-400': props.auth === 1,
+    'pi pi-globe text-green-400': props.auth === 0 || !props.hasPassword,
+    'pi pi-lock text-red-400': props.auth !== 0 && props.hasPassword,
 }));
 const isloading = ref(false);
 const handleJoin = async () => {
