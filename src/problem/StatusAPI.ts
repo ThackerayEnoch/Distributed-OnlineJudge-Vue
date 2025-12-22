@@ -27,6 +27,7 @@ export namespace Status{
         memory: number;
         judger: string;
         score: number;
+        queueSize: number;
         // 其他属性根据实际情况添加
     }
     export interface TestCase {

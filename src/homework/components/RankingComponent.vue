@@ -95,8 +95,9 @@
                 </template>
                 <template #body="{ data }">
                     <div v-if="data.problems[index] != null" class="h-20 w-full flex flex-col justify-center
-                        bg-opacity-75"
-                        :class="getBackgroundClass(data.problems[index].isSolved, data.problems[index].tries)">
+                        bg-opacity-75 cursor-pointer"
+                        :class="getBackgroundClass(data.problems[index].isSolved, data.problems[index].tries)"
+                        @click="toSubmissionDetail(data.problems[index], data.userId)">
                         <div v-show="data.problems[index].tries != null && data.problems[index].tries != 0">
                             <div v-show="data.problems[index].isFirst" class="font-bold">
                                 ※1st
@@ -118,15 +119,15 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref, defineProps, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { getHomeworkRankingById, type RankingSpace } from '../api/homeworkRankingAPI';
 import { exportToExcel, type ExportHeader } from '@/common/utils/excel';
 import { ProblemStatus } from '../status/homeworkStatus';
 import { useRouter } from 'vue-router';
-import { useUserStore } from '@/common/utils/store';
 import globalMessage from '@/common/utils/toast';
-import { is } from 'date-fns/locale';
-
+import { useUserStore } from '@/common/utils/store';
+import { Role } from '@/common/constant/Role';
+const counterStore = useUserStore();
 const props = defineProps<{
     homeworkId: string;
     title: string;
@@ -134,7 +135,7 @@ const props = defineProps<{
 const isloading = ref(true);
 const router = useRouter();
 const userStore = useUserStore();
-
+const currentTime = ref<number>(0);
 // 当前用户相关状态
 const currentUserFound = ref(false);
 const currentUserRank = ref(0);
@@ -160,10 +161,9 @@ const startCountdown = (cacheStartTime: number) => {
     const cacheExpireTime = cacheStartTime + 5000; // 缓存5秒后过期
 
     const updateCountdown = () => {
-        const now = Date.now();
-        const remaining = Math.max(0, Math.ceil((cacheExpireTime - now) / 1000));
+        const remaining = Math.max(0, Math.ceil((cacheExpireTime - currentTime.value) / 1000));
         countdown.value = remaining;
-
+        currentTime.value += 1000;
         if (remaining === 0) {
             if (countdownTimer) {
                 clearInterval(countdownTimer);
@@ -381,6 +381,7 @@ const rankData = ref<RankingSpace.RankVO>(
         problems: [],
         users: [],
         cacheStartTime: 0,
+        serverTime: 0
     },
 );
 // AC颜色
@@ -423,6 +424,21 @@ const getBackgroundClass = (isSolved: boolean, tries: number) => {
     return className;
 };
 
+// 跳转到提交详情
+const toSubmissionDetail = (problem: RankingSpace.ProblemData, userId: number) => {
+    const user = counterStore.currentUser;
+    if (user.roleId === null || user.roleId > Role.COLLBORATOR) {
+        return;
+    }
+    if (problem.isSolved) {
+        const routeData = router.resolve(`/status/${problem.solvedSubmitId}?contestId=${props.homeworkId}`);
+        window.open(routeData.href, '_blank');
+    } else if (problem.tries > 0) {
+        const routeData = router.resolve(`/homework/${props.homeworkId}/submit?contestId=${props.homeworkId}&userId=${userId}&problemId=${problem.problemId}`);
+        window.open(routeData.href, '_blank');
+    }
+};
+
 
 
 // 加载排行榜数据
@@ -445,6 +461,7 @@ async function loadRankingData(homeworkId: number) {
 
         // 获取cacheStartTime来启动倒计时
         if (tmpData.cacheStartTime) {
+            currentTime.value = tmpData.serverTime;
             startCountdown(tmpData.cacheStartTime);
         }
 
@@ -458,6 +475,9 @@ async function loadRankingData(homeworkId: number) {
             }
             if (a.solvedCount === 0 && b.solvedCount === 0) {
                 // 当双方 solvedCount 都为 0 时，按 totalTries 从大到小排序
+                // 遍历求totalTries
+                a.totalTries = a.problems.reduce((sum, problem) => sum + problem.tries, 0);
+                b.totalTries = b.problems.reduce((sum, problem) => sum + problem.tries, 0);
                 if (a.totalTries !== b.totalTries) {
                     return b.totalTries - a.totalTries;
                 }

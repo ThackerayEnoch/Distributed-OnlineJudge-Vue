@@ -11,6 +11,7 @@ export namespace RankingSpace {
         isFirst: boolean;
         tries: number;
         solvedTime: number;
+        solvedSubmitId: number;
     }
 
     export interface UserProblemData {
@@ -28,6 +29,7 @@ export namespace RankingSpace {
         problems: RankProblem[];
         users: UserProblemData[];
         cacheStartTime:number;
+        serverTime:number;
     }
 }
 export const getHomeworkRankingById = (homeworkId: number) => {

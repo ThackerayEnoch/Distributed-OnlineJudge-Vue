@@ -105,7 +105,7 @@ export const getProblemDetail = (problemId :number,contestId?:number) => {
     return request.get<Problem.ProblemResData>(`/api/p/problem/${problemId}`,{contestId});
 }
 export const submitProblem = (submitJudgeDTO:Judge.SubmitReqData) => {
-    return request.post('/api/j/judge/submit',submitJudgeDTO);
+    return request.post<number>('/api/j/judge/submit',submitJudgeDTO);
 }
 export const getProblemStatistics = (problemId:number,contestId?:number) => {
     if(contestId === undefined||contestId==null) return request.get<Problem.ProblemStatistics>(`/api/p/problem/${problemId}/statistics`);

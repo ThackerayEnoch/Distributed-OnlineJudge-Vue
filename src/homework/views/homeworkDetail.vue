@@ -178,6 +178,7 @@ const homework = ref({
     nickname: '',
     endTime: '',
     updateTime: '',
+    serverTime: 0,
 });
 watch(route, (newRoute) => {
     tabSelect(newRoute);
@@ -210,7 +211,7 @@ function tabSelect(router: any) {
 }
 const selectedTab = ref('intro');
 const timeProgress = ref(0);
-const currentTime = ref(new Date().getTime());
+const currentTime = ref(0);
 const endTimeDate = ref(new Date().getTime());
 let isEnd = false;
 const remainingTime = ref('');
@@ -263,9 +264,9 @@ setInterval(() => {
     if (isEnd) return;
 
     const previousIsContestNotStarted = isContestNotStarted.value;
-    currentTime.value = new Date().getTime();
     calculateTimeProgress();
     const timeDiff = endTimeDate.value - currentTime.value;
+    currentTime.value += 1000;
     calculateRemainingTime(timeDiff);
 
     // 检查比赛是否刚刚开始（从未开始变为已开始）
@@ -317,14 +318,14 @@ const isContestNotStarted = ref(false);
 async function localHomeworkDetail(homeworkId: number) {
     loading.value = true;
     getHomeworkSummary(homeworkId).then(res => {
-        homework.value = res.data as any;
+        homework.value = res.data as any
+        currentTime.value = homework.value.serverTime;
         calculateTimeProgress();
         endTimeDate.value = new Date(homework.value.endTime.replace(/-/g, '/')).getTime();
 
         // 根据开始时间判断比赛是否已经开始
         const startTime = new Date(homework.value.startTime.replace(/-/g, '/')).getTime();
-        const now = new Date().getTime();
-        if (now < startTime) {
+        if (homework.value.serverTime < startTime) {
             // 比赛未开始，允许访问简介但标记状态
             isContestNotStarted.value = true;
             globalMessage.warn('提示', '比赛未开始，只能查看作业简介');

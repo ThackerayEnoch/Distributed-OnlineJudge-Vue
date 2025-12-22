@@ -25,6 +25,7 @@ export namespace HomeworkSpace{
         startTime: string;
         endTime: string;
         updateTime: string;
+        serverTime: number;
     }
     export interface HomeworkProblemsVO {
         displayId: number;

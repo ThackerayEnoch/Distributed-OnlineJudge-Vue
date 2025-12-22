@@ -58,6 +58,36 @@ export const statusMap = {
     '10': 'Submitted Failed',
     '15': 'No Status'
 };
+// 状态映射简写
+export const statusMapMin = {
+    '9': 'Submitting',
+    '6': 'Compiling',
+    '7': 'Judging',
+    '-2': 'CE',
+    '-3': 'PE',
+    '-1': 'WA',
+    '0': 'AC',
+    '1': 'TLE',
+    '2': 'MLE',
+    '3': 'RE',
+    '4': 'SE',
+    '5': 'Pending',
+};
+// 测试点状态颜色
+export const testcaseClassMap = {
+    '9': 'bg-blue-500',     // 提交中
+    '6': 'bg-blue-500',   // 编译中
+    '7': 'bg-blue-500',   // 判题中
+    '-2': 'bg-yellow-500',  // 编译错误
+    '-3': 'bg-amber-500',   // 格式错误
+    '-1': 'wa-color',     // 答案错误
+    '0': 'bg-green-500',    // 全部通过
+    '1': 'tle-color',   // 超时
+    '2': 'tle-color',    // 内存溢出
+    '3': 're-color',      // 运行错误
+    '4': 'bg-gray-500',     // 系统错误
+    '5': 'bg-blue-500',     // 等待判题
+};
 // 判题状态标签颜色映射
 export const statusClassMap = {
     '-10': 'bg-blue-500 text-white',
@@ -66,14 +96,13 @@ export const statusClassMap = {
     '7': 'bg-blue-500 text-white',
     '-2': 'bg-yellow-500 text-white',
     '-3': 'bg-yellow-500 text-white',
-    '-1': 'bg-red-500 text-white',
+    '-1': 'wa-color text-white',
     '0': 'bg-green-500 text-white',
     '1': 'tle-color text-white',
     '2': 'tle-color text-white',
     '3': 're-color text-white',
     '4': 'bg-yellow-500 text-white',
     '5': 'bg-blue-500 text-white',
-    '8': 'bg-blue-500 text-white',
-    '10': 'bg-red-500 text-white',
-    '15': 'bg-gray-500 text-white'
+    '10': 'bg-yellow-500 text-white',
+    '15': 'bg-yellow-500 text-white',
 };

@@ -214,10 +214,64 @@
         </form>
 
     </Dialog>
+
+    <Dialog v-model:visible="showStatusDialog" header="提交状态" :modal="true" :closable="false" :style="{ width: '450px' }"
+        :draggable="false">
+        <div class="flex flex-col items-center justify-center p-4 space-y-6">
+            <div v-if="submissionStatus" class="text-center w-full">
+                <div class="mb-6">
+                    <span :class="getStatusClass(submissionStatus.status)"
+                        class="p-3 px-8 text-xl font-bold inline-block rounded-md shadow-sm transition-all duration-300">
+                        {{ statusMap[String(submissionStatus.status) as keyof typeof statusMap] || 'Unknown' }}
+                    </span>
+                </div>
+
+                <div v-if="isPending(submissionStatus.status)" class="mb-4 flex flex-col items-center justify-center">
+                    <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="4" />
+                    <span v-if="submissionStatus.queueSize > 0" class="mt-2 text-gray-500 dark:text-gray-400 text-sm">
+                        当前队列位置: {{ submissionStatus.queueSize }}
+                    </span>
+                </div>
+
+                <div v-if="!isPending(submissionStatus.status)" class="grid grid-cols-2 gap-4 w-full mt-2">
+                    <div
+                        class="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-100 dark:border-gray-600">
+                        <span
+                            class="text-xs text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider font-bold">运行时间</span>
+                        <span class="text-xl font-mono font-bold text-gray-800 dark:text-gray-100">{{
+                            submissionStatus.time
+                            }}ms</span>
+                    </div>
+                    <div
+                        class="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-100 dark:border-gray-600">
+                        <span
+                            class="text-xs text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider font-bold">运行内存</span>
+                        <span class="text-xl font-mono font-bold text-gray-800 dark:text-gray-100">{{
+                            formatMemory(submissionStatus.memory) }}</span>
+                    </div>
+                </div>
+            </div>
+            <div v-else class="flex flex-col items-center py-8">
+                <ProgressSpinner style="width: 40px; height: 40px" />
+                <span class="mt-2 text-gray-500">获取状态中...</span>
+            </div>
+
+            <div class="flex flex-col w-full space-y-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <div class="flex space-x-2">
+                    <Button label="提交记录" class="flex-1" severity="info" outlined @click="goToStatus" />
+                    <Button label="题目列表" class="flex-1" severity="warning" outlined @click="goToProblemList" />
+                    <Button v-if="contestId != null" label="查看榜单" class="flex-1" severity="help" outlined
+                        @click="goToRanking" />
+                    <Button label="查看详情" class="flex-1" severity="success" outlined @click="goToDetail" />
+                </div>
+                <Button label="返回题目" severity="secondary" text @click="closeStatusDialog" class="w-full" />
+            </div>
+        </div>
+    </Dialog>
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { number } from 'yup';
 import katex from 'katex';
@@ -230,14 +284,12 @@ import { cpp } from '@codemirror/lang-cpp';
 
 import { type LanguageSpace, getAllLanguages } from '@/common/api/languageAPI';
 import { getProblemDetail, submitProblem, getProblemStatistics, type Problem, type Judge } from '../problemAPI';
+import { getStatBySubmitid, type Status } from '../StatusAPI';
+import { statusMap, statusClassMap } from '@/common/constant/AllConstant';
 import { layoutConfig } from '@/common/views/layout/layout';
-import { languageOptions } from '@/common/constant/AllConstant';
 import globalMessage from '@/common/utils/toast';
 import { ProblemStatus } from '../status/problemStatus';
 import AccessDenied from '@/common/components/AccessDenied.vue';
-import { useUserStore } from '@/common/utils/store';
-
-const userStore = useUserStore();
 const extensions = [oneDark];
 const router = useRouter();
 const route = useRoute();
@@ -272,6 +324,103 @@ function routePush(path: string) {
 function closeDialog() {
     visible.value = false;
 }
+
+// 提交状态弹窗相关
+const showStatusDialog = ref(false);
+const currentSubmitId = ref<number>(0);
+const submissionStatus = ref<Status.StatusItem | null>(null);
+let pollingInterval: any = null;
+
+const startPolling = (submitId: number) => {
+    currentSubmitId.value = submitId;
+    submissionStatus.value = null;
+    fetchStatus();
+    pollingInterval = setInterval(fetchStatus, 1000);
+};
+
+const fetchStatus = async () => {
+    if (!currentSubmitId.value) return;
+    try {
+        const res = await getStatBySubmitid(currentSubmitId.value);
+        submissionStatus.value = res.data || null;
+        if (submissionStatus.value) {
+            const status = submissionStatus.value.status;
+            // Polling statuses: Not Submitted, Submitting, Compiling, Judging, Pending, No Status
+            const pendingStatuses = [-10, 9, 6, 7, 5, 15];
+            if (!pendingStatuses.includes(status)) {
+                stopPolling();
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        stopPolling();
+    }
+};
+
+const stopPolling = () => {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
+};
+
+const closeStatusDialog = () => {
+    showStatusDialog.value = false;
+    stopPolling();
+};
+
+const getStatusClass = (status: number) => {
+    return statusClassMap[String(status) as keyof typeof statusClassMap] || 'bg-gray-500 text-white';
+};
+
+const isPending = (status: number) => {
+    return [-10, 9, 6, 7, 5, 15].includes(status);
+};
+
+const formatMemory = (memory: number) => {
+    if (memory < 1024) {
+        return `${memory} KiB`;
+    } else {
+        if (memory % 1024 === 0) {
+            return `${(memory / 1024).toFixed(0)} MiB`;
+        }
+        return `${(memory / 1024).toFixed(2)} MiB`;
+    }
+};
+
+const openInNewTab = (path: string) => {
+    const routeUrl = router.resolve(path);
+    window.open(routeUrl.href, '_blank');
+}
+
+const goToRanking = () => {
+    if (contestId != null) {
+        openInNewTab(`/homework/${contestId}/ranking`);
+    }
+};
+
+const goToStatus = () => {
+    if (contestId != null) {
+        openInNewTab(`/homework/${contestId}/submit?problemId=${props.pid}&contestId=${contestId}`);
+    } else {
+        openInNewTab(`/statuses?problemId=${props.pid}`);
+    }
+};
+
+const goToDetail = () => {
+    if (submissionStatus.value?.submitId) {
+        openInNewTab(`/status/${submissionStatus.value.submitId}`);
+    }
+};
+
+const goToProblemList = () => {
+    if (contestId != null) {
+        openInNewTab(`/homework/${contestId}/problems`);
+    } else {
+        openInNewTab(`/problems`);
+    }
+};
+
 const isSubmtting = ref(false);
 // 提交代码
 async function handleSubmit() {
@@ -286,19 +435,17 @@ async function handleSubmit() {
         gid: 0,
         isRemote: problemDetail.value.isRemote
     }
-    await submitProblem(dto).then(() => {
-        if (contestId != null) {
-            router.push('/statuses?problemId=' + props.pid + '&contestId=' + contestId + '&type=own');
-        }
-        else {
-            router.push('/statuses?problemId=' + props.pid + '&type=own');
-        }
+    await submitProblem(dto).then((res) => {
         globalMessage.success('提交成功', '您的代码已提交成功');
+        visible.value = false;
+        // 后端返回的可能是Long类型，这里作为number处理，如果过大可能需要转string
+        const submitId = Number(res.data);
+        showStatusDialog.value = true;
+        startPolling(submitId);
     }).catch((err) => {
         globalMessage.error('提交失败', err.message);
     }).finally(() => {
         isSubmtting.value = false;
-        visible.value = false;
     })
 }
 // 语言选择
