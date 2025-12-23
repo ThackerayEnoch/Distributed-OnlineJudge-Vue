@@ -28,42 +28,36 @@ const items = ref<MenuItem[]>([
         label: '首页',
         name: 'home',
         icon: 'pi pi-home',
-        command: () => navigateTo('home'),
         root: true,
     },
     {
         label: '题目',
         name: 'problems',
         icon: 'pi pi-book',
-        command: () => navigateTo('problems'),
         root: true,
     },
     {
         label: '评测',
         name: 'statuses',
         icon: 'pi pi-check-circle',
-        command: () => navigateTo('statuses'),
         root: true,
     },
     {
-        label: '作业',
+        label: '比赛',
         name: 'homeworks',
-        icon: 'pi pi-pencil',
-        command: () => navigateTo('homeworks'),
+        icon: 'pi pi-trophy',
         root: true,
     },
     {
         label: '反馈',
         name: 'issues',
         icon: 'fas fa-bug',
-        command: () => navigateTo('issues'),
         root: true,
     },
     {
         label: '管理',
         name: 'admin',
         icon: 'pi pi-cog',
-        command: () => navigateTo('admin'),
         root: true,
     },
 ]
@@ -138,12 +132,12 @@ watch(route, async (newRoute) => {
     switchMenu(currentRoute);
     // 当路由变化时，尝试调用子组件暴露的 loadMessages 方法刷新消息
     // 使用可选链以防组件尚未挂载
-    try {
+    /*try {
         await topBarMessageRef.value?.loadMessages?.();
     } catch (e) {
         // 忽略子组件刷新错误，避免阻塞路由切换
         console.error('刷新 TopBarMessage 失败:', e);
-    }
+    }*/
 });
 </script>
 
@@ -155,25 +149,29 @@ watch(route, async (newRoute) => {
                     <div @click="navigateTo('home')" class="layout-topbar-logo flex items-center">
                         <img src="@/common/assets/ujn.svg" alt="Logo" class="w-[21%] h-auto" />
                         <span class="ml-1" @click="navigateTo('home')">UJNOJ</span>
-                        <div class="ml-0 text-xs whitespace-nowrap self-end">v1.1.0</div>
+                        <div class="ml-0 text-xs whitespace-nowrap self-end">v1.1.2</div>
                     </div>
                 </div>
             </template>
 
 
             <template #item="{ item }">
-                <a v-if="item.root && (item.name !== 'admin' || item.name === 'admin' && counterStore.currentUser.roleId <= Role.COLLBORATOR)"
-                    class="flex items-center w-[7rem] cursor-pointer px-4 py-2 overflow-hidden relative font-semibold text-lg uppercase"
-                    :class="[
-                        activeMenu === item.name
-                            ? 'text-[var(--primary-color)] ]'
-                            : 'text-gray-700 hover:text-[var(--primary-hover-color)]'
-                    ]">
-                    <span class="mx-auto flex items-center gap-2">
-                        <i v-if="item.icon" :class="item.icon"></i> <!-- 图标 -->
-                        {{ item.label }} <!-- 文本 -->
-                    </span>
-                </a>
+                <router-link
+                    v-if="item.root && (item.name !== 'admin' || item.name === 'admin' && counterStore.currentUser.roleId <= Role.COLLBORATOR)"
+                    :to="'/' + item.name" custom v-slot="{ href, navigate }">
+                    <a :href="href" @click="navigate"
+                        class="flex items-center w-[7rem] cursor-pointer px-4 py-2 overflow-hidden relative font-semibold text-lg uppercase"
+                        :class="[
+                            activeMenu === item.name
+                                ? 'text-[var(--primary-color)] ]'
+                                : 'text-gray-700 hover:text-[var(--primary-hover-color)]'
+                        ]">
+                        <span class="mx-auto flex items-center gap-2">
+                            <i v-if="item.icon" :class="item.icon"></i> <!-- 图标 -->
+                            {{ item.label }} <!-- 文本 -->
+                        </span>
+                    </a>
+                </router-link>
             </template>
 
             <template #end>

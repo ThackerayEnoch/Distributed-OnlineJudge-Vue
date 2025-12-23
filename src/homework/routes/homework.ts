@@ -57,6 +57,36 @@ export default [
           props: {
             homeworkTab: true
           }
+        },
+        {
+          path:'/homework/:homeworkId/notifications',
+          name: 'HomeworkNotifications',
+          components: {
+            homeworkTab: () => import('@/homework/components/NotificationComponent.vue')
+          },
+          props: {
+            homeworkTab: true
+          }
+        },
+        {
+          path:'/homework/:homeworkId/clarifications',
+          name: 'HomeworkClarifications',
+          components: {
+            homeworkTab: () => import('@/homework/components/ClarificationsComponent.vue')
+          },
+          props: {
+            homeworkTab: true
+          }
+        },
+        {
+          path:'/homework/:homeworkId/admin-clarifications',
+          name: 'HomeworkAdminClarifications',
+          components: {
+            homeworkTab: () => import('@/homework/components/AdminClarificationsComponents.vue')
+          },
+          props: {
+            homeworkTab: true
+          }
         }
       ],
       props: {

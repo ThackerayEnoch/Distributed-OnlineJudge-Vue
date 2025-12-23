@@ -290,6 +290,9 @@ import { layoutConfig } from '@/common/views/layout/layout';
 import globalMessage from '@/common/utils/toast';
 import { ProblemStatus } from '../status/problemStatus';
 import AccessDenied from '@/common/components/AccessDenied.vue';
+import { useNoticePolling } from '@/common/utils/useNoticePolling';
+const { startPolling } = useNoticePolling();
+
 const extensions = [oneDark];
 const router = useRouter();
 const route = useRoute();
@@ -331,7 +334,7 @@ const currentSubmitId = ref<number>(0);
 const submissionStatus = ref<Status.StatusItem | null>(null);
 let pollingInterval: any = null;
 
-const startPolling = (submitId: number) => {
+const startPollingQuery = (submitId: number) => {
     currentSubmitId.value = submitId;
     submissionStatus.value = null;
     fetchStatus();
@@ -409,7 +412,11 @@ const goToStatus = () => {
 
 const goToDetail = () => {
     if (submissionStatus.value?.submitId) {
-        openInNewTab(`/status/${submissionStatus.value.submitId}`);
+        if (contestId != null) {
+            openInNewTab(`/status/${submissionStatus.value.submitId}?contestId=${contestId}`);
+        } else {
+            openInNewTab(`/status/${submissionStatus.value.submitId}`);
+        }
     }
 };
 
@@ -441,7 +448,7 @@ async function handleSubmit() {
         // 后端返回的可能是Long类型，这里作为number处理，如果过大可能需要转string
         const submitId = Number(res.data);
         showStatusDialog.value = true;
-        startPolling(submitId);
+        startPollingQuery(submitId);
     }).catch((err) => {
         globalMessage.error('提交失败', err.message);
     }).finally(() => {
@@ -515,6 +522,9 @@ onMounted(() => {
     getProblemDetailData();
     getAllLanguagesList()
     loadProblemStatistics();
+    if (contestId != null && contestId >= 1000) {
+        startPolling(contestId);
+    }
 });
 // 当异步请求得到数据后，渲染数学公式
 watch(problemDetail, () => {
@@ -582,7 +592,7 @@ const decodeHtmlEntities = (str: string): string => {
 
     // 使用 DOMParser 保留 HTML 结构
     const parser = new DOMParser();
-    const dom = parser.parseFromString(`<!DOCTYPE html><body>${str}`, 'text/html');
+    const dom = parser.parseFromString(`< !DOCTYPE html > <body>${str}`, 'text/html');
 
     // 递归解码节点中的文本内容
     const decodeNode = (node: Node): void => {
@@ -623,7 +633,7 @@ const renderMath = (content: string): string => {
         if (blockLatex || blockLatex2) {
             const latex = blockLatex || blockLatex2;
             try {
-                return `<div class="math-block">${katex.renderToString(latex, { displayMode: true })}</div>`;
+                return `< div class= "math-block" > ${katex.renderToString(latex, { displayMode: true })} </div>`;
             } catch (error) {
                 console.error('KaTeX rendering error:', error);
                 return match; // 保留原始公式

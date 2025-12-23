@@ -16,6 +16,7 @@ router.afterEach(() => {
 
 <template>
   <Toast />
+  <Toast position="bottom-right" group="bl" />
   <RouterView name="app" />
 </template>
 

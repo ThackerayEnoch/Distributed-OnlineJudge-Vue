@@ -108,6 +108,36 @@
                             </svg>
                             提交记录
                         </span>
+                        <RouterLink :to="`/homework/${homeworkId}/notifications`"
+                            :class="{ 'text-blue-500 border-b-2 border-blue-500': selectedTab === 'notifications' }"
+                            class="hover:border-b-2 hover:border-blue-500 hover:text-blue-500">
+                            <svg class="w-5 h-5 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.43.816 1.035.816 1.73 0 .695-.32 1.3-.816 1.73" />
+                            </svg>
+                            公告
+                        </RouterLink>
+                        <RouterLink v-if="!isAdmin" :to="`/homework/${homeworkId}/clarifications`"
+                            :class="{ 'text-blue-500 border-b-2 border-blue-500': selectedTab === 'clarifications' }"
+                            class="hover:border-b-2 hover:border-blue-500 hover:text-blue-500">
+                            <svg class="w-5 h-5 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                            </svg>
+                            答疑
+                        </RouterLink>
+                        <RouterLink v-else :to="`/homework/${homeworkId}/admin-clarifications`"
+                            :class="{ 'text-blue-500 border-b-2 border-blue-500': selectedTab === 'admin-clarifications' }"
+                            class="hover:border-b-2 hover:border-blue-500 hover:text-blue-500">
+                            <svg class="w-5 h-5 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                            </svg>
+                            管理答疑
+                        </RouterLink>
                     </div>
                 </div><!--导航栏-->
                 <div class="flex" style="align-items: flex-start;">
@@ -143,7 +173,7 @@
                     <div
                         class="w-full p-6 ml-0 my-3 flex bg-white shadow-lg flex flex-col dark:bg-gray-800 overflow-x-auto">
                         <router-view name="homeworkTab" :title="homework.title" :description="homework.description"
-                            :problems="problems" />
+                            :problems="problems" :contestId="homework.id" />
                     </div><!--显示不同导航栏内容-->
                 </div>
             </div>
@@ -158,11 +188,17 @@ import AccessDenied from '@/common/components/AccessDenied.vue';
 import JoinHomeworkComponent from '@/homework/components/JoinHomeworkComponent.vue'
 import { type JoinHomeworkSpace, getBlockContestInfo } from '@/homework/api/joinHomeworkAPI';
 import { ProblemStatus } from '@/homework/status/homeworkStatus';
+import { useNoticePolling } from '@/common/utils/useNoticePolling';
+const { startPolling } = useNoticePolling();
+
 import { useRoute } from 'vue-router';
 
 const message = ref<string>('您没有权限查看此题目');
 const isAccessDenied = ref<boolean>(false);
 const route = useRoute();
+import { useUserStore } from '@/common/utils/store';
+import { Role } from '@/common/constant/Role';
+const userStore = useUserStore();
 // 获取路径的homeworkId参数
 const { homeworkId } = defineProps(['homeworkId']);
 const problems = ref<HomeworkSpace.HomeworkProblemsVO[]>([]);
@@ -207,6 +243,15 @@ function tabSelect(router: any) {
     } else if (path.includes('/submit')) {
         selectedTab.value = 'submissions';
         // 提交记录的权限检查由对应的 API 调用处理
+    } else if (path.includes('/notifications')) {
+        selectedTab.value = 'notifications';
+        // 公告的权限检查由对应的 API 调用处理
+    } else if (path.includes('/clarifications')) {
+        selectedTab.value = 'clarifications';
+        // 询问的权限检查由对应的 API 调用处理
+    } else if (path.includes('/admin-clarifications')) {
+        selectedTab.value = 'admin-clarifications';
+        // 管理询问的权限检查由对应的 API 调用处理
     }
 }
 const selectedTab = ref('intro');
@@ -214,6 +259,7 @@ const timeProgress = ref(0);
 const currentTime = ref(0);
 const endTimeDate = ref(new Date().getTime());
 let isEnd = false;
+const isAdmin = ref(false);
 const remainingTime = ref('');
 // 计算时间进度
 function calculateTimeProgress() {
@@ -322,15 +368,21 @@ async function localHomeworkDetail(homeworkId: number) {
         currentTime.value = homework.value.serverTime;
         calculateTimeProgress();
         endTimeDate.value = new Date(homework.value.endTime.replace(/-/g, '/')).getTime();
-
+        // 判断用户是否为管理员
+        const user = userStore.currentUser;
+        if (user.roleId !== null && user.roleId <= Role.COLLBORATOR) {
+            isAdmin.value = true;
+        }
         // 根据开始时间判断比赛是否已经开始
-        const startTime = new Date(homework.value.startTime.replace(/-/g, '/')).getTime();
-        if (homework.value.serverTime < startTime) {
-            // 比赛未开始，允许访问简介但标记状态
-            isContestNotStarted.value = true;
-            globalMessage.warn('提示', '比赛未开始，只能查看作业简介');
-        } else {
-            isContestNotStarted.value = false;
+        if (!isAdmin.value) {
+            const startTime = new Date(homework.value.startTime.replace(/-/g, '/')).getTime();
+            if (homework.value.serverTime < startTime) {
+                // 比赛未开始，允许访问简介但标记状态
+                isContestNotStarted.value = true;
+                globalMessage.warn('提示', '比赛未开始，只能查看作业简介');
+            } else {
+                isContestNotStarted.value = false;
+            }
         }
     }).catch(error => {
         if (error.code === ProblemStatus.ACCESS_DENIED) {
@@ -378,6 +430,9 @@ async function localHomeworkProblems(homeworkId: number) {
 onMounted(() => {
     localHomeworkDetail(homeworkId);
     tabSelect(route);
+    if (homeworkId != null && homeworkId >= 1000) {
+        startPolling(homeworkId);
+    }
 })
 </script>
 <style scoped>
