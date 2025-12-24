@@ -48,7 +48,7 @@ export const useNoticeStore = defineStore('notice', () => {
             localStorage.setItem(localKey, JSON.stringify(updatedIds));
 
             // 4. 触发 PrimeVue Toast
-            toast.add({ severity: 'warn', summary: '新公告', detail: '您有新的公告，请注意查看。返回比赛点击提交记录右边查看。', life: 999999999, group: 'bl' });
+            toast.add({ severity: 'warn', summary: '新公告', detail: '您有新的公告，请注意查看。在比赛页面点击提交记录右边的公告查看。', life: 999999999, group: 'bl' });
         }
         if(data.existUnreadMessage){
           // 4. 触发 PrimeVue Toast

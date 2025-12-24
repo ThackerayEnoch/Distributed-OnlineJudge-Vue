@@ -4,7 +4,8 @@
             <!-- 题目列表标题 -->
             <div class="p-4 space-x-4 flex items-center">
                 <h2 class="text-2xl font-bold text-blue-500">作业列表</h2>
-                <ToggleSwitch v-tooltip.top="'只显示自己创建的作业'" @change="modeChange" v-model="displayMode" />
+                <span class="text-sm">只显示我的比赛</span>
+                <ToggleSwitch v-tooltip.top="'只显示自己创建的比赛'" @change="modeChange" v-model="displayMode" />
             </div>
             <!-- 操作栏 -->
             <div class="flex items-center space-x-5 p-4">

@@ -2,8 +2,8 @@
     <div class="w-full h-full">
         <div class="w-full h-[25%] p-4 shadow-lg bg-white dark:bg-gray-800 mb-4">
             <div class="flex items-center space-x-2">
-                <Select class="w-25" v-model="selectedHomeworkType" :options="HomeworkTypeOptions" placeholder="筛选..."
-                    @change="filterHomeworks" />
+                <Select class="w-25" v-model="selectedHomeworkType" :options="HomeworkTypeOptions" optionLabel="label"
+                    optionValue="value" placeholder="筛选..." @change="filterHomeworks" />
                 <InputGroup style="max-width: 50%;">
                     <InputText v-model="homeworkName" placeholder="请输入作业名" @keyup.enter="filterHomeworks" />
                     <InputGroupAddon style="margin: 0;padding: 0;border-radius: 0;">
@@ -118,7 +118,10 @@ const homeworks = ref<HomeworkSpace.HomeworkJSON[]>([]);
 
 const homeworkName = ref('');
 const selectedHomeworkType = ref('own');
-const HomeworkTypeOptions = ref(['all', 'own']);
+const HomeworkTypeOptions = ref([
+    { label: '全部', value: 'all' },
+    { label: '仅自己', value: 'own' }
+]);
 const currentTime = ref(Date.now());
 let timeUpdateInterval: number;
 function filterHomeworks() {

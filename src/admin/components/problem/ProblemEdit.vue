@@ -93,7 +93,7 @@
                 </div>
             </div>
             <div class="flex flex-col space-y-2 mt-4">
-                <label class="text-gray-500"><span class="text-red-500">*</span> 题目标签:</label>
+                <label class="text-gray-500"> 题目标签:</label>
                 <div class="flex flex-wrap gap-4">
                     <div class="flex flex-wrap gap-2">
                         <template v-for="(tag, index) in tags" :key="index">
@@ -281,10 +281,11 @@
                 <span>其他</span>
             </div>
             <div class="p-4 mt-4 pb-0">
-                <span class="text-bg-blue-500">自动去除代码每行末尾空白符</span>
+                <span class="text-bg-blue-500">自动移除输出数据行末的无效空格</span>
             </div>
             <div class="flex-1 p-4 pt-0 pb-0">
-                <ToggleSwitch inputId="autoRemove" v-model="removeBlank" class="mt-4" />
+                <ToggleSwitch inputId="autoRemove" v-tooltip="'关闭此项可能导致选手在提交代码时因格式问题触发格式错误'" v-model="removeBlank"
+                    class="mt-4" />
             </div>
             <div class="p-4 mt-0 pb-0">
                 <span class="text-bg-blue-500">允许查看评测点测评结果</span>
@@ -436,7 +437,7 @@ export default defineComponent({
         const title = ref("");
         const timeLimit = ref(1000);
         const memoryLimit = ref(512);
-        const stackLimit = ref(128);
+        const stackLimit = ref(512);
         const problemDesc = ref("");
         const inputDesc = ref("");
         const outputDesc = ref("");

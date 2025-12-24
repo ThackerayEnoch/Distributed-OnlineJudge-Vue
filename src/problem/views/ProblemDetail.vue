@@ -28,9 +28,6 @@
                     <Tag v-if="problemDetail?.type" class="mr-2" severity="danger">
                         OI分数: {{ problemDetail?.ioScore }}
                     </Tag>
-                    <Tag class="mr-2" severity="success">
-                        难度: {{ difficultyMap(problemDetail?.difficulty as Number) }}
-                    </Tag>
                     <Tag class="mr-2" severity="info">
                         判题模式: {{ judgeModeMap(problemDetail?.judgeMode as string) }}
                     </Tag>
@@ -240,7 +237,7 @@
                             class="text-xs text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider font-bold">运行时间</span>
                         <span class="text-xl font-mono font-bold text-gray-800 dark:text-gray-100">{{
                             submissionStatus.time
-                            }}ms</span>
+                        }}ms</span>
                     </div>
                     <div
                         class="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-100 dark:border-gray-600">
@@ -592,7 +589,7 @@ const decodeHtmlEntities = (str: string): string => {
 
     // 使用 DOMParser 保留 HTML 结构
     const parser = new DOMParser();
-    const dom = parser.parseFromString(`< !DOCTYPE html > <body>${str}`, 'text/html');
+    const dom = parser.parseFromString(`<body>${str}</body>`, 'text/html');
 
     // 递归解码节点中的文本内容
     const decodeNode = (node: Node): void => {
