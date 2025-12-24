@@ -6,9 +6,9 @@ import adminRoutes from '@/admin/routes/adminRoutes';
 function getVpnPrefix() {
   const path = window.location.pathname;
   console.log("basePath: "+path);
-  const match = path.match(/^\/http\/[0-9a-f]+\/dev/);
-  console.log("finalPath: "+(match ? match[0] : '/dev'));
-  return match ? match[0] : '/dev';
+  const match = path.match(/^\/http\/[0-9a-f]+\/app/);
+  console.log("finalPath: "+(match ? match[0] : '/app'));
+  return match ? match[0] : '/app';
 }
 
 const router = createRouter({

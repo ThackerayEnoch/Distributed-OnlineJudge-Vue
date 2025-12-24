@@ -577,6 +577,15 @@ export default defineComponent({
         }
         function onAddPageOpen() {
             addProblemDialog.value = true;
+            // 初始化 selectedProblems
+            selectedProblems.value = contestProblems.value.map(p => ({
+                id: p.id,
+                title: p.title,
+                difficulty: p.difficulty,
+                tags: [],
+                total: 0,
+                solved: 0
+            } as any));
             loadAllProblems();
             loadAllProblemCount();
             loadTags();
@@ -638,11 +647,13 @@ export default defineComponent({
             const type = filterType.value ? 'own' : 'all';
             await getAdminAllProblems(problemFirst.value, type, problemSearchContent.value, problemTagIds.value).then(res => {
                 allProblems.value = res.data as ContestSpace.AdminAllProblemVO[];
-                const problemIds: number[] = contestProblems.value.map(problem => problem.id);
-                allProblems.value.forEach(problem => {
-                    if (problemIds.includes(problem.id) && !selectedProblems.value.some(p => p.id === problem.id)) {
-                        selectedProblems.value.push(problem);
+                // 更新 selectedProblems 中的引用
+                const newProblemsMap = new Map(allProblems.value.map(p => [p.id, p]));
+                selectedProblems.value = selectedProblems.value.map(p => {
+                    if (newProblemsMap.has(p.id)) {
+                        return newProblemsMap.get(p.id)!;
                     }
+                    return p;
                 });
             }).catch(err => {
                 globalMessage.error("加载题目失败", err.message);
