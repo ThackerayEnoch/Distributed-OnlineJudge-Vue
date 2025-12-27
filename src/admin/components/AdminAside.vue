@@ -67,7 +67,9 @@ export default defineComponent({
                             { label: '导入用户', icon: 'pi pi-upload', to: '/admin/users/import' },
                             { label: '账号生成', icon: 'pi pi-plus', to: '/admin/users/generate' },
                             { label: '登录IP限制', icon: 'pi pi-shield', to: '/admin/users/whitelist' },
-                            { label: '批量导入IP', icon: 'pi pi-file', to: '/admin/users/ip-import' }
+                            { label: '批量导入IP', icon: 'pi pi-file', to: '/admin/users/ip-import' },
+                            { label: '在线用户', icon: 'pi pi-globe', to: '/admin/users/online' },
+                            { label: '登录日志', icon: 'pi pi-history', to: '/admin/users/login-log' }
                         ]
                     },
                     {

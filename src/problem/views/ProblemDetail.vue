@@ -106,11 +106,6 @@
                         <span class="text-gray-600 font-semibold font-medium">题目提供者</span>
                         <span class="text-gray-800 ml-2">{{ problemDetail.nickname }}</span>
                     </div>
-                    <!-- 难度 -->
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-gray-600 font-semibold font-medium">难度等级</span>
-                        <span class="text-orange-500 font-semibold">{{ difficultyMap(problemDetail.difficulty) }}</span>
-                    </div>
                     <!-- 统计信息组 -->
                     <div class="flex justify-between items-center mb-4">
                         <span class="text-gray-600 font-semibold font-medium">提交总数</span>
@@ -170,7 +165,8 @@
                     </div>
                 </div>
                 <!-- 题目标签区域 -->
-                <div class="card mt-4 mb-4 p-4 bg-white dark:bg-gray-800 shadow-md rounded-none">
+                <div v-if="problemDetail.tags && problemDetail.tags.length > 0"
+                    class="card mt-4 mb-4 p-4 bg-white dark:bg-gray-800 shadow-md rounded-none">
                     <h3 class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-200">当前题目标签</h3>
                     <div class="flex flex-wrap gap-2">
                         <template v-for="(tag, index) in problemDetail.tags" :key="index">
@@ -237,7 +233,7 @@
                             class="text-xs text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider font-bold">运行时间</span>
                         <span class="text-xl font-mono font-bold text-gray-800 dark:text-gray-100">{{
                             submissionStatus.time
-                        }}ms</span>
+                            }}ms</span>
                     </div>
                     <div
                         class="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-100 dark:border-gray-600">
@@ -348,7 +344,14 @@ const fetchStatus = async () => {
             // Polling statuses: Not Submitted, Submitting, Compiling, Judging, Pending, No Status
             const pendingStatuses = [-10, 9, 6, 7, 5, 15];
             if (!pendingStatuses.includes(status)) {
-                stopPolling();
+                if (pollingInterval) {
+                    stopPolling();
+                    totalSubmissions.value++;
+                    if (status === 0) {
+                        passedSubmissions.value++;
+                        isSolved.value = true;
+                    }
+                }
             }
         }
     } catch (err) {

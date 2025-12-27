@@ -209,6 +209,20 @@ export default [
               components:{
                 admin:()=>import('@/admin/components/user/UserIPImportBatch.vue')
               }
+            },
+            {
+              path:'/admin/users/online',
+              name:'AdminOnlineUsers',
+              components:{
+                admin:()=>import('@/admin/components/user/OnlineUsers.vue')
+              }
+            },
+            {
+              path:'/admin/users/login-log',
+              name:'AdminUserLoginLog',
+              components:{
+                admin:()=>import('@/admin/components/user/LoginLog.vue')
+              }
             }
           ]
         },
