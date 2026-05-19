@@ -5,6 +5,7 @@ export namespace Auth {
     export interface LoginReqParams{
         username: string;
         password: string;
+        captchaToken?: string;
     }
     // 登录成功后返回的token
     export interface LoginResData {
@@ -32,9 +33,17 @@ export namespace Auth {
 }
 // 用户登录
 // 用户登录
-export const hustojLogin = ()=>{
-    return request.post<Auth.LoginResData>('/api/a/doLogin', {}, {
+export const hustojLogin = (params?: Auth.LoginReqParams) => {
+    const urlEncodedParams = new URLSearchParams();
+    if (params) {
+        Object.keys(params).forEach(key => {
+            urlEncodedParams.append(key, (params as any)[key]);
+        });
+    }
+
+    return request.post<Auth.LoginResData>('/api/a/doLogin', urlEncodedParams, {
         headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
             'loginType':'hustojLogin'
         }
     });

@@ -12,7 +12,8 @@ function getVpnPrefix() {
 }
 
 const router = createRouter({
-  history: createWebHistory(getVpnPrefix()),
+  // history: createWebHistory(getVpnPrefix()),
+  history: createWebHistory(),
   routes: [
     ...layoutRoutes,
     ...authRoutes,

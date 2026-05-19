@@ -46,23 +46,53 @@
             <Button label="关闭" class="p-button-text" @click="visible = false" />
         </template>
     </Dialog>
+    <div id="captcha-box" v-show="isCaptchaVisible"></div>
 </template>
 
 <script setup lang="ts">
 import * as yup from 'yup';
 import { ref, onMounted } from 'vue';
-import { login, survive, hustojLogin } from '@/auth/authAPI'
+import { login as loginApi, survive, hustojLogin } from '@/auth/authAPI'
 import { useForm, useField } from 'vee-validate';
 import globalMessage from '@/common/utils/toast';
 import router from '@/common/utils/router';
 import { useUserStore } from '@/common/utils/store';
 import { User } from '@/common/entity/user'
 import { Role } from '@/common/constant/Role'
+import { ResponseCode } from '@/common/constant/ResponseCode'
+import '@/common/utils/tac/css/tac.css';
+import '@/common/utils/tac/js/tac.min.js';
+
+type CaptchaRequestChain = {
+    postRequest?: (name: string, request: unknown, response: any) => void;
+};
+
+type CaptchaConfig = {
+    addRequestChain?: (chain: CaptchaRequestChain) => void;
+};
+
+type CaptchaInstance = {
+    init: () => void;
+    destroyWindow: () => void;
+    reloadCaptcha: () => void;
+    config?: CaptchaConfig;
+};
+
+type CaptchaStyle = {
+    logoUrl?: string | null;
+} & Record<string, unknown>;
+
+declare global {
+    interface Window {
+        TAC?: new (config: unknown, style: CaptchaStyle) => CaptchaInstance;
+    }
+}
 const counterStore = useUserStore();
 
 const isloading = ref(false);
 const isHustojLogin = ref(false);
 const visible = ref(false);
+const isCaptchaVisible = ref(false);
 onMounted(() => {
     isLoggedIn();
 })
@@ -79,30 +109,10 @@ const isLoggedIn = async () => {
     })
 }
 const hustojLoginFun = async () => {
-    isHustojLogin.value = true;
-    await hustojLogin()
-        .then(res => {
-            if (res?.data) {
-                const user = new User(res.data.userId, res.data.username, res.data.nickname, res.data.roleId ?? Role.STUDENT);
-                counterStore.setUser(user);
-                globalMessage.success('提示', '通过旧系统登录成功');
-                if (!res.data.isLoggedIn) {
-                    router.push('/auth/password');
-                } else {
-                    router.push('/');
-                }
-            }
-        })
-        .catch((error) => {
-            globalMessage.error('错误', error.data);
-            // 等待 2 秒后进行 URL 跳转
-            setTimeout(() => {
-                window.location.href = '/'; // 替换为目标跳转路径
-            }, 2000);
-        })
-        .finally(() => {
-            isHustojLogin.value = false;
-        });
+    await submitHustojLogin({
+        username: username.value || '',
+        password: password.value || ''
+    });
 };
 // 定义表单验证规则
 const schema = yup.object({
@@ -119,13 +129,45 @@ const { handleSubmit } = useForm({
 const { value: username, errorMessage: usernameError } = useField<string>('username');
 const { value: password, errorMessage: passwordError } = useField<string>('password');
 
-const onSubmit = handleSubmit(async (values) => {
+const normalizeCaptchaResponse = (response: any) => {
+    if (!response || typeof response !== 'object') {
+        return;
+    }
+
+    if (typeof response.code === 'undefined' && typeof response.status !== 'undefined') {
+        response.code = response.status;
+    }
+
+    if (typeof response.msg === 'undefined' && typeof response.message !== 'undefined') {
+        response.msg = response.message;
+    }
+};
+
+const createCaptcha = (config: unknown, style: CaptchaStyle): CaptchaInstance => {
+    if (!window.TAC) {
+        throw new Error('TAC script not loaded');
+    }
+    const captcha = new window.TAC(config, style);
+    captcha.config?.addRequestChain?.({
+        postRequest: (_name, _request, response) => {
+            normalizeCaptchaResponse(response);
+        }
+    });
+
+    return captcha;
+};
+
+type LoginValues = { username: string; password: string };
+
+const submitLogin = async (values: LoginValues, captchaToken?: string) => {
     isloading.value = true;
     try {
-        const res = await login({
+        const params = {
             username: values.username,
             password: values.password,
-        });
+            ...(captchaToken ? { captchaToken } : {})
+        };
+        const res = await loginApi(params);
 
         if (res?.data) {
             const user = new User(res.data.userId, res.data.username, res.data.nickname, res.data.roleId ?? Role.STUDENT);
@@ -140,14 +182,121 @@ const onSubmit = handleSubmit(async (values) => {
             globalMessage.error('错误', '登录失败');
         }
     } catch (error: any) {
+        if (error?.code === ResponseCode.CAPTCHA_ERROR_OR_REQUIRED && !captchaToken) {
+            globalMessage.info('提示', '需要验证码验证，请完成验证后继续登录');
+            await openCaptcha(values, async (token) => {
+                await submitLogin(values, token);
+            });
+            return;
+        }
         globalMessage.error('登录失败', error?.message || String(error));
     } finally {
         isloading.value = false;
     }
+};
+
+const submitHustojLogin = async (values: LoginValues, captchaToken?: string) => {
+    isHustojLogin.value = true;
+    try {
+        const params = {
+            username: values.username,
+            password: values.password,
+            ...(captchaToken ? { captchaToken } : {})
+        };
+        const res = await hustojLogin(params);
+        if (res?.data) {
+            const user = new User(res.data.userId, res.data.username, res.data.nickname, res.data.roleId ?? Role.STUDENT);
+            counterStore.setUser(user);
+            globalMessage.success('提示', '通过旧系统登录成功');
+            if (!res.data.isLoggedIn) {
+                router.push('/auth/password');
+            } else {
+                router.push('/');
+            }
+        }
+    } catch (error: any) {
+        if (error?.code === ResponseCode.CAPTCHA_ERROR_OR_REQUIRED && !captchaToken) {
+            globalMessage.info('提示', '需要验证码验证，请完成验证后继续登录');
+            await openCaptcha(values, async (token) => {
+                await submitHustojLogin(values, token);
+            });
+            return;
+        }
+        globalMessage.error('错误', error?.message || String(error));
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 2000);
+    } finally {
+        isHustojLogin.value = false;
+    }
+};
+
+const openCaptcha = async (values: LoginValues, onSuccess: (token: string) => Promise<void>) => {
+    const config = {
+        requestCaptchaDataUrl: '/api/a/captcha/gen',
+        validCaptchaUrl: '/api/a/captcha/check',
+        bindEl: '#captcha-box',
+        validSuccess: async (res: any, _captcha: unknown, tac?: CaptchaInstance) => {
+            tac?.destroyWindow();
+            isCaptchaVisible.value = false;
+            const token = res?.data?.token || res?.data?.id;
+            if (!token) {
+                globalMessage.error('错误', '验证码校验成功但未返回 token');
+                return;
+            }
+            await onSuccess(token);
+        },
+        validFail: (_res: any, captcha: CaptchaInstance) => {
+            globalMessage.error('错误', '验证码验证失败，请重试');
+            captcha.reloadCaptcha();
+        },
+        btnRefreshFun: (_el: unknown, captcha: CaptchaInstance) => {
+            captcha.reloadCaptcha();
+        },
+        btnCloseFun: (_el: unknown, captcha: CaptchaInstance) => {
+            captcha.destroyWindow();
+            isCaptchaVisible.value = false;
+        }
+    };
+
+    const style: CaptchaStyle = {
+        logoUrl: null
+    };
+
+    try {
+        isCaptchaVisible.value = true;
+        const captcha = createCaptcha(config, style);
+        captcha.init();
+    } catch (error) {
+        isCaptchaVisible.value = false;
+        globalMessage.error('错误', '初始化验证码失败');
+        console.error('初始化tac失败', error);
+    }
+};
+
+const onSubmit = handleSubmit(async (values) => {
+    await submitLogin({
+        username: values.username,
+        password: values.password
+    });
 });
 
 
 
 </script>
 
-<style scoped></style>
+<style scoped>
+#captcha-box {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    background: rgba(0, 0, 0, 0.35);
+}
+
+#captcha-box:empty {
+    display: none;
+}
+</style>

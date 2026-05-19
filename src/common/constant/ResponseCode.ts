@@ -15,7 +15,15 @@ export enum ResponseCode {
     USERNAME_OR_EMAIL_NOT_UNIQUE = 11002, // 用户名或邮箱重复
     UNSUPPORTED_GRANT_TYPE = 11003, // 不支持的认证模式
     USER_IS_BANNED = 11004, // 用户已被封禁
+    TOKEN_EXPIRED = 11005, // Token已过期
+    INVALID_SESSION_ID = 11006, // 无效SESSION ID
+    SESSION_ID_NOT_FOUND = 11007, // SESSION已失效，请重新登陆旧OJ
+    IP_ADDRESS_ILLEGAL = 11008, // IP登录策略禁止登录
     ACCOUNT_EXPIRED = 11009, // 账号已过期
+    BAD_CREDENTIALS = 11010, // 凭据异常
+    CAPTCHA_ERROR_OR_REQUIRED = 11011, // 验证码错误或必填
+    USER_ACCOUNT_LOCKED = 11012, // 账号被锁定
+    PASSWORD_EXPIRED = 11013, // 密码已过期
     VERIFICATION_CODE_ERROR = 12001, // 验证码错误
     CAPTCHA_NOT_FOUND = 12002, // 请先发送验证码
     TOO_MANY_REQUESTS_CAPTCHA = 12003, // 发送验证码过于频繁，请稍后再试
@@ -26,10 +34,10 @@ export enum ResponseCode {
     USER_IS_EXIST = 13002, // 用户已存在
     EMAIL_IS_EXIST_USER = 13003, // 邮箱已存在
     USER_IS_BANNED_USER = 13004, // 用户已被封禁
-    IP_ADDRESS_ILLEGAL = 11008// IP地址不合法
 }
 
 export const ResponseMessage: { [key in ResponseCode]: string } = {
+    [ResponseCode.CAPTCHA_ERROR_OR_REQUIRED]: "验证码错误或必填",
     [ResponseCode.SUCCESS]: "请求成功",
     [ResponseCode.CREATED]: "创建成功",
     [ResponseCode.ACCEPTED]: "请求已被接受",
@@ -46,6 +54,10 @@ export const ResponseMessage: { [key in ResponseCode]: string } = {
     [ResponseCode.USERNAME_OR_EMAIL_NOT_UNIQUE]: "用户名或邮箱重复",
     [ResponseCode.UNSUPPORTED_GRANT_TYPE]: "不支持的认证模式",
     [ResponseCode.USER_IS_BANNED]: "用户已被封禁",
+    [ResponseCode.TOKEN_EXPIRED]: "Token已过期",
+    [ResponseCode.INVALID_SESSION_ID]: "无效SESSION ID",
+    [ResponseCode.SESSION_ID_NOT_FOUND]: "SESSION已失效，请重新登陆旧OJ",
+    [ResponseCode.IP_ADDRESS_ILLEGAL]: "IP登录策略禁止登录",
     [ResponseCode.VERIFICATION_CODE_ERROR]: "验证码错误",
     [ResponseCode.CAPTCHA_NOT_FOUND]: "请先发送验证码",
     [ResponseCode.TOO_MANY_REQUESTS_CAPTCHA]: "发送验证码过于频繁，请稍后再试",
@@ -57,7 +69,9 @@ export const ResponseMessage: { [key in ResponseCode]: string } = {
     [ResponseCode.EMAIL_IS_EXIST_USER]: "邮箱已存在",
     [ResponseCode.USER_IS_BANNED_USER]: "用户已被封禁",
     [ResponseCode.ACCOUNT_EXPIRED]: "账号已过期",
-    [ResponseCode.IP_ADDRESS_ILLEGAL]: "IP策略禁止登录"
+    [ResponseCode.BAD_CREDENTIALS]: "凭据异常",
+    [ResponseCode.USER_ACCOUNT_LOCKED]: "账号被锁定",
+    [ResponseCode.PASSWORD_EXPIRED]: "密码已过期"
 };
 // 根据数字获取具体信息的函数
 export function getResponseMessage(code: number): string {
