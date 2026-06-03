@@ -33,8 +33,9 @@
                 <Button icon="pi pi-refresh" label="刷新数据" @click="loadData" :loading="loading" size="small" text />
             </div>
 
-            <DataTable :value="users" :loading="loading" stripedRows paginator :rows="10"
-                :rowsPerPageOptions="[10, 20, 50]" tableStyle="min-width: 50rem">
+            <DataTable :value="users" :loading="loading" stripedRows paginator lazy :rows="pageSize"
+                :first="(currentPage - 1) * pageSize" :totalRecords="total" :rowsPerPageOptions="[10, 20, 50]"
+                tableStyle="min-width: 50rem" @page="onPage">
                 <template #empty>
                     <div class="text-center p-4">暂无在线用户</div>
                 </template>
@@ -84,12 +85,6 @@
                     </template>
                 </Column>
 
-                <Column field="tokenCount" header="Token数" style="width: 8%" align="center">
-                    <template #body="slotProps">
-                        <span class="text-lg font-medium">{{ slotProps.data.tokenCount }}</span>
-                    </template>
-                </Column>
-
                 <Column header="操作" style="width: 5%" align="center">
                     <template #body="slotProps">
                         <Button icon="pi pi-trash" severity="danger" rounded text v-tooltip.top="'删除Token'"
@@ -107,6 +102,7 @@ import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import ConfirmDialog from 'primevue/confirmdialog';
 import { Role } from '@/common/constant/Role';
+import { listOnlineUsers, kickOutOnlineUser } from '@/admin/api/onlineUsetAPI';
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -119,7 +115,6 @@ interface OnlineUser {
     loginTime: string; // ISO string
     ip: string;
     tokenRemainingTime: number; // seconds
-    tokenCount: number; // Number of issued tokens
     roleId: number;
 }
 
@@ -131,7 +126,10 @@ interface OnlineStats {
 // --- State ---
 const loading = ref(false);
 const users = ref<OnlineUser[]>([]);
-const tokenMaxDuration = ref(1800); // Default 30 minutes, should be fetched from backend
+const tokenMaxDuration = ref(3600); // 60 minutes
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 const stats = computed<OnlineStats>(() => {
     return {
         totalOnline: users.value.length,
@@ -139,91 +137,25 @@ const stats = computed<OnlineStats>(() => {
     };
 });
 
-// --- Mock Data & API ---
-const generateMockData = (): OnlineUser[] => {
-    const mockUsers: OnlineUser[] = [
-        {
-            id: '1001',
-            username: 'admin',
-            nickname: '超级管理员',
-            loginTime: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
-            ip: '192.168.1.1',
-            tokenRemainingTime: 1600, // ~26 mins left
-            tokenCount: 1,
-            roleId: Role.SYSADMIN
-        },
-        {
-            id: '2045',
-            username: 'student_a',
-            nickname: '张三',
-            loginTime: new Date(Date.now() - 1000 * 60 * 120).toISOString(), // 2 hours ago
-            ip: '10.0.0.5',
-            tokenRemainingTime: 1200, // 20 mins left
-            tokenCount: 2,
-            roleId: Role.STUDENT
-        },
-        {
-            id: '2046',
-            username: 'student_b',
-            nickname: '李四',
-            loginTime: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 mins ago
-            ip: '10.0.0.6',
-            tokenRemainingTime: 1750, // ~29 mins left
-            tokenCount: 1,
-            roleId: Role.STUDENT
-        },
-        {
-            id: '2047',
-            username: 'teacher_wang',
-            nickname: '王老师',
-            loginTime: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
-            ip: '172.16.0.100',
-            tokenRemainingTime: 200, // ~3 mins left (Low!)
-            tokenCount: 3,
-            roleId: Role.TEACHER
-        },
-        {
-            id: '3001',
-            username: 'guest_01',
-            nickname: '访客01',
-            loginTime: new Date(Date.now() - 1000 * 45).toISOString(),
-            ip: '202.106.0.20',
-            tokenRemainingTime: 1000,
-            tokenCount: 1,
-            roleId: Role.STUDENT
-        }
-    ];
-    // Generate more random users
-    for (let i = 0; i < 15; i++) {
-        mockUsers.push({
-            id: `40${i < 10 ? '0' + i : i}`,
-            username: `user_${i}`,
-            nickname: `用户${i}`,
-            loginTime: new Date(Date.now() - Math.random() * 1000 * 60 * 60 * 10).toISOString(),
-            ip: `192.168.0.${100 + i}`,
-            tokenRemainingTime: Math.floor(Math.random() * 1800),
-            tokenCount: Math.floor(Math.random() * 3) + 1,
-            roleId: Role.STUDENT
-        });
-    }
-    return mockUsers;
-};
-
-const fetchOnlineUsersAPI = async (): Promise<OnlineUser[]> => {
-    // TODO: Replace with actual API call
-    // return await api.get('/admin/users/online');
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(generateMockData());
-        }, 600);
-    });
-};
-
 // --- Methods ---
 const loadData = async () => {
     loading.value = true;
     try {
-        users.value = await fetchOnlineUsersAPI();
+        const res = await listOnlineUsers({
+            offset: pageSize.value,
+            page: currentPage.value
+        });
+        const list = res.data?.list ?? [];
+        users.value = list.map((item) => ({
+            id: String(item.uid),
+            username: item.username,
+            nickname: item.nickname,
+            loginTime: item.loginTime,
+            ip: item.loingIp,
+            tokenRemainingTime: item.tokenTtlSeconds,
+            roleId: item.roleId
+        }));
+        total.value = res.data?.total ?? users.value.length;
     } catch (error) {
         console.error('Failed to load online users', error);
     } finally {
@@ -246,11 +178,14 @@ const confirmDeleteToken = (user: OnlineUser) => {
     });
 };
 
-const deleteToken = async (user: OnlineUser) => {
-    // TODO: Call API to delete token
-    // await api.delete(`/admin/users/${user.id}/token`);
+const onPage = (event: { page: number; rows: number }) => {
+    currentPage.value = event.page + 1;
+    pageSize.value = event.rows;
+    loadData();
+};
 
-    // Mock deletion
+const deleteToken = async (user: OnlineUser) => {
+    await kickOutOnlineUser(Number(user.id));
     users.value = users.value.filter(u => u.id !== user.id);
     toast.add({ severity: 'success', summary: '操作成功', detail: `用户 ${user.username} 的 Token 已删除`, life: 3000 });
 };

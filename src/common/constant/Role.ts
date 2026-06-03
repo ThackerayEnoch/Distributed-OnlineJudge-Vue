@@ -1,6 +1,7 @@
 export enum Role {
-    SYSADMIN = 2,
-    ADMIN = 3,
+    SYSADMIN = 1,
+    ADMIN = 2,
+    PROBLEM_EDITOR = 3,
     TEACHER = 4,
     COLLBORATOR = 5,
     STUDENT = 6
