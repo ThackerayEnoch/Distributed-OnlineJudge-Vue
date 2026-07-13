@@ -31,5 +31,4 @@ jobs:
           push: true
           no-cache: true
           tags: |
-            thackerayenoch/doj:frontend
-            thackerayenoch/doj:frontend-latest
+            thackerayenoch/doj-frontend
