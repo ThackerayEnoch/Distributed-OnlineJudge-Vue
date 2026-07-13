@@ -13,6 +13,8 @@ RUN npm run build
 
 
 # ---------- Runtime ----------
-FROM nginx:alpine
+FROM alpine:latest
 
-COPY --from=builder /app/dist /home/thackerayenoch/oj
+WORKDIR /frontend
+
+COPY --from=builder /app/dist/ .
