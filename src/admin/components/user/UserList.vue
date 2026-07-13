@@ -165,7 +165,7 @@
                 <InputGroupAddon class="!bg-primary-400 !border-primary-100">
                     <i class="pi pi-lock text-white"></i>
                 </InputGroupAddon>
-                <InputText v-model="newPassword" placeholder="请输入6位以上新密码" type="text"
+                <InputText v-model="newPassword" placeholder="请输入6位以上新密码，留空为默认密码" type="text"
                     class="!border-l-0 focus:!ring-primary-100 focus:!border-primary-100 flex-1"
                     autocomplete="new-password" />
             </InputGroup>
@@ -326,7 +326,7 @@ import globalMessage from '@/common/utils/toast';
 
 const addDialogVisible = ref<boolean>(false);
 const displayDialog = ref<boolean>(false);
-const newPassword = ref<string>('ujn@12345');
+const newPassword = ref<string>('');
 const passwordDisplayDialog = ref<boolean>(false);
 const roleDisplayDialog = ref<boolean>(false);
 const isloading = ref<boolean>(true);
@@ -349,7 +349,7 @@ const selectedUser = ref<UserSpace.UserInfoVO>({
 });
 const form = reactive({
     username: '',
-    password: 'Ujn@12345',
+    password: '',
     nickname: '',
     needChangePassword: true,
     email: '',
@@ -367,7 +367,7 @@ const roles = ref<UserSpace.Role[]>([]);
 
 // 验证逻辑保持相同
 const usernameError = computed(() => !form.username.trim());
-const passwordError = computed(() => form.password.length < 6 || form.password.length > 20);
+const passwordError = computed(() => form.password.length > 20);
 const nicknameError = computed(() => !form.nickname.trim());
 function onAddUser() {
     addDialogVisible.value = true;
@@ -429,6 +429,9 @@ async function addUser() {
     if (usernameError.value || passwordError.value || nicknameError.value) {
         return;
     }
+    if (!form.password) {
+        form.password = 'reset';
+    }
     loading.add = true;
     form.expireTime = expireTime.value.getTime();
     await createUser(form).then(() => {
@@ -447,13 +450,12 @@ async function updateUserEvent(type: string) {
         status: selectedUser.value.status,
     };
     if (type == 'password') {
-        if (newPassword.value.length < 6) {
-            globalMessage.error('操作失败', '密码长度需6位以上');
-            return;
-        }
         if (newPassword.value.length > 20) {
             globalMessage.error('操作失败', '密码长度需20位以下');
             return;
+        }
+        if (!newPassword.value) {
+            newPassword.value = 'reset';
         }
         dto.password = newPassword.value;
         loading.password = true;

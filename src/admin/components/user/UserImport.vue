@@ -152,7 +152,7 @@ const handleFileUpload = () => {
         selectedFiles.value = [];
         // 随机密码
         users.value.forEach((user) => {
-            user.password = isRandomPassword.value ? generateRandomPassword(8) : 'ujn@12345';
+            user.password = isRandomPassword.value ? generateRandomPassword(8) : 'reset';
         });
         globalMessage.success('Excel解析', '文件解析成功');
         displayDialog.value = true;
