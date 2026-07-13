@@ -38,8 +38,10 @@ jobs:
 
       - name: Generate Version
         id: version
-        run: |
-          VERSION="v$(date -u +'%Y.%m.%d-%H%M%S')-${GITHUB_SHA::7}"
+        run: | 
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          VERSION="v$(date -u +'%Y.%m.%d-%H%M%S')-${SHORT_SHA}"
+          
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Version: $VERSION"
 
