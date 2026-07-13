@@ -26,8 +26,10 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v6
         with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
+          context: .
+          file: ./Dockerfile
           push: true
+          no-cache: true
           tags: |
             thackerayenoch/doj:frontend
+            thackerayenoch/doj:frontend-latest
