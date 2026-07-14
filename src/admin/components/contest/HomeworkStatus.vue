@@ -27,7 +27,7 @@
             <Column field="title" header="题目">
                 <template #body="slotProps">
                     <router-link :to="'/problem/' + slotProps.data.id">{{ slotProps.data.title
-                    }}</router-link>
+                        }}</router-link>
                 </template>
             </Column>
 
@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, defineProps, onMounted } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import { getHomeworkStat, type ContestSpace } from '@/admin/api/contestAPI';
 import globalMessage from '@/common/utils/toast';
 
