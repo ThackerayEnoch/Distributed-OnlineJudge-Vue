@@ -190,13 +190,6 @@ export default [
               }
             },
             {
-              path:'/admin/users/enable',
-              name:'AdminUserEnable',
-              components:{
-                admin:()=>import('@/admin/components/user/EnableUser.vue')
-              }
-            },
-            {
               path:'/admin/users/whitelist',
               name:'AdminUserWhitelist',
               components:{

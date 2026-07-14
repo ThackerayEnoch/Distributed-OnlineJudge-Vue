@@ -10,9 +10,7 @@
                 <div class="flex flex-col md:flex-row items-center">
                     <!-- 用户头像 -->
                     <div class="md:w-1/4 w-full flex justify-center">
-                        <img class="rounded-full w-32 h-32 object-cover"
-                            src="https://r2.wcfs.dokidokiujn.ninja/WCFS/User/ProfilePhoto/EdReO11VAAIQygI.jpg"
-                            alt="用户头像" />
+                        <img class="rounded-full w-32 h-32 object-cover" alt="用户头像" />
                     </div>
                     <!-- 头像修改按钮 -->
                     <div class="md:w-3/4 w-full mt-6 md:mt-0 md:pl-6">
