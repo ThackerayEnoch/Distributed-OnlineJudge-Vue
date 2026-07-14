@@ -16,21 +16,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - uses: docker/login-action@v3
+      # 1. 只有当不是 PR 阶段（即 push 到 main 或手动触发）时，才登录 Docker Hub
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
+      # 2. 动态决定是否 Push：如果是 PR 触发则为 false，否则（如 push 到 main）为 true
       - name: Build and Push
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          push: true
+          push: ${{ github.event_name != 'pull_request' }} # 👈 核心修改：非 PR 时才 push
           no-cache: true
           tags: |
             thackerayenoch/doj-frontend
