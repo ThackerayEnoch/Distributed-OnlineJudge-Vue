@@ -169,7 +169,7 @@ const saveBatch = async () => {
         isloading.value = false;
     }
 };
-const defaultPassword = 'ujn@12345';
+const defaultPassword = '';
 const passwordPlaceholder = ref<string>('随机生成密码');
 const passwordModeChange = () => {
     switch (passwordMode.value) {
