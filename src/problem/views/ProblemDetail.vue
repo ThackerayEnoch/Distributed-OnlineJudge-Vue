@@ -188,7 +188,7 @@
             <div class="flex justify-between items-center">
                 <label class="text-gray-600 font-medium">编程语言</label>
                 <Dropdown v-model="selectedLanguage" :options="allowLanguagesList" placeholder="选择语言" class="w-48"
-                    :filter="true" required />
+                    :filter="true" @change="handleLanguageChange" required />
             </div>
 
             <!-- 代码编辑区（允许扩展） -->
@@ -233,7 +233,7 @@
                             class="text-xs text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider font-bold">运行时间</span>
                         <span class="text-xl font-mono font-bold text-gray-800 dark:text-gray-100">{{
                             submissionStatus.time
-                            }}ms</span>
+                        }}ms</span>
                     </div>
                     <div
                         class="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-100 dark:border-gray-600">
@@ -469,17 +469,47 @@ async function getAllLanguagesList() {
 const LanguageList = ref<LanguageSpace.LanguageVO[]>([]);
 const selectedLanguage = ref<string>('C');
 const allowLanguagesList = ref<string[]>([]);
-async function languageOptionsHandle(languageIds: number[]) {
-    while (LanguageList.value.length === 0) {
-        //等待语言列表加载完成
-        await new Promise(resolve => setTimeout(resolve, 500));
+const STORAGE_KEY = 'user_preferred_language'
+const priorityLanguages: readonly string[] = ['C++ 17 With O2', 'C++ 17', 'C++', 'C']
+async function languageOptionsHandle(languageIds?: number[]) {
+    let retries = 0
+    while (LanguageList.value.length === 0 && retries < 10) {
+        await new Promise((resolve) => setTimeout(resolve, 500))
+        retries++
     }
-    if (languageIds != null && languageIds.length > 0) {
-        allowLanguagesList.value = LanguageList.value.filter((item) => languageIds.includes(item.id)).map((item) => item.name);
+    if (LanguageList.value.length === 0) {
+        globalMessage.error('语言列表加载失败', 'LanguageList 加载超时或数据为空')
+        allowLanguagesList.value = []
+        selectedLanguage.value = ''
+        return
+    }
+    if (languageIds && languageIds.length > 0) {
+        const idSet = new Set(languageIds)
+        allowLanguagesList.value = LanguageList.value
+            .filter((item) => idSet.has(item.id))
+            .map((item) => item.name)
     } else {
-        allowLanguagesList.value = LanguageList.value.map((item) => item.name);
+        allowLanguagesList.value = LanguageList.value.map((item) => item.name)
     }
-    selectedLanguage.value = allowLanguagesList.value[0] || '';
+    const allowed = allowLanguagesList.value
+    const allowedSet = new Set(allowed)
+    // 3. 匹配逻辑：用户本地缓存 > 优先级列表 > 允许列表第0项 > 空字符串
+    const savedLanguage = localStorage.getItem(STORAGE_KEY)
+    if (savedLanguage && allowedSet.has(savedLanguage)) {
+        // 命中缓存，且该题目支持此语言
+        selectedLanguage.value = savedLanguage
+    } else {
+        selectedLanguage.value =
+            priorityLanguages.find((lang) => allowedSet.has(lang)) ||
+            allowed[0] ||
+            ''
+    }
+}
+const handleLanguageChange = (event: { value: string }) => {
+    const newLang = event.value
+    if (newLang) {
+        localStorage.setItem(STORAGE_KEY, newLang)
+    }
 }
 // 题目详情数据
 const problemDetail = ref<Problem.ProblemResData>({
