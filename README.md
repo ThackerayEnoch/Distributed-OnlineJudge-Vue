@@ -1,4 +1,4 @@
-# 基于Web的C语言快捷伺服评测系统的设计与实现
+# Distribute-OnlineJudge
 
 
 
